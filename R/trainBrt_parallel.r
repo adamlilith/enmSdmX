@@ -26,6 +26,7 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by deviance.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
+#' @param parallelType Either \code{'doParallel'} or \code{'doSNOW'} (default).
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
 #'
@@ -206,7 +207,7 @@
 #' 
 #' 
 #' @export
-trainBrt <- function(
+trainBrt_parallel <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
@@ -222,6 +223,7 @@ trainBrt <- function(
 	family = 'bernoulli',
 	out = 'model',
 	cores = 1,
+	parallelType = 'doSnow',
 	verbose = FALSE,
 	...
 ) {
@@ -260,21 +262,40 @@ trainBrt <- function(
 	### MAIN
 	########
 
-		if (cores > 1) {
-			cores <- min(cores, parallel::detectCores(logical = FALSE))
+		cores <- min(cores, nrow(params), parallel::detectCores(logical = FALSE))
+
+		if (cores > 1L) {
+
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makePSOCKcluster(cores)
-			doParallel::registerDoParallel(cl)
-			parallel::clusterCall(cl, function(x) .libPaths(x), .libPaths()) # can find non-standard paths
+			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+
+			if (parallelType == 'doParallel') {
+				doParallel::registerDoParallel(cl)
+				# opts <- NULL
+				say('doParallel')
+			} else if (parallelType == 'doSNOW') {
+				doSNOW::registerDoSNOW(cl)
+				# opts <- list(progress = verbose)
+				say('doSNOW')
+			}
+			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
+			# opts <- NULL
+			say('1 core')
 		}
-		
+
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
-		mcOptions <- list(preschedule=TRUE, set.seed=TRUE, silent=FALSE)
-		
-		# work <- foreach::foreach(i=1:nrow(tuning), .options.multicore=mcOptions, .combine='c', .inorder=FALSE, .export=c('.trainBrtWorker'), .packages = c('gbm')) %makeWork%
-		work <- foreach::foreach(i=1:nrow(params), .options.multicore=mcOptions, .combine='c', .inorder=FALSE, .export=c('.trainBrtWorker')) %makeWork%
+		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
+
+		work <- foreach::foreach(
+			i = 1L:nrow(params),
+			# .options.snow = opts,
+			.options.multicore = mcOptions,
+			.combine='c',
+			.inorder = FALSE,
+			.export = c('.trainBrtWorker')
+		) %makeWork% {
 			.trainBrtWorker(
 				i = i,
 				params = params,
@@ -294,6 +315,8 @@ trainBrt <- function(
 				...
 			)
 				
+		}
+						
 		if (cores > 1) parallel::stopCluster(cl)
 
 	### collate models
