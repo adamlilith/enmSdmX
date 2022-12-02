@@ -8,7 +8,6 @@ trainBrt(
   data,
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
-  family = "bernoulli",
   learningRate = c(1e-04, 0.001, 0.01),
   treeComplexity = c(5, 3, 1),
   bagFraction = 0.6,
@@ -18,6 +17,7 @@ trainBrt(
   tryBy = c("learningRate", "treeComplexity", "maxTrees", "stepSize"),
   w = TRUE,
   anyway = FALSE,
+  family = "bernoulli",
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -30,8 +30,6 @@ trainBrt(
 \item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
 
 \item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
-
-\item{family}{Character. Name of error family.  See \code{\link[dismo]{gbm.step}}.}
 
 \item{learningRate}{Numeric. Learning rate at which model learns from successive trees (Elith et al. 2008 recommend 0.0001 to 0.1).}
 
@@ -56,7 +54,14 @@ If \code{tryBy} is NULL then the function attempts to train the model with the s
 
 \item{anyway}{Logical. If \code{FALSE} (default), it is possible for no models to be returned if none converge and/or none had a number of trees is >= \code{minTrees}). If \code{TRUE} then all models are returned but with a warning.}
 
-\item{out}{Character. Indicates type of value returned. If \code{model} (default) then returns an object of class \code{gbm}. If \code{models} then all models that were trained are returned in a list in the order they appear in the tuning table (this may take a lot of memory!). If \code{tuning} then just return a data frame with tuning parameters and deviance of each model sorted by deviance. If both then return a 2-item list with the best model and the tuning table.}
+\item{family}{Character. Name of error family.  See \code{\link[dismo]{gbm.step}}.}
+
+\item{out}{Character vector. One or more values:
+\itemize{
+    \item    \code{'model'}: Model with the lowest deviance.
+    \item    \code{'models'}: All models evaluated, sorted from lowest to highest deviance.
+    \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by deviance.
+}}
 
 \item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.}
 
@@ -71,58 +76,179 @@ If \code{out = 'model'} this function returns an object of class \code{gbm}. If 
 This function is a wrapper for \code{\link[dismo]{gbm.step}}. It returns the model with best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. It can also return a table with deviance of different combinations of tuning parameters that were tested, and all of the models tested. See Elith, J., J.R. Leathwick, and T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813.
 }
 \examples{
-\dontrun{
-### model red-bellied lemurs
-data(mad0)
-data(lemurs)
 
-# climate data
-bios <- c(1, 5, 12, 15)
-clim <- raster::getData('worldclim', var='bio', res=10)
-clim <- raster::subset(clim, bios)
-clim <- raster::crop(clim, mad0)
-
-# occurrence data
-occs <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
-occsEnv <- raster::extract(clim, occs[ , c('longitude', 'latitude')])
-
-# background sites
-bg <- 2000 # too few cells to locate 10000 background points
-bgSites <- dismo::randomPoints(clim, 2000)
-bgEnv <- raster::extract(clim, bgSites)
-
-# collate
-presBg <- rep(c(1, 0), c(nrow(occs), nrow(bgSites)))
-env <- rbind(occsEnv, bgEnv)
-env <- cbind(presBg, env)
-env <- as.data.frame(env)
-
-preds <- paste0('bio', bios)
-
-# settings... defaults probably better, but these are faster
-lr <- c(0.001, 0.1)
-tc <- c(1, 3)
-maxTrees <- 2000
+# The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models.
 set.seed(123)
-model <- trainBrt(
+
+### setup data
+
+# environmental rasters
+rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+madEnv <- rast(rastFile)
+madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+
+crs <- sf::st_crs(madEnv)
+
+# lemur occurrence data
+data(lemurs)
+occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+occEnv <- extract(madEnv, occs, ID=FALSE)
+occEnv <- occEnv[complete.cases(occEnv), ]
+	
+# create 10000 background sites (or as many as raster can support)
+bgEnv <- terra::spatSample(madEnv, 20000)
+bgEnv <- bgEnv[complete.cases(bgEnv), ]
+bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
+
+# collate occurrences and background sites
+presBg <- data.frame(
+	presBg = c(
+   rep(1, nrow(occEnv)),
+   rep(0, nrow(bgEnv))
+   )
+)
+
+env <- rbind(occEnv, bgEnv)
+env <- cbind(presBg, env)
+
+predictors <- c('bio1', 'bio12')
+
+## MaxEnt
+mx <- trainMaxEnt(
 	data = env,
 	resp = 'presBg',
-	preds = preds,
-	learningRate = lr,
-	treeComplexity = tc,
-	maxTrees = maxTrees,
+	preds = predictors,
+	regMult = 1, # too few values for reliable model, but fast
 	verbose = TRUE
 )
 
-plot(model)
+## generalized linear model (GLM)
+# Normally, we'd center and standardize variables before modeling.
+gl <- trainGlm(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
 
-# prediction raster
-nTrees <- model$gbm.call$n.trees
-map <- predict(clim, model, type='response', n.trees=nTrees)
-plot(map)
-points(occs[ , c('longitude', 'latitude')])
+## generalized additive model (GAM)
+ga <- trainGam(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
 
-}
+## natural splines
+nat <- trainNs(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
+
+## boosted regression trees
+envSub <- env[1:2000, ] # subsetting data to run faster
+brt <- trainBrt(
+	data = envSub,
+	resp = 'presBg',
+	preds = predictors,
+	learningRate = 0.001, # too few values for reliable model(?)
+	treeComplexity = 2, # too few values for reliable model, but fast
+	minTrees = 1200, # minimum trees for reliable model(?), but fast
+	maxTrees = 1200, # too small for reliable model(?), but fast
+	tryBy = 'treeComplexity',
+	anyway = TRUE, # return models that did not converge
+	verbose = TRUE
+)
+
+## random forests
+rf <- trainRf(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
+
+## make maps of models
+
+mxMap <- predictEnmSdm(mx, madEnv)
+glMap <- predictEnmSdm(gl, madEnv)
+gaMap <- predictEnmSdm(ga, madEnv)
+natMap <- predictEnmSdm(nat, madEnv)
+brtMap <- predictEnmSdm(brt, madEnv)
+rfMap <- predictEnmSdm(rf, madEnv)
+
+maps <- c(
+	mxMap,
+	glMap,
+	gaMap,
+	natMap,
+	brtMap,
+	rfMap
+)
+
+names(maps) <- c('MaxEnt', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
+fun <- function() plot(occs[1], col='black', add=TRUE)
+plot(maps, fun=fun)
+
+## compare model responses to BIO12 (mean annual precipitation)
+
+# make a data frame holding all other variables at mean across occurrences,
+# varying only BIO12
+occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
+occEnvMeans <- rbind(occEnvMeans)
+occEnvMeans <- as.data.frame(occEnvMeans)
+climFrame <- occEnvMeans[rep(1, 100), ]
+rownames(climFrame) <- NULL
+
+minBio12 <- min(env$bio12)
+maxBio12 <- max(env$bio12)
+climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
+
+predMx <- predictEnmSdm(mx, climFrame)
+predGl <- predictEnmSdm(gl, climFrame)
+predGa <- predictEnmSdm(ga, climFrame)
+predNat <- predictEnmSdm(nat, climFrame)
+predBrt <- predictEnmSdm(brt, climFrame)
+predRf <- predictEnmSdm(rf, climFrame)
+
+
+plot(climFrame$bio12, predMx,
+xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
+
+lines(climFrame$bio12, predGl, lty='dotted', col='blue')
+lines(climFrame$bio12, predGa, lty='dashed', col='green')
+lines(climFrame$bio12, predNat, lty=4, col='purple')
+lines(climFrame$bio12, predBrt, lty=5, col='orange')
+lines(climFrame$bio12, predRf, lty=6, col='cyan')
+
+legend(
+   'topleft',
+   inset = 0.01,
+   legend = c(
+	'MaxEnt',
+	'GLM',
+	'GAM',
+	'NS',
+	'BRT',
+	'RF'
+   ),
+   lty = 1:6,
+   col = c(
+	'black',
+	'blue',
+	'green',
+	'purple',
+	'orange',
+	'cyan'
+   ),
+   bg = 'white'
+)
+
+
 }
 \seealso{
 \code{\link[dismo]{gbm.step}}

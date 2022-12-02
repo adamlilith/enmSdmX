@@ -2,7 +2,7 @@
 % Please edit documentation in R/predictEnmSdm.r
 \name{predictEnmSdm}
 \alias{predictEnmSdm}
-\title{Generic predict function for LMs, GLMs, GAMs, RFs, BRTs, CRFs, Maxent, and more}
+\title{Generic predict function for SDMs/ENMs}
 \usage{
 predictEnmSdm(
   model,

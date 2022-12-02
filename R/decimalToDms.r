@@ -3,10 +3,14 @@
 #' This function converts geographic coordinates in decimal format to degrees-minutes-seconds (DD-MM-SS) format.
 #'
 #' @param x Numeric or vector of numeric values, longitude or latitude in decimal format.
+#'
 #' @return A numeric matrix with three columns: degrees, seconds, and seconds. Note that the hemisphere (i.e., indicated by the sign of x) is not returned since it could be either north/south or east/west.
+#'
 #' @examples
+#'
 #' decimalToDms(38.56123) # latitude of St. Louis, Missouri, USA
 #' decimalToDms(90.06521) # longitude of St. Louis, Missouri, USA
+#'
 #' @export
 decimalToDms <- function(x) {
 

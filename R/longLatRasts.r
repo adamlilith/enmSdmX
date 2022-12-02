@@ -2,7 +2,7 @@
 #'
 #' This function generates a raster stack with two rasters, one with cell values equal to the cell's longitude and the other with cell values equal to the cell's latitude.
 #'
-#' @param x \code{SpatRast} object. The output will have the same resolution, extent, and coordinate projection system as \code{x}.
+#' @param x \code{SpatRaster} object. The output will have the same resolution, extent, and coordinate projection system as \code{x}.
 #' @param m Any of:
 #'	\itemize{
 #'		\item \code{TRUE} (default): Calculate longitude and latitude only for cells that are not \code{NA}.

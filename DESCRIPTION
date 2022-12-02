@@ -1,8 +1,8 @@
 Package: enmSdmX
 Type: Package
 Title: Tools for Modeling Niches and Distributions of Species
-Version: 0.0.1
-Date: 2022-10-26
+Version: 1.0.0
+Date: 2022-11-29
 Authors@R: 
 	c(
 		person(
@@ -18,35 +18,40 @@ Description: Tools for implementing species distribution models (SDMs) and
 	ecological niche models (ENMs). The heart of the package is a set of
 	"training" functions which automatically tune and parameterize
 	a models based on several popular algorithms (e.g., MaxEnt, GLMs, BRTs,
-	GAMs, etc.). Ancillary tools include functions for model evaluation,
-	and calculation of biotic velocity (speed and direction	at which a
-	species' range moves through time).
+	GAMs, etc.). Ancillary tools include estimation of spatial sampling bias,
+	model evaluation, and calculation of biotic velocity (speed and direction
+	at which a species' range moves through time).
 Depends:
+	R (>= 4.0.0)
 Imports:
+	boot,
+	compiler,
 	dismo,
+	doParallel,
+	doSNOW,
 	foreach,
+	future,
 	gbm,
-	MASS,
-	maxnet,
-	methods,
+	graphics,
 	mgcv,
+	MuMIn,
 	omnibus,
-	party,
-	rJava,
-	randomForest,
+	parallel,
+	parallelly,
 	scales,
 	sf,
-	splines,
-	stats
+	stats,
+	statisfactory,
+	terra,
+	utils
 Remotes:
 Suggests:
-    knitr,
-    rmarkdown
-License: GPL (>=3)
+	knitr
 LazyData: true
 LazyLoad: yes
-URL: http://github.com/adamlilith/enmSdmX
-BugReports: https://github.com/adamlilith/enmSdmX
+URL: http://github.com/adamlilith/enmSdm
+BugReports: https://github.com/adamlilith/enmSdm
 Encoding: UTF-8
+License: MIT
 RoxygenNote: 7.2.1
 VignetteBuilder: knitr

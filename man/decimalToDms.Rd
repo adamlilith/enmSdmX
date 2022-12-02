@@ -16,6 +16,8 @@ A numeric matrix with three columns: degrees, seconds, and seconds. Note that th
 This function converts geographic coordinates in decimal format to degrees-minutes-seconds (DD-MM-SS) format.
 }
 \examples{
+
 decimalToDms(38.56123) # latitude of St. Louis, Missouri, USA
 decimalToDms(90.06521) # longitude of St. Louis, Missouri, USA
+
 }

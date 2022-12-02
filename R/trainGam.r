@@ -13,83 +13,192 @@
 #' @param initialTerms Positive integer. Maximum number of terms to be used in an initial model. Used only if \code{construct} is TRUE. The maximum that can be handled by \code{dredge()} is 31, so if this number is >31 and \code{select} is \code{TRUE} then it is forced to 31 with a warning. Note that the number of coefficients for factors is not calculated correctly, so if the predictors contain factors then this number might have to be reduced even more.
 #' @param interaction Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.
 #' @param w Either logical in which case TRUE causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.
-#' @param out Character. Indicates type of value returned. If \code{model} (default) then returns an object of class \code{brglm} or \code{glm} (depending on the value of \code{use}). If \code{tuning} then just return the AICc table for each kind of model term used in model construction. If both then return a 2-item list with the best model and the AICc table.
+#' @param out Character vector. One or more values:
+#' \itemize{
+#' 	\item	\code{'model'}: Model with the lowest AICc.
+#' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
+#' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
+#' }
 #' @param verbose Logical. If TRUE then display intermediate results on the display device.
 #' @param ... Extra arguments (not used).
 #' @return If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
 #' @seealso \code{\link[mgcv]{gam}}
 #' @examples
-#' \dontrun{
-#' library(brglm2)
 #'
-#' ### model red-bellied lemurs
-#' data(mad0)
+#' # The examples below show a very basic modeling workflow. They have been 
+#' # designed to work fast, not produce accurate, defensible models.
+#' set.seed(123)
+#' 
+#' ### setup data
+#' 
+#' # environmental rasters
+#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+#' madEnv <- rast(rastFile)
+#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+#' 
+#' crs <- sf::st_crs(madEnv)
+#' 
+#' # lemur occurrence data
 #' data(lemurs)
+#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+#' occEnv <- extract(madEnv, occs, ID=FALSE)
+#' occEnv <- occEnv[complete.cases(occEnv), ]
+#' 	
+#' # create 10000 background sites (or as many as raster can support)
+#' bgEnv <- terra::spatSample(madEnv, 20000)
+#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
+#' bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
 #' 
-#' # climate data
-#' bios <- c(1, 5, 12, 15)
-#' clim <- raster::getData('worldclim', var='bio', res=10)
-#' clim <- raster::subset(clim, bios)
-#' clim <- raster::crop(clim, mad0)
+#' # collate occurrences and background sites
+#' presBg <- data.frame(
+#' 	presBg = c(
+#'    rep(1, nrow(occEnv)),
+#'    rep(0, nrow(bgEnv))
+#'    )
+#' )
 #' 
-#' # occurrence data
-#' occs <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
-#' occsEnv <- raster::extract(clim, occs[ , c('longitude', 'latitude')])
-#' 
-#' # background sites
-#' bg <- 2000 # too few cells to locate 10000 background points
-#' bgSites <- dismo::randomPoints(clim, 2000)
-#' bgEnv <- raster::extract(clim, bgSites)
-#' 
-#' # collate
-#' presBg <- rep(c(1, 0), c(nrow(occs), nrow(bgSites)))
-#' env <- rbind(occsEnv, bgEnv)
+#' env <- rbind(occEnv, bgEnv)
 #' env <- cbind(presBg, env)
-#' env <- as.data.frame(env)
 #' 
-#' preds <- paste0('bio', bios)
+#' predictors <- c('bio1', 'bio12')
 #' 
-#' # GLM
+#' ## MaxEnt
+#' mx <- trainMaxEnt(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	regMult = 1, # too few values for reliable model, but fast
+#' 	verbose = TRUE
+#' )
+#' 
+#' ## generalized linear model (GLM)
+#' # Normally, we'd center and standardize variables before modeling.
 #' gl <- trainGlm(
 #' 	data = env,
 #' 	resp = 'presBg',
-#' 	preds = preds,
-#'  verbose = TRUE
+#' 	preds = predictors,
+#' 	verbose = TRUE
 #' )
 #' 
-#' # GAM
+#' ## generalized additive model (GAM)
 #' ga <- trainGam(
 #' 	data = env,
 #' 	resp = 'presBg',
-#' 	preds = preds,
-#'  verbose = TRUE
+#' 	preds = predictors,
+#' 	verbose = TRUE
 #' )
 #' 
-#' # NS
-#' ns <- trainNs(
+#' ## natural splines
+#' nat <- trainNs(
 #' 	data = env,
 #' 	resp = 'presBg',
-#' 	preds = preds,
-#'  verbose = TRUE
+#' 	preds = predictors,
+#' 	verbose = TRUE
 #' )
 #' 
-#' # prediction rasters
-#' mapGlm <- predict(clim, gl, type='response')
-#' mapGam <- predict(clim, ga, type='response')
-#' mapNs <- predict(clim, ga, type='response')
-#'
-#' par(mfrow=c(1, 3))
-#' plot(mapGlm, main='GLM')
-#' plot(mad0, add=TRUE)
-#' points(occs[ , c('longitude', 'latitude')])
-#' plot(mapGam, main='GAM')
-#' plot(mad0, add=TRUE)
-#' points(occs[ , c('longitude', 'latitude')])
-#' plot(mapNs, main='NS')
-#' plot(mad0, add=TRUE)
-#' points(occs[ , c('longitude', 'latitude')])
-#' }
+#' ## boosted regression trees
+#' envSub <- env[1:2000, ] # subsetting data to run faster
+#' brt <- trainBrt(
+#' 	data = envSub,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	learningRate = 0.001, # too few values for reliable model(?)
+#' 	treeComplexity = 2, # too few values for reliable model, but fast
+#' 	minTrees = 1200, # minimum trees for reliable model(?), but fast
+#' 	maxTrees = 1200, # too small for reliable model(?), but fast
+#' 	tryBy = 'treeComplexity',
+#' 	anyway = TRUE, # return models that did not converge
+#' 	verbose = TRUE
+#' )
+#' 
+#' ## random forests
+#' rf <- trainRf(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	verbose = TRUE
+#' )
+#' 
+#' ## make maps of models
+#' 
+#' mxMap <- predictEnmSdm(mx, madEnv)
+#' glMap <- predictEnmSdm(gl, madEnv)
+#' gaMap <- predictEnmSdm(ga, madEnv)
+#' natMap <- predictEnmSdm(nat, madEnv)
+#' brtMap <- predictEnmSdm(brt, madEnv)
+#' rfMap <- predictEnmSdm(rf, madEnv)
+#' 
+#' maps <- c(
+#' 	mxMap,
+#' 	glMap,
+#' 	gaMap,
+#' 	natMap,
+#' 	brtMap,
+#' 	rfMap
+#' )
+#' 
+#' names(maps) <- c('MaxEnt', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
+#' fun <- function() plot(occs[1], col='black', add=TRUE)
+#' plot(maps, fun=fun)
+#' 
+#' ## compare model responses to BIO12 (mean annual precipitation)
+#' 
+#' # make a data frame holding all other variables at mean across occurrences,
+#' # varying only BIO12
+#' occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
+#' occEnvMeans <- rbind(occEnvMeans)
+#' occEnvMeans <- as.data.frame(occEnvMeans)
+#' climFrame <- occEnvMeans[rep(1, 100), ]
+#' rownames(climFrame) <- NULL
+#' 
+#' minBio12 <- min(env$bio12)
+#' maxBio12 <- max(env$bio12)
+#' climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
+#' 
+#' predMx <- predictEnmSdm(mx, climFrame)
+#' predGl <- predictEnmSdm(gl, climFrame)
+#' predGa <- predictEnmSdm(ga, climFrame)
+#' predNat <- predictEnmSdm(nat, climFrame)
+#' predBrt <- predictEnmSdm(brt, climFrame)
+#' predRf <- predictEnmSdm(rf, climFrame)
+#' 
+#' 
+#' plot(climFrame$bio12, predMx,
+#' xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
+#' 
+#' lines(climFrame$bio12, predGl, lty='dotted', col='blue')
+#' lines(climFrame$bio12, predGa, lty='dashed', col='green')
+#' lines(climFrame$bio12, predNat, lty=4, col='purple')
+#' lines(climFrame$bio12, predBrt, lty=5, col='orange')
+#' lines(climFrame$bio12, predRf, lty=6, col='cyan')
+#' 
+#' legend(
+#'    'topleft',
+#'    inset = 0.01,
+#'    legend = c(
+#' 	'MaxEnt',
+#' 	'GLM',
+#' 	'GAM',
+#' 	'NS',
+#' 	'BRT',
+#' 	'RF'
+#'    ),
+#'    lty = 1:6,
+#'    col = c(
+#' 	'black',
+#' 	'blue',
+#' 	'green',
+#' 	'purple',
+#' 	'orange',
+#' 	'cyan'
+#'    ),
+#'    bg = 'white'
+#' )
+#' 
+#' 
 #' @export
+
 
 trainGam <- function(
 	data,
@@ -122,8 +231,8 @@ trainGam <- function(
 		}
 
 		# response and predictors
-		if (class(resp) %in% c('integer', 'numeric')) resp <- names(data)[resp]
-		if (class(preds) %in% c('integer', 'numeric')) preds <- names(data)[preds]
+		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
+		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 	#############
 	## weights ##
@@ -138,10 +247,10 @@ trainGam <- function(
 			} else {
 				w <- rep(1, nrow(data))
 			}
-		} else if (class(w) == 'character') {
+		} else if (inherits(w, 'character')) {
 			w <- data[ , w, drop=TRUE]
 		}
-		w <<- w / max(w) # declare to global because dredge() and pdredge() have problems if it is not
+		w <- w / max(w)
 
 	################################
 	## initial model construction ##
@@ -181,9 +290,9 @@ trainGam <- function(
 
 				# remember
 				gamFrame <- if (exists('gamFrame', inherits=FALSE)) {
-					rbind(gamFrame, data.frame(term=term, AIC=thisAic))
+					rbind(gamFrame, data.frame(term=term, AICc=thisAic))
 				} else {
-					data.frame(term=term, AIC=thisAic)
+					data.frame(term=term, AICc=thisAic)
 				}
 
 			} # next single-variable term
@@ -232,9 +341,9 @@ trainGam <- function(
 
 						# remember
 						gamFrame <- if (exists('gamFrame', inherits=FALSE)) {
-							rbind(gamFrame, data.frame(term=term, AIC=thisAic))
+							rbind(gamFrame, data.frame(term=term, AICc=thisAic))
 						} else {
-							data.frame(term=term, AIC=thisAic)
+							data.frame(term=term, AICc=thisAic)
 						}
 
 					}  # for each second predictor test two-variable terms
@@ -244,28 +353,127 @@ trainGam <- function(
 			} # if interactions
 
 			# sort by AIC
-			gamFrame <- gamFrame[order(gamFrame$AIC), ]
+			gamFrame <- gamFrame[order(gamFrame$AICc), ]
 
 			# print AICc frame
 			if (verbose) {
 
-				omnibus::say('GAM construction results for each term tested:', level=1)
+				omnibus::say('GAM construction results for each term tested:', level=2)
 				print(gamFrame)
 				omnibus::say('')
 
 			}
 
-			## construct final model
-			form <- paste0(form, ' + ', gamFrame$term[1]) # add first term
+			### no model selection
+			######################
+			if (!select) {
 
-			# for each set of presences > min num required, add a term
-			if (floor(sum(data[ , resp]) / presPerTermInitial ) - 1 > 1 & initialTerms > 1) {
+				## construct final model
+				form <- paste0(form, ' + ', gamFrame$term[1]) # add first term
 
-				termsToAdd <- 2:min(initialTerms, c(floor(sum(data[ , resp]) / presPerTermInitial ) - 1, nrow(gamFrame) - 1))
+				# for each set of presences > min num required, add a term
+				if (floor(sum(data[ , resp]) / presPerTermInitial ) - 1 > 1 & initialTerms > 1) {
 
-				form <- paste0(form, ' + ', paste0(gamFrame$term[termsToAdd], collapse=' + '))
+					termsToAdd <- 2:min(initialTerms, c(floor(sum(data[ , resp]) / presPerTermInitial ) - 1, nrow(gamFrame) - 1))
 
-			} # if there are sufficient presences for additional terms beyond first
+					form <- paste0(form, ' + ', paste0(gamFrame$term[termsToAdd], collapse=' + '))
+
+				} # if there are sufficient presences for additional terms beyond first
+				
+				# train FULL model
+				model <- mgcv::gam(
+					formula=stats::as.formula(form),
+					family=family,
+					data=data,
+					method='ML',
+					optimizer=c('outer', 'newton'),
+					select=TRUE,
+					gamma=gamma,
+					weights=w,
+					...
+				)
+				
+
+			### model selection
+			###################
+			
+			} else if (select) {
+			
+				if (verbose) omnibus::say('Selecting best model:', level=2)
+
+				# create grid of model terms
+				n <- nrow(gamFrame)
+				gamFrame$minPres <- seq(presPerTermFinal, presPerTermFinal * n, by=presPerTermFinal)
+				
+				numPres <- sum(data[ , resp, drop=TRUE])
+				totalTerms <- max(which(gamFrame$minPres <= numPres))
+				gamFrame <- gamFrame[1L:totalTerms, , drop=FALSE]
+				
+				grid <- list()
+				for (i in 1L:nrow(gamFrame)) grid <- c(grid, list(yesNo = c(FALSE, TRUE)))
+				grid <- expand.grid(grid)
+				colnames(grid) <- gamFrame$term
+			
+				### do all models
+				bestAicc <- Inf
+				tuning <- data.frame()
+				if ('models' %in% out) models <- list()
+				for (countModel in 1L:nrow(grid)) {
+				
+					form <- paste0(resp, ' ~ 1')
+					thisGridRow <- unlist(grid[countModel, ])
+					if (sum(thisGridRow) > 0) form <- paste(form, '+', paste(colnames(grid)[thisGridRow], collapse = ' + '))
+					
+					if (verbose) say('   Evaluating: ', form)
+					
+					thisModel <- mgcv::gam(
+						formula=stats::as.formula(form),
+						family=family,
+						data=data,
+						method='ML',
+						optimizer=c('outer', 'newton'),
+						select=TRUE,
+						gamma=gamma,
+						weights=w#,
+						# ...
+					)
+
+					# tuning table
+					thisAicc <- MuMIn::AICc(thisModel)
+
+					dev <- thisModel$deviance
+					nullDev <- thisModel$null.deviance
+					devExplained <- (nullDev - dev) / nullDev
+				
+					tuning <- rbind(
+						tuning,
+						data.frame(
+							model = form,
+							AICc = thisAicc,
+							deviance = dev,
+							devianceExplained = devExplained
+						)
+					)
+					
+					# remember best model
+					if ('model' %in% out) {
+						if (thisAicc < bestAicc) {
+							model <- thisModel
+							bestAicc <- thisAicc
+						}
+					}
+					
+					# remember model
+					if ('models' %in% out) models[[length(models) + 1L]] <- thisModel
+				
+				} # next model
+			
+				modelOrder <- order(tuning$AICc)
+				tuning <- tuning[modelOrder, , drop=FALSE]
+				if ('models' %in% out) models <- models[modelOrder]
+				rownames(tuning) <- NULL
+			
+			} # if selecing best model
 
 		# NO AUTOMATED MODEL CONSTRUCTION
 		# use all single-variable terms and two-variable terms
@@ -312,185 +520,44 @@ trainGam <- function(
 				
 			}
 
+			# train FULL model
+			model <- mgcv::gam(
+				formula=stats::as.formula(form),
+				family=family,
+				data=data,
+				method='ML',
+				optimizer=c('outer', 'newton'),
+				select=TRUE,
+				gamma=gamma,
+				weights=w,
+				na.action='na.fail',
+				...
+			)
+
 		} # if NOT doing automated model construction
 
+	### summary
+	if (verbose & 'model' %in% out) {
 
-	###########################################################################
-	## train model ############################################################
-	## while model hasn't converged and while gamma is <= tolerance value... ##
-	###########################################################################
-
-	# # initialize flag to indicate if model converged
-	# modelConverged <- FALSE
-	# thisGamma <- gamma
-
-	# while (modelConverged==FALSE & thisGamma <= 10) {
-
-		# # if (verbose) omnibus::say('Basis K = ', basisK, ' | gamma = ', thisGamma)
-
-		# # get GAM model... using automated scale selection with weights so influence of absences equals influence of presences... using tryCatch because sometimes for variables with too little variation the default df of the basis is too high, in which case it is reduced and attempted again (for univariate and bivariate models only)
-		# model <- tryCatch(
-			# mgcv::gam(
-				# formula=stats::as.formula(form),
-				# family=family,
-				# data=data,
-				# method='ML',
-				# optimizer=c('outer', 'newton'),
-				# scale=-1,
-				# select=TRUE,
-				# gamma=thisGamma,
-				# weights=w,
-				# na.action='na.fail'
-			# ),
-			# error=function(err) return(FALSE)
-		# )
-
-		# # # if basis starting degrees of freedom was too large, reduce it by 1 and try again
-		# # if (class(model)[1]=='logical' & basisK > 2) {
-
-			# # basisK <- basisK - 1
-
-		# # if basisK = 1 and model hasn't converged yet, then try increasing gamma and restart with initial basisK
-		# # } else if (class(model)[1]=='logical' & basisK==2) {
-		# if (class(model)[1]=='logical') {
-
-			# thisGamma <- thisGamma + 0.4
-			# # basisK <- startBasisK # reset basis to starting value if too low
-
-		# # if model worked and converged, trip flag to say so
-		# } else if (class(model)[1]!='logical') {
-
-			# if (model$converged) modelConverged <- TRUE
-			# # if (model$outer.info$conv=='full convergence' & model$converged==TRUE) modelConverged <- TRUE
-			# if (modelConverged & verbose) say('Model converged.')
-
-		# }
-
-	# } # while model hasn't converged and while gamma is <= tolerance value
-
-	# train FULL model
-	model <- mgcv::gam(
-		formula=stats::as.formula(form),
-		family=family,
-		data=data,
-		method='ML',
-		optimizer=c('outer', 'newton'),
-		scale=-1,
-		select=TRUE,
-		gamma=gamma,
-		weights=w,
-		na.action='na.fail'
-	)
-
-	if (verbose) {
-
-		omnibus::say('Full model:', level=1);
+		omnibus::say('Best model:', level=2);
 		print(summary(model))
 		utils::flush.console()
 
 	}
 
-	#######################################################################################
-	## if doing model construction, evaluate all possible models using AIC then get best ##
-	#######################################################################################
-
-	if (select & 'model' %in% out) {
-
-		if (verbose) { omnibus::say('Calculating AICc across all possible models...', pre=1) }
-
-		# calculate all possible models and rank by AIC
-		sizeGamFrame <- if (exists('gamFrame', inherits=FALSE)) { nrow(gamFrame) } else { Inf }
-		lims <- c(0, max(1, min(c(floor(sum(data[ , resp]) / presPerTermFinal), initialTerms, sizeGamFrame))))
-
-		tuning <- MuMIn::dredge(
-			global.model=model,
-			rank='AICc',
-			m.lim=lims,
-			trace=FALSE
-		)
-
-		if ('model' %in% out) {
-
-			if (verbose) omnibus::say('Final model:', level=1)
-
-			# get model with best AIC
-			thisFormula <- paste0(resp, ' ~ 1 + ', paste(names(tuning)[which(tuning[1, ] == '+')], sep=' + ', collapse=' + '))
-			if (thisFormula == paste0(resp, ' ~ 1 + ')) thisFormula <- paste0(resp, ' ~ 1')
-
-			# # initialize penalty for effective degrees of freedom... incrementing this until GAM converges
-			# thisGamma <- initialGamma
-
-			# initialize flag to indicate if model converged
-			modelConverged <- FALSE
-
-			# ## compute final GAM
-			# while (modelConverged==FALSE & thisGamma <= 10) {
-
-				# # using tryCatch because sometimes for variables with too little variation the default df of the basis is too high, in which case it is reduced and attempted again
-				# model <- tryCatch(
-					# mgcv::gam(
-						# formula=stats::as.formula(thisFormula),
-						# family=family,
-						# data=data,
-						# method='REML',
-						# optimizer=c('outer', 'newton'),
-						# scale=-1,
-						# select=TRUE,
-						# gamma=thisGamma,
-						# weights=w,
-						# ...
-					# ),
-					# error=function(err) return(FALSE)
-				# )
-
-				# # if model hasn't converged yet, then try increasing gamma
-				# if (is.logical(model)){
-					# thisGamma <- thisGamma + 0.4
-				# # if model worked and converged, trip flag to say so
-				# } else {
-					# if (model$converged) {
-						# modelConverged <- TRUE
-					# } else {
-						# thisGamma <- thisGamma + 0.4
-					# }
-				# }
-
-			# } # while model hasn't converged and while gamma is <= tolerance value
-
-			## compute final GAM
-			model <- mgcv::gam(
-				formula=stats::as.formula(thisFormula),
-				family=family,
-				data=data,
-				method='REML',
-				optimizer=c('outer', 'newton'),
-				scale=-1,
-				select=TRUE,
-				gamma=gamma,
-				weights=w,
-				...
-			)
-
-			# # get best model (simple way... throws an error)
-			# model <- MuMIn::get.models(tuning, subset = 1)[[1]]
-			if (verbose) print(summary(model))
-
-		} # if wanting model as output
-
-	} # if doing model construction, evaluate all possible models using AIC then get best
-
-	rm(w)
-
-	# return
-	if ('model' %in% out & 'tuning' %in% out) {
-		out <- list()
-		out$tuning <- tuning
-		out$model <- model
-		out
+	### return
+	if (length(out) > 1L) {
+		output <- list()
+		if ('models' %in% out) output$models <- models
+		if ('model' %in% out) output$model <- model
+		if ('tuning' %in% out) output$tuning <- tuning
+		output
+	} else if ('models' %in% out) {
+		models
+	} else if ('model' %in% out) {
+		model
 	} else if ('tuning' %in% out) {
 		tuning
-	} else {
-		model
 	}
 
 }

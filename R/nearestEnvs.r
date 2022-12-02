@@ -1,8 +1,8 @@
 #' Extract "most conservative" environments from points and/or polygons
 #'
-#' This function implements the "nearest environmental point" method (Smith et al. in review) to enable the use of occurrence records geolocated only to a general place (e.g., a country or province), along with occurrences georeferenced with little error.  The function returns environments from a set of precisely-geolocated points plus the environment associated with each imprecise record.
+#' This function implements the "nearest environmental point" method (Smith et al. 2023) to enable the use of occurrence records geolocated only to a general place (e.g., a country or province), along with occurrences georeferenced with little error.  The function returns environments from a set of precisely-geolocated points plus the environment associated with each imprecise record.
 #'
-#' @param rasts	A \code{SpatRaster} or "stack" of \code{SpatRaster}s. Please also see argument \code{pca}!
+#' @param rasts	A \code{SpatRaster} or "stack" of \code{SpatRaster}s. Please also see argument \code{pca}.
 #' @param pts A set of spatial points of class \code{SpatVector} or \code{sf}.
 #' @param polys A set of spatial polygons of class \code{SpatVector} or \code{sf}.
 #' @param centerFrom Indicates how to locate the "reference" centroid used to identify single points on each polygon. This is only relevant if both \code{pts} and \code{polys} are specified.
@@ -12,29 +12,28 @@
 #' 	\item \code{'both'}: This option first calculates the environmental centroid of each polygon, then finds the joint centroid of these points plus of \code{pts}, and lastly locates on the border of each polygon the point closest to this grand centroid.
 #' }
 #' @param pca If \code{TRUE} (default) and there is more than one raster specified in \code{rasts}, then a principal components analysis (PCA) is applied to the values of the rasters before finding the closest points. The returned values are those of the original rasters and the PC scores.
-#' @param numPcs The number of PC aces used to find environmental centroids. This is only used if \code{pca} is \code{TRUE}. By default, all axes are used.
-#' @param center,scale Settings for \code{\link[stats]{prcomp}}. These indicate if, when calculating the PCA, variables should first be centered and scaled (both \code{TRUE} by default). If the values in \code{rasts} are not of the same units, these should almost always be \code{TRUE}. They are ignored if \code{pca} is \code{FALSE}.
+#' @param numPcs The number of PC axes used to find environmental centroids. This is only used if \code{pca} is \code{TRUE}. By default, all axes are used.
+#' @param center,scale Settings for \code{\link[stats]{prcomp}}. These indicate if, when calculating the PCA, variables should first be centered and scaled (both \code{TRUE} by default). If the values in \code{rasts} are not of the same units, this should almost always be \code{TRUE}. They are ignored if \code{pca} is \code{FALSE}.
 #' @param na.rm If \code{TRUE} (default), ignore \code{NA}s when extracting from rasters (e.g., if a point or polygon falls onto an \code{NA} cell). If \code{FALSE}, then any \code{NA}s that overlap a point or polygon will result in an error.
 #' @param return Determines what is returned:
 #' \itemize{
-#' 		\item \code{'allPoints'} (default): Returns all points. If \emph{n} is the number of points in \code{pts} and \emph{m} the number of polygons in \code{polys}, then the first \code{n} rows in the returned data frame refer to the environments of the \code{pts} and the subsequent \emph{m} to each \code{poly}.
+#' 		\item \code{'allPoints'} (default): Returns all environmental points. If \emph{n} is the number of points in \code{pts} and \emph{m} the number of polygons in \code{polys}, then the first \code{n} rows in the returned data frame refer to the environments of the \code{pts} and the subsequent \emph{m} to each \code{poly}.
 #'		\item \code{'polyPoints'}: Returns the environmental values on each \code{poly} polygon closest to the given center.
 #'	}
 #'
 #' @details This function locates a set of points from the environments covered by each polygon using the following procedure, the details of which depend on what arguments are specified:
 #' \itemize{
-#' \item Only \code{pts} is specified: Environments are taken directly from the locations of \code{pts}.
-#' \item Only \code{polys} is specified: Environments are taken from the closest environment of all the environments associated with each each polygon that is closest to the environmental centroid of the environmental centroids of the polygons.
-#' \item \code{pts} and \code{polys} are specified: Environments are taken from the locations of \code{pts} plus the environment from each polygon closest to the environmental centroid of \code{pts}*.
+#' \item Only \code{pts} is specified: Environments are taken directly from the locations of \code{pts} in environmental space.
+#' \item Only \code{polys} is specified: Environments are taken from the closest environment of all the environments associated with each each polygon that is closest to the environmental centroid of the environmental centroids of the polygons (that may be confusing, but it is not a typo).
+#' \item \code{pts} and \code{polys} are specified: Environments are taken from the locations of \code{pts} plus the environment from each polygon closest to the environmental centroid of \code{pts}. By default, the function uses the environmental centroid of the precise occurrences in step (1), but this can be changed to the environmental centroid of the centroids of the polygons or the environmental centroid of the points defined by the union of precise occurrence points plus the environmental centroids of the polygons.
 #' }
-#'
-#' * By default, the function uses the environmental centroid of the precise occurrences in step (1), but this can be changed to the environmental centroid of the centroids of the polygons or the environmental centroid of the points defined by the union of precise occurrence points plus the environmental centroids of the polygons.
 #'
 #' The function can alternatively return the points on the vertices of the MCP, or points on the input polygons closest to the reference centroid.
 #'
 #' @return A data frame.
 #'
-#' @references Smith, A.B., Murphy, S., Henderson, D., and Erickson, K.D. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth. \doi{10.1101/2021.06.10.447988}
+#' @references
+#' Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} In press. Open access pre-print: \doi{10.1101/2021.06.10.447988}
 #'
 #' @seealso \code{\link{mcpFromPointsPolys}} for a related application in geographic space.
 #'
@@ -43,11 +42,12 @@
 #' # This is a contrived example based on red-bellied lemurs in Madagascar
 #' # represented by points data and (pretend) Faritras-level occurrences.
 #'
+#' wgs84 <- getCRS('WGS84')
 #'
 #' data(lemurs)
 #' redBelly <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 #' ll <- c('longitude', 'latitude')
-#' pts <- sf::st_as_sf(redBelly[ , ll], crs=4326, coords=ll)
+#' redBelly <- sf::st_as_sf(redBelly[ , ll], coords=ll, crs=wgs84)
 #'
 #' faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
 #' 'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
@@ -55,12 +55,13 @@
 #' data(mad1)
 #' polys <- mad1[mad1$NAME_2 %in% faritras, ]
 #'
-#' rasts <- syste.file('ex/madEnv.tif', package='enmSdmX')
+#' rasts <- system.file('ex/madEnv.tif', package='enmSdmX')
+#' rasts <- rasts / 100 # values in rasters were rounded to nearest 100th
 #'
 #' # plot environment of points and environments of each polygon closest to
 #' # centroid of environments of points
 #'
-#' envAll <- nearestEnvs(rasts, pts = redBelly, polys = polys, numPcs = 2)
+#' envAll <- nearestEnvs(rasts, pts = redBelly, polys = polys, pca = TRUE, numPcs = 2)
 #' envPolys <- nearestEnvs(rasts, pts = redBelly, polys = polys, numPcs = 2,
 #' 	return = 'polyPoints')
 #' allPolyEnvs <- extract(rasts, polys)
@@ -141,7 +142,7 @@ nearestEnvs <- function(
 	} else if (is.null(pts) & !is.null(polys)) {
 
 		# centroid and distances to centroid
-		centroid <- colMeans(envPolys[ , vars], na.rm=TRUE)
+		centroid <- colMeans(envPolys[ , vars], na.rm = na.rm)
 		dists <- sweep(envPolys[ , vars, drop=FALSE], 2, centroid)
 		dists <- dists^2
 		dists <- rowSums(dists)
@@ -171,7 +172,7 @@ nearestEnvs <- function(
 		}
 
 		# centroid and distances to centroid
-		centroid <- colMeans(env[ , vars], na.rm=TRUE)
+		centroid <- colMeans(env[ , vars], na.rm = na.rm)
 
 		dists <- sweep(envPolys[ , vars, drop=FALSE], 2L, centroid)
 		dists <- dists^2
@@ -200,6 +201,7 @@ nearestEnvs <- function(
 	} # if both points and polys exist
 
 	if (na.rm) out <- out[complete.cases(out), , drop=FALSE]
+	rownames(out) <- NULL
 	out
 
 }

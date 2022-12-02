@@ -9,141 +9,202 @@ trainByCrossValid(
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
   folds = dismo::kfold(data),
-  trainFx = enmSdm::trainGlm,
+  trainFx = enmSdmX::trainGlm,
   ...,
-  metrics = c("logLoss", "cbi", "auc", "fpb", "tss", "msss", "mdss", "minTrainPres",
+  metrics = c("logLoss", "cbi", "auc", "tss", "msss", "mdss", "minTrainPres",
     "trainSe95", "trainSe90"),
   weightEvalTrain = TRUE,
   weightEvalTest = TRUE,
   na.rm = FALSE,
-  out = c("models", "tuning"),
+  outputModels = TRUE,
   verbose = 1
 )
 }
 \arguments{
-\item{data}{Data frame or matrix. Environmental predictors (and no other fields) for presences and background sites.}
+\item{data}{Data frame or matrix. Response variable and environmental predictors (and no other fields) for presences and non-presence sites.}
 
 \item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character vector or integer vector. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data} as predictors.}
 
-\item{folds}{Either a numeric vector, or matrix or data frame:
+\item{folds}{Either a numeric vector, or matrix or data frame which specify which rows in \code{data} belong to which folds:
 \itemize{
-    \item If a vector, there must be one value per row in \code{data}. If there are \emph{K} unique values in the vector, then \emph{K} unique models will be trained. Each model will use all of the data except for rows that match a particular value in the \code{folds} vector. For example, if \code{folds = c(1, 1, 1, 2, 2, 2, 3, 3, 3)}, then three models will be trained, one with all rows that match the 2s and 3s, one with all rows matching 1s and 2s, and one will all rows matching 1s and 3s. The models will be evaluated against the withheld data and against the training data. Use \code{NA} to exclude rows from all testing/training. The default is to construct 5 folds of roughly equal size.
-\item If a matrix or data frame, there must be one row per row in \code{data}. Each column corresponds to a different model to be trained. For a given column there should be only two unique values, plus possibly \code{NA}s. Of the two values, the lesser value will be used to identify the calibration data and the greater value the evaluation data. Rows with \code{NA}s will be ignored.  For example, a particular column could contain 1s, 2, and \code{NA}s. Data rows corresponding to 1s will be used as training data, data rows corresponding to 2s as test data, and rows with \code{NA} are dropped. The \code{NA} flag is useful for creating spatially-structured cross-validation folds where training and test sites are separated (spatially) by censored (ignored) data.
+    \item If a vector, there must be one value per row in \code{data}. If there are \emph{K} unique values in the vector, then \emph{K} unique models will be trained. Each model will use all of the data except for rows that match a particular value in the \code{folds} vector. For example, if \code{folds = c(1, 1, 1, 2, 2, 2, 3, 3, 3)}, then three models will be trained, one with all rows that match the 2s and 3s, one with all rows matching 1s and 2s, and one will all rows matching 1s and 3s. The models will be evaluated against the training data and against the withheld data. Use \code{NA} to exclude rows from all testing/training. The default is to construct 5 folds of roughly equal size.
+\item If a matrix or data frame, there must be one row per row in \code{data}. Each column corresponds to a different model to be trained. For a given column there should be only two unique values, plus possibly \code{NA}s. Of the two values, the lesser value will be used to identify the calibration data and the greater value the evaluation data. Rows with \code{NA}s will be ignored and not used in training or testing.  For example, a particular column could contain 1s, 2, and \code{NA}s. Data rows corresponding to 1s will be used as training data, data rows corresponding to 2s as test data, and rows with \code{NA} are dropped. The \code{NA} flag is useful for creating spatially-structured cross-validation folds where training and test sites are separated (spatially) by censored (ignored) data.
 }}
 
-\item{trainFx}{Function, name of the "trainXYZ" function to use. Currently the functions/algorithms supported are \code{\link[enmSdm]{trainGlm}}, \code{\link[enmSdm]{trainBrt}}, \code{\link[enmSdm]{trainMaxEnt}}, \code{\link[enmSdm]{trainMaxNet}}, and \code{\link[enmSdm]{trainNs}}.}
+\item{trainFx}{Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBrt}}, \code{\link[enmSdmX]{trainGam}}, \code{\link[enmSdmX]{trainGlm}}, \code{\link[enmSdmX]{trainMaxEnt}}, and \code{\link[enmSdmX]{trainNs}}.}
 
 \item{...}{Arguments to pass to the "trainXYZ" function.}
 
 \item{metrics}{Character vector, names of evaluation metrics to calculate. If \code{weightEvalTrain} and/or \code{weightEvalTest} is \code{TRUE}, then the "train" and "test" version of each metric will be weighted versions of each. The default is to calculate all of:
 \itemize{
     \item \code{'logLoss'}: Log loss. Higher (less negative) values imply better fit.
-    \item \code{'cbi'}: Continuous Boyce Index (CBI). Calculated with \code{\link[enmSdm]{contBoyce}}.
-    \item \code{'auc'}: Area under the receiver-operator characteristic curve (AUC). Calculated with \code{\link[enmSdm]{aucWeighted}}.
-    \item \code{'tss'}: Maximum value of the True Skill Statistic. Calculated with \code{\link[enmSdm]{tssWeighted}}.
+    \item \code{'cbi'}: Continuous Boyce Index (CBI). Calculated with \code{\link[enmSdmX]{evalContBoyce}}.
+    \item \code{'auc'}: Area under the receiver-operator characteristic curve (AUC). Calculated with \code{\link[enmSdmX]{evalAUC}}.
+    \item \code{'tss'}: Maximum value of the True Skill Statistic. Calculated with \code{\link[enmSdmX]{evalTSS}}.
     \item \code{'msss'}: Sensitivity and specificity calculated at the threshold that maximizes sensitivity (true presence prediction rate) plus specificity (true absence prediction rate).
     \item \code{'mdss'}: Sensitivity (se) and specificity (sp) calculated at the threshold that minimizes the difference between sensitivity and specificity.
     \item \code{'minTrainPres'}: Sensitivity and specificity at the greatest threshold at which all training presences are classified as "present".
     \item \code{'trainSe95'} and/or \code{'trainSe90'}: Sensitivity at the threshold that ensures either 95 or 90 percent of all training presences are classified as "present" (training sensitivity = 0.95 or 0.9).
 }}
 
-\item{weightEvalTrain}{Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "train" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of test sites. Note that this applies \emph{only} to the calculation of evaluation statistics.  If \code{w} is supplied weights they will be used for model calibration.}
+\item{weightEvalTrain}{Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "train" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of sites. Note that this applies \emph{only} to the calculation of evaluation statistics, not to model calibration.  If \code{w} is supplied, they will be used for model calibration.}
 
-\item{weightEvalTest}{Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "test" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of test sites. Note that this applies \emph{only} to the calculation of evaluation statistics.  If \code{w} is supplied then weights will be used for model calibration.}
+\item{weightEvalTest}{Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "test" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of sites. Note that this applies \emph{only} to the calculation of evaluation statistics.  If \code{w} is supplied, they will be used for model calibration.}
 
 \item{na.rm}{Logical, if \code{TRUE} then remove \code{NA} predictions before calculating evaluation statistics. If \code{FALSE} (default), propagate \code{NA}s (meaning if predictions contain \code{NA}s, then the evaluation statistic will most likely also be \code{NA}.)}
 
-\item{out}{Character. Indicates type of value returned. If \code{'models'} then returns a list of a list of candidate models (one sublist per fold. If \code{'tuning'} then just return the evaluation table for candidate models of each fold. If both then return a 2-item list with all candidate models and tuning tables. \emph{WARNING}: Depending on the type of model, using \code{'models'} may produce objects that are very large in memory.}
+\item{outputModels}{If \code{TRUE}, then return all models (in addition to tables reporting tuning paramaeters and evaluation metrics). \emph{WARNING}: Depending on the type of model and amount of data, using \code{'models'} may produce objects that are very large in memory.}
 
-\item{verbose}{Numeric. If 0 show no progress updates. If > 0 then show minimal progress updates for this function only. If > 1 show detailed progress for this function. If > 2 show detailed progress plus detailed progress for the "trainXYZ" function.}
+\item{verbose}{Numeric. If 0 show no progress updates. If > 0 then show minimal progress updates for this function only. If > 1 show detailed progress for this function. If > 2 show detailed progress plus detailed progress for the \code{trainXYZ} function.}
 }
 \value{
 A list object with several named elements:
 \itemize{
 		\item \code{meta}: Meta-data on the model call.
 		\item \code{folds}: The \code{folds} object.
-		\item \code{models} (if \code{'models'} is in argument \code{out}): A list of model objects, one per  data fold
-	\item \code{tuning} (if \code{'tuning'} is in argument \code{out}): One data frame per k-fold, each containing evaluation statistics for all candidate models in the fold.
+		\item \code{models} (if \code{outputModels} is \code{TRUE}): A list of model objects, one per  data fold.
+	\item \code{tuning}: One data frame per k-fold, each containing evaluation statistics for all candidate models in the fold.
 }
 }
 \description{
-This function is an extension of any of the "trainXYZ" functions for calibrating species distribution and ecological niche models. This function uses the "trainXYZ" function to calibrate and evaluate a suite of models using cross-validation. The models are evaluated against withheld data to determine the optimal settings for a "final" model using all available data.
+This function is an extension of any of the \code{trainXYZ} functions for calibrating species distribution and ecological niche models. This function uses the \code{trainXYZ} function to calibrate and evaluate a suite of models using cross-validation. The models are evaluated against withheld data to determine the optimal settings for a "final" model using all available data. The function returns a set of models and/or a table with statistics on each model. The statistics represent various measures of model accuracy, and are calculated against training and test sites (separately).
 }
 \details{
-In some cases models do not converge (e.g., boosted regression trees and generalized additive models sometimes suffer from this issue). In this case the model will be skipped, but a data frame with the k-fold and model number in the fold will be returned in the $meta element in the output. If all models converged, then this data frame will be empty.
+In some cases models do not converge (e.g., boosted regression trees and generalized additive models sometimes suffer from this issue). In this case the model will be skipped, but a data frame with the k-fold and model number in the fold will be returned in the $meta element in the output. If np models converged, then this data frame will be empty.
 }
 \examples{
-\dontrun{
+
+# The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models.
 set.seed(123)
-### contrived example
-# generate training/testing data
-n <- 10000
-x1 <- seq(-1, 1, length.out=n) + rnorm(n)
-x2 <- seq(10, 0, length.out=n) + rnorm(n)
-x3 <- rnorm(n)
-y <- 2 * x1 + x1^2 - 10 * x2 - x1 * x2
-y <- statisfactory::invLogitAdj(y, 0.001)
-presAbs <- as.integer(runif(10000) > (1 - y))
-data <- data.frame(presAbs=presAbs, x1=x1, x2=x2, x3=x3)
 
-model <- trainGlm(data, verbose=TRUE)
-summary(model) # most parsimonious model
+### setup data
 
-folds <- dismo::kfold(data, 3)
-out <- trainByCrossValid(data, folds=folds, verbose=1)
+# environmental rasters
+rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+madEnv <- rast(rastFile)
+madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
 
-str(out, 1)
-summaryByCrossValid(out)
+crs <- sf::st_crs(madEnv)
 
-str(out, 1)
-head(out$tuning[[1]])
-head(out$tuning[[2]])
-head(out$tuning[[3]])
+# lemur occurrence data
+data(lemurs)
+occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+occEnv <- extract(madEnv, occs, ID=FALSE)
+occEnv <- occEnv[complete.cases(occEnv), ]
+	
+# create background sites (using just 1000 to speed things up!)
+bgEnv <- terra::spatSample(madEnv, 3000)
+bgEnv <- bgEnv[complete.cases(bgEnv), ]
+bgEnv <- bgEnv[sample(nrow(bgEnv), 1000), ]
 
-# can do following for each fold (3 of them)
-lapply(out$models[[1]], coefficients)
-sapply(out$models[[1]], logLik)
-sapply(out$models[[1]], AIC)
+# collate occurrences and background sites
+presBg <- data.frame(
+   presBg = c(
+      rep(1, nrow(occEnv)),
+      rep(0, nrow(bgEnv))
+   )
+)
 
-# select model for k = 1 with greatest CBI
-top <- which.max(out$tuning[[1]]$cbiTest)
-summary(out$models[[1]][[top]])
+env <- rbind(occEnv, bgEnv)
+env <- cbind(presBg, env)
 
-# in fold k = 1, which models perform well but are not overfit?
-plot(out$tuning[[1]]$cbiTrain, out$tuning[[1]]$cbiTest, col='white',
-		main='Model Numbers for k = 1')
-abline(0, 1, col='red')
-numModels <- nrow(out$tuning[[1]])
-text(out$tuning[[1]]$cbiTrain, out$tuning[[1]]$cbiTest, labels=1:numModels)
-usr <- par('usr')
-x <- usr[1] + 0.9 * (usr[4] - usr[3])
-y <- usr[3] + 0.1 * (usr[4] - usr[3])
-text(x, y, labels='overfit', col='red', xpd=NA)
-x <- usr[1] + 0.1 * (usr[4] - usr[3])
-y <- usr[3] + 0.9 * (usr[4] - usr[3])
-text(x, y, labels='suspicious', col='red', xpd=NA)
+predictors <- c('bio1', 'bio12')
 
-# other algorithms
-# boosted regression trees (with "fast" set of parameters... not recommended
-# for normal use)
-brt <- trainByCrossValid(data, folds=folds, verbose=2, trainFx=trainBrt,
-	maxTrees=2000, treeComplexity=2, learningRate=c(0.01, 0.001))
+# using "vector" form of "folds" argument
+folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
 
-# MaxEnt with "fast" set of settings (not recommended for normal use)
-mx <- trainByCrossValid(data, folds=folds, verbose=2, trainFx=trainMaxEnt,
-	regMult=c(1, 2), classes='lp')
+## MaxEnt
+mxx <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainMaxEnt,
+	regMult = 1:2 # too few values for valid model, but fast!
+)
 
-}
+## generalized linear models
+glx <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainGlm
+)
+
+## generalized linear models
+gax <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainGam
+)
+
+## natural splines
+natx <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainNs
+)
+
+## boosted regression trees
+brtx <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainBrt,
+	learningRate = 0.001, # too few values for reliable model(?)
+	treeComplexity = 2, # too few values for reliable model, but fast
+	minTrees = 1200, # minimum trees for reliable model(?), but fast
+	maxTrees = 1200, # too small for reliable model(?), but fast
+	tryBy = 'treeComplexity',
+	anyway = TRUE # return models that did not converge
+)
+
+
+## random forests
+rfx <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainRf
+)
+
+# summarize MaxEnt feature sets and regularization across folds
+summaryByCrossValid(mxx, trainFxName = 'trainMaxEnt')
+
+# summarize GLM terms across folds
+summaryByCrossValid(glx, trainFxName = 'trainGlm')
+
+# summarize GAM terms across folds
+summaryByCrossValid(gax, trainFxName = 'trainGam')
+
+# summarize natural splines terms across folds
+summaryByCrossValid(natx, trainFxName = 'trainNs')
+
+# summarize BRT parameters across folds
+# Note that to get BRTs to run fast we allowed no variation
+# so the summary in this example is fairly boring.
+summaryByCrossValid(brtx, trainFxName = 'trainBrt')
+
+# summarize random forests 'mtry' parameter across folds
+summaryByCrossValid(natx, trainFxName = 'trainRf')
+
 }
 \references{
-Fielding, A.H. and J.F. Bell. 1997. A review of methods for the assessment of prediction errors in conservation presence/absence models. \emph{Environmental Conservation} 24:38-49.
-
-La Rest, K., Pinaud, D., Monestiez, P., Chadoeuf, J., and Bretagnolle, V.  2014.  Spatial leave-one-out cross-validation for variable selection in the presence of spatial autocorrelation. Global Ecology and Biogeography 23:811-820.
-
-Wunderlich, R.F., Lin, P-Y., Anthony, J., and Petway, J.R. 2019. Two alternative evaluation metrics to replace the true skill statistic in the assessment of species distribution models. Nature Conservation 35:97-116.
+Fielding, A.H. and J.F. Bell. 1997. A review of methods for the assessment of prediction errors in conservation presence/absence models. \emph{Environmental Conservation} 24:38-49. \doi{10.1017/S0376892997000088}
+La Rest, K., Pinaud, D., Monestiez, P., Chadoeuf, J., and Bretagnolle, V.  2014.  Spatial leave-one-out cross-validation for variable selection in the presence of spatial autocorrelation. \emph{Global Ecology and Biogeography} 23:811-820. \doi{https://doi.org/10.1111/geb.12161}
+Radosavljevic, A. and Anderson, R.P.  2014.  Making better Maxent models of species distributions: complexity, overfitting and evaluation.  \emph{Journal of Biogeography} 41:629-643. \doi{10.1111/jbi.12227}
 }
 \seealso{
-\code{\link[enmSdm]{trainBrt}}, \code{\link[enmSdm]{trainCrf}}, \code{\link[enmSdm]{trainGam}}, \code{\link[enmSdm]{trainGlm}}, \code{\link[enmSdm]{trainMaxEnt}}, \code{\link[enmSdm]{trainMaxNet}}, \code{\link[enmSdm]{trainLars}}, \code{\link[enmSdm]{trainMaxNet}}, \code{\link[enmSdm]{trainRf}}, \code{\link[enmSdm]{trainNs}}
+\code{\link[enmSdmX]{trainBrt}}, \code{\link[enmSdmX]{trainGam}}, \code{\link[enmSdmX]{trainGlm}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainMaxNet}}, \code{\link[enmSdmX]{trainNs}}, \code{\link[enmSdmX]{trainRf}}
 }

@@ -1,14 +1,14 @@
 #' Create a raster with square cells
 #' 
 #' This function creates a raster from an object with an extent (i.e., another raster or similar spatial object) with square cells. The user can specify cell resolution (linear dimension) \emph{or} the approximate number of cells desired.
-#' @param x An object with a spatial extent property (e.g., a \code{SpatRaster}*, \code{SpatVector}).
+#'
+#' @param x An object with a spatial extent property (e.g., a \code{SpatRaster} or a \code{SpatVector}).
 #' @param numCells Positive integer, approximate number of cells desired. If this is specified, then \code{res} is ignored. If this number of cells cannot be fit into the desired extent exactly, then the actual number of cells will be larger.
 #' @param res Positive numeric. Size of a cell in the units of the projection of \code{x} (typically meters). Ignored if \code{numCells} is not \code{NULL}.
 #' @param vals Numeric, value to assign to cells. Note that if this is shorter than the number of cells in the output, then values will be recycled. If longer, then values will be truncated. The default is to assign all 0s.
 #'
-#' @return Raster object. The raster will have an extent of the same size or larger than the extent of \code{x}.
+#' @return \code{SpatRaster} object. The raster will have an extent of the same size or larger than the extent of \code{x}.
 #'
-#' @seealso \code{\link{squareRastCells}}
 #' @examples
 #'
 #' # project outline of Madagascar to equal-area:

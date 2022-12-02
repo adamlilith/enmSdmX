@@ -10,7 +10,12 @@
 #' @param testClasses Logical.  If \code{TRUE} (default) then test all possible combinations of classes (note that all tested models will at least have linear features). If \code{FALSE} then use the classes provided (these will not vary between models).
 #' @param dropOverparam Logical, if \code{TRUE} (default), drop models if they have more coefficients than training occurrences. It is possible for no models to fulfill this criterion, in which case no models will be returned.
 #' @param anyway Logical. Same as \code{dropOverparam} (included for backwards compatibility. If \code{NULL} (default), then the value of \code{dropOverparam} will take precedence. If \code{TRUE} or \code{FALSE} then \code{anyway} will override the value of \code{dropOverparam}.
-#' @param out Character or character vector. Indicates type of value returned. Values can be \code{'model'} (default; return model with lowest AICc), \code{'models'} (return a list of all models), and/or \code{'tuning'} (return a data frame with AICc for each model). If more than one value is specified, then the output will be a list with elements named "model", "models", and/or "tuning". If \code{'models'} is specified, they will only be produced if \code{select = TRUE}. The models will appear in the list in same order as they appear in the tuning table (i.e., model with the lowest AICc first, second-lowest next, etc.). If just one value is specified, the output will be either an object of class \code{MaxEnt}, a list with objects of class \code{MaxEnt}, or a data frame.
+#' @param out Character vector. One or more values:
+#' \itemize{
+#' 	\item	\code{'model'}: Model with the lowest AICc.
+#' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
+#' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
+#' }
 #' @param forceLinear Logical. If \code{TRUE} (default) then require any tested models to include at least linear features.
 #' @param jackknife Logical. If \code{TRUE} (default) the the returned model will be also include jackknife testing of variable importance.
 #' @param arguments \code{NULL} (default) or a character list. Options to pass to \code{maxent()}'s \code{args} argument. (Do not include \code{l}, \code{p}, \code{q}, \code{h}, \code{t}, \code{betamultiplier}, or \code{jackknife}!)
@@ -20,97 +25,184 @@
 #' @param ... Extra arguments. Not used.
 #' @return If \code{out = 'model'} this function returns an object of class \code{MaxEnt}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters, log likelihood, and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{MaxEnt} object and the data frame.
 #' @details This function is a wrapper for \code{maxent()}. That function relies on a maxent \code{jar} file being placed into the folder \code{./library/dismo/java}. See \code{\link[dismo]{maxent}} for more details. The \code{maxent()} function creates a series of files on disc for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \code{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion. \cr
-#' @seealso \code{\link[maxnet]{maxnet}}, \code{\link[dismo]{maxent}}, \code{\link{trainMaxNet}}
+#' @seealso \code{\link[dismo]{maxent}}
 #' @references
-#' Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342.
+#' Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}
+#'
 #' @examples
 #'
-#' ### model red-bellied lemurs
-#' data(mad0)
+#' # The examples below show a very basic modeling workflow. They have been 
+#' # designed to work fast, not produce accurate, defensible models.
+#' set.seed(123)
+#' 
+#' ### setup data
+#' 
+#' # environmental rasters
+#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+#' madEnv <- rast(rastFile)
+#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+#' 
+#' crs <- sf::st_crs(madEnv)
+#' 
+#' # lemur occurrence data
 #' data(lemurs)
+#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+#' occEnv <- extract(madEnv, occs, ID=FALSE)
+#' occEnv <- occEnv[complete.cases(occEnv), ]
+#' 	
+#' # create 10000 background sites (or as many as raster can support)
+#' bgEnv <- terra::spatSample(madEnv, 20000)
+#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
+#' bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
 #' 
-#' # climate data
-#' bios <- c(1, 5, 12, 15)
-#' clim <- raster::getData('worldclim', var='bio', res=10)
-#' clim <- raster::subset(clim, bios)
-#' clim <- raster::crop(clim, mad0)
+#' # collate occurrences and background sites
+#' presBg <- data.frame(
+#' 	presBg = c(
+#'    rep(1, nrow(occEnv)),
+#'    rep(0, nrow(bgEnv))
+#'    )
+#' )
 #' 
-#' # occurrence data
-#' occs <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
-#' occsEnv <- raster::extract(clim, occs[ , c('longitude', 'latitude')])
-#' occsEnv <- as.data.frame(occsEnv) # need to do this for prediction later
-#' 
-#' # background sites
-#' bg <- 2000 # too few cells to locate 10000 background points
-#' bgSites <- dismo::randomPoints(clim, 2000)
-#' bgEnv <- raster::extract(clim, bgSites)
-#' 
-#' # collate
-#' presBg <- rep(c(1, 0), c(nrow(occs), nrow(bgSites)))
-#' env <- rbind(occsEnv, bgEnv)
+#' env <- rbind(occEnv, bgEnv)
 #' env <- cbind(presBg, env)
-#' env <- as.data.frame(env)
 #' 
-#' preds <- paste0('bio', bios)
+#' predictors <- c('bio1', 'bio12')
 #' 
-#' regMult <- 1:3 # default values are probably better, but these will be faster
-#' 
-#' # calibrate MaxEnt model
-#' ent <- trainMaxEnt(
-#' 	data=env,
-#' 	resp='presBg',
-#' 	preds=preds,
-#' 	regMult=regMult,
-#' 	classes='lpq',
-#' 	verbose=TRUE
+#' ## MaxEnt
+#' mx <- trainMaxEnt(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	regMult = 1, # too few values for reliable model, but fast
+#' 	verbose = TRUE
 #' )
 #' 
-#' # calibrate MaxNet model
-#' net <- trainMaxNet(
-#' 	data=env,
-#' 	resp='presBg',
-#' 	preds=preds,
-#' 	regMult=regMult,
-#' 	classes='lpq',
-#' 	verbose=TRUE
+#' ## generalized linear model (GLM)
+#' # Normally, we'd center and standardize variables before modeling.
+#' gl <- trainGlm(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	verbose = TRUE
 #' )
 #' 
-#' # prediction rasters
-#' mapEnt <- predict(ent, clim, type='logistic')
-#' mapNet <- predict(clim, net, type='logistic')
-#'
-#' par(mfrow=c(1, 2))
-#' plot(mapEnt, main='MaxEnt')
-#' points(occs[ , c('longitude', 'latitude')])
-#' plot(mapNet, main='MaxNet')
-#' points(occs[ , c('longitude', 'latitude')])
-#'
-#' # predictions to occurrences
-#' (dismo::predict(ent, occsEnv, args=c('outputformat=logistic')))
-#' (enmSdm::predictMaxEnt(ent, occsEnv, type='logistic'))
-#' (c(predict(net, occsEnv, type='logistic')))
+#' ## generalized additive model (GAM)
+#' ga <- trainGam(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	verbose = TRUE
+#' )
 #' 
-#' # note the differences between the tuning of the two models...
-#' # this is because maxnet() (used by trainMaxNet())
-#' # uses an approximation:
-#' # (note maxnet() calculates hinges and thresholds differently
-#' # so we will turn them off)
+#' ## natural splines
+#' nat <- trainNs(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	verbose = TRUE
+#' )
 #' 
-#' data(bradypus, package='maxnet')
-#' p <- bradypus$presence
-#' data <- bradypus[ , 2:3] # easier to inspect betas
-#' mn <- maxnet::maxnet(p, data,
-#' maxnet::maxnet.formula(p, data, classes='lpq'))
-#' mx <- dismo::maxent(data, p,
-#' args=c('linear=true', 'product=true', 'quadratic=true', 'hinge=false',
-#' 'threshold=false'))
+#' ## boosted regression trees
+#' envSub <- env[1:2000, ] # subsetting data to run faster
+#' brt <- trainBrt(
+#' 	data = envSub,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	learningRate = 0.001, # too few values for reliable model(?)
+#' 	treeComplexity = 2, # too few values for reliable model, but fast
+#' 	minTrees = 1200, # minimum trees for reliable model(?), but fast
+#' 	maxTrees = 1200, # too small for reliable model(?), but fast
+#' 	tryBy = 'treeComplexity',
+#' 	anyway = TRUE, # return models that did not converge
+#' 	verbose = TRUE
+#' )
 #' 
-#' predMx <- dismo::predict(mx, data)
-#' predMn <- predict(mn, data, type='logistic')
+#' ## random forests
+#' rf <- trainRf(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	verbose = TRUE
+#' )
 #' 
-#' par(mfrow=c(1, 1))
-#' plot(predMx, predMn)
-#' abline(0, 1)
+#' ## make maps of models
+#' 
+#' mxMap <- predictEnmSdm(mx, madEnv)
+#' glMap <- predictEnmSdm(gl, madEnv)
+#' gaMap <- predictEnmSdm(ga, madEnv)
+#' natMap <- predictEnmSdm(nat, madEnv)
+#' brtMap <- predictEnmSdm(brt, madEnv)
+#' rfMap <- predictEnmSdm(rf, madEnv)
+#' 
+#' maps <- c(
+#' 	mxMap,
+#' 	glMap,
+#' 	gaMap,
+#' 	natMap,
+#' 	brtMap,
+#' 	rfMap
+#' )
+#' 
+#' names(maps) <- c('MaxEnt', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
+#' fun <- function() plot(occs[1], col='black', add=TRUE)
+#' plot(maps, fun=fun)
+#' 
+#' ## compare model responses to BIO12 (mean annual precipitation)
+#' 
+#' # make a data frame holding all other variables at mean across occurrences,
+#' # varying only BIO12
+#' occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
+#' occEnvMeans <- rbind(occEnvMeans)
+#' occEnvMeans <- as.data.frame(occEnvMeans)
+#' climFrame <- occEnvMeans[rep(1, 100), ]
+#' rownames(climFrame) <- NULL
+#' 
+#' minBio12 <- min(env$bio12)
+#' maxBio12 <- max(env$bio12)
+#' climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
+#' 
+#' predMx <- predictEnmSdm(mx, climFrame)
+#' predGl <- predictEnmSdm(gl, climFrame)
+#' predGa <- predictEnmSdm(ga, climFrame)
+#' predNat <- predictEnmSdm(nat, climFrame)
+#' predBrt <- predictEnmSdm(brt, climFrame)
+#' predRf <- predictEnmSdm(rf, climFrame)
+#' 
+#' 
+#' plot(climFrame$bio12, predMx,
+#' xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
+#' 
+#' lines(climFrame$bio12, predGl, lty='dotted', col='blue')
+#' lines(climFrame$bio12, predGa, lty='dashed', col='green')
+#' lines(climFrame$bio12, predNat, lty=4, col='purple')
+#' lines(climFrame$bio12, predBrt, lty=5, col='orange')
+#' lines(climFrame$bio12, predRf, lty=6, col='cyan')
+#' 
+#' legend(
+#'    'topleft',
+#'    inset = 0.01,
+#'    legend = c(
+#' 	'MaxEnt',
+#' 	'GLM',
+#' 	'GAM',
+#' 	'NS',
+#' 	'BRT',
+#' 	'RF'
+#'    ),
+#'    lty = 1:6,
+#'    col = c(
+#' 	'black',
+#' 	'blue',
+#' 	'green',
+#' 	'purple',
+#' 	'orange',
+#' 	'cyan'
+#'    ),
+#'    bg = 'white'
+#' )
+#' 
+#' 
 #' @export
 trainMaxEnt <- function(
 	data,
@@ -294,7 +386,7 @@ trainMaxEnt <- function(
 			tuning$relLike <- exp(-0.5 * tuning$deltaAICc)
 			tuning$aicWeight <- tuning$relLike / sum(tuning$relLike)
 
-			rownames(tuning) <- 1:nrow(tuning)
+			rownames(tuning) <- NULL
 		
 		}
 

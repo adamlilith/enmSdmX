@@ -1,4 +1,4 @@
-#' Generic predict function for LMs, GLMs, GAMs, RFs, BRTs, CRFs, Maxent, and more
+#' Generic predict function for SDMs/ENMs
 #'
 #' This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, Maxent, and more.
 #' @param model  Object of class \code{lm}, \code{glm}, \code{gam}, \code{randomForest}, \code{MaxEnt}, \code{MaxNet}, \code{prcomp}, \code{kde}, \code{gbm}, and possibly others (worth a try!).
@@ -119,7 +119,17 @@ predictEnmSdm <- function(
 		# BRT
 		} else if (inherits(model, 'gbm')) {
 
-			out <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
+			if (inherits(newdata, 'SpatRaster')) {
+				nd <- terra::as.data.frame(newdata, na.rm=FALSE)
+				notNas <- which(complete.cases(nd))
+				nd <- nd[notNas, , drop=FALSE]
+				preds <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
+				out <- newdata[[1L]] * NA
+				out <- setValueByCell(out, preds, cell=notNas, format='raster')
+			} else {
+				out <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
+			}
+
 			
 		# KDE from ks package
 		} else if (inherits(model, 'kde')) {
@@ -142,10 +152,21 @@ predictEnmSdm <- function(
 			out <- predictMaxNet(object=model, newdata=newdata, ...)
 
 		# random forest in party package
-		} else if (inherits(model, 'RandomForest')) {
+		} else if (inherits(model, 'randomForest')) {
 
-			out <- randomForest::predict.randomForest(model, newdata, type='prob', ...)
-			out <- unlist(out)
+			nd <- terra::as.data.frame(newdata, na.rm=FALSE)
+			notNas <- which(complete.cases(nd))
+			nd <- nd[notNas, , drop=FALSE]
+			preds <- predict(model, nd, type='prob', ...)
+			preds <- preds[ , '1']
+
+			if (inherits(newdata, 'SpatRaster')) {
+				out <- newdata[[1L]] * NA
+				out <- setValueByCell(out, preds, cell=notNas, format='raster')
+			} else {
+				out <- rep(NA, nrow(newdata))
+				out[notNas] <- preds
+			}
 
 		# anything else!
 		} else {

@@ -18,10 +18,10 @@ dmsToDecimal <- function(dd, mm, ss, hemis = NULL) {
 
 	if (all(is.null(hemis))) {
 		sgn <- rep(1, n)
-		warning('Hemisphere not specified. Assuming northern/western hemisphere.')
+		warning('Hemisphere not specified. Assuming northern/eastern hemisphere.')
 	} else {
 		sgn <- ifelse(toupper(hemis) == 'S' | toupper(hemis) == 'W', -1, ifelse(toupper(hemis) == 'E' | toupper(hemis) == 'N', 1, 1))
-		if (!any(toupper(hemis) %in% c('N', 'S', 'E', 'W'))) warning('Hemisphere invalid for at least some coordinates. Assuming northern/western hemisphere for these coordinates.')
+		if (!any(toupper(hemis) %in% c('N', 'S', 'E', 'W'))) warning('Hemisphere invalid for at least some coordinates. Assuming northern/eastern hemisphere for these coordinates.')
 	}
 	
 	out <- sgn * (dd + mm / 60 + ss / 3600)

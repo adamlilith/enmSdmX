@@ -2,105 +2,36 @@
 % Please edit documentation in R/getCRS.r
 \name{getCRS}
 \alias{getCRS}
-\title{Return a "proj6" string for a datum and projection}
+\title{WKT string for a named coordinate reference system or a spatial object}
 \usage{
-getCRS(x)
+getCRS(x = NULL, warn = TRUE)
 }
 \arguments{
-\item{x}{Character. Name of proj4 string to return. Spaces, case, and dashes are ignored, but to make the codes more memorable, some of the codes are shown as having them.}
+\item{x}{This can be any of:
+\itemize{
+    \item Name of CRS: Each CRS has one "long" name and at least one "short" name, which appear in the table returned by \code{getCRS()}. You can use the "long" name of the CRS, or either of the two "short" names.  Spaces, case, and dashes are ignored, but to make the codes more memorable, they are shown as having them.
+        \item \code{NULL} (default): This returns a table of projections with their "long" and "short" names (nearly the same as \code{data(crss)}).
+    \item An object of class \code{SpatVector}, \code{SpatRaster}, or \code{sf}. If this is a "\code{Spat}" object, then a character vector with the CRS in WKT form is returned. If a \code{sf} is supplied, then a \code{crs} object is returned in WKT format.
+}}
+
+\item{warn}{If \code{TRUE} (default), then print a warning if the name of the CRS cannot be found.}
 }
 \value{
-A WKT (well-known text) object.
+A string representung WKT2 (well-known text) object or a \code{data.frame}.
 }
 \description{
-This function returns the "proj6" string for a particular datum and possibly projection.
+Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getsCRS()}.
 }
-\section{Unprojected}{
-
-\itemize{
-	\item \strong{NAD27}: \code{NAD27}
-	\item \strong{NAD83}: \code{NAD83}
-\item \strong{WGS72}: \code{wgs72}
-	\item \strong{WGS84}: \code{WGS84}
-}
-}
-
-\section{Hybrid global/local}{
-
-\itemize{
-\item \strong{Web Mercator}, \strong{Google Web Mercator}, \strong{Spherical Mercator}, \strong{WGS 84 Web Mercator}, or \strong{WGS84/Pseudo-Mercator}: \code{Web Mercator} or \code{WM}
-}
-}
-
-\section{Global}{
-
-\itemize{
-\item \strong{Equal Earth}: \code{ee} or \code{Equal Earth}
-\item \strong{Eckert IV}: \code{Eckert 4} or \code{Eckert IV}
-\item \strong{Good-Homosline (Land)}: \code{GH Land} or \code{Good-Homosline Land}
-	\item \strong{Hammer} or \strong{Hammer-Aitoff}: \code{Hammer} or \code{Hammer-Aitoff}
-	\item \strong{Hammer-Wagner} (same as Wagner VII): \code{Wagner VII} or {Hammer-Wagner}
-	\item \strong{Mollweide}: \code{Mollweide}
-	\item \strong{Plate Carree}: \code{Plate Carree} or \code{PC}
- \item \strong{Putnin\'s P2} (same as Wagner IV): \code{Putnins P2} or \code{Wagner IV}
-\item \strong{Robinson}: \code{Robinson}
- \item \strong{Wagner IV} (same as Putnin\'s P2): \code{Wagner IV} or \code{Putnins P2}
- \item \strong{Wagner VII} (same as Hammer-Wagner): \code{Wagner VII} or \code{Hammer-Wagner}
-}
-}
-
-\section{Continents and Oceans}{
-
-\itemize{
-\item \strong{Africa Albers}: \code{Albers Africa}
-\item \strong{Africa Lambert Conformal Conic}: \code{Africa LCC} or \code{Africa Lambert Conformal Conic}
-\item \strong{Asia Lambert Conformal Conic}: \code{Asia LCC} or \code{Asia Lambert Conformal Conic}
-\item \strong{Australia Albers}: \code{Australia Albers}
-\item \strong{Australia Lambert Conformal Conic}: \code{Australia LCC} or \code{Australia Lambert Conformal Conic}
-\item \strong{Europe Albers}: \code{Europe Albers}
-\item \strong{Europe Lambert Conformal Conic}: \code{Europe LCC} or \code{Europe Lambert Conformal Conic}
-\item \strong{North America Albers}: \code{NA Albers} or \code{North America Albers}
-\item \strong{North America Lambert Conformal Conic}: \code{NA LCC} or \code{North America Lambert Conformal Conic}
-\item \strong{South America Albers}: \code{SA Albers} or \code{South America Albers}
-\item \strong{South America Lambert Conformal Conic}: \code{SA LCC} or \code{South America Lambert Conformal Conic}
-}
-}
-
-\section{Regional/country}{
-
-\itemize{
-\item \strong{Asia (North) Lambert Conformal Conic}: \code{N Asia LCC} or \code{North Asia Lambert Conformal Conic}
-\item \strong{Asia (South) Lambert Conformal Conic}: \code{S Asia LCC} or \code{South Asia Lambert Conformal Conic}
-\item \strong{Australia Albers}: \code{Australia Albers}
-\item \strong{Central America Albers}: \code{Central America Albers}
-\item \strong{Central America Lambert Conformal Conic}: \code{Central America LCC} or \code{Central America Lambert Conformal Conic}
-\item \strong{Madagascar Albers}: \code{Madagascar Albers}
-\item \strong{Madagascar Lambert Conformal Conic}: \code{Madagascar LCC} or \code{Madagascar Lambert Conformal Conic}
-\item \strong{United States (coterminous, or CONUS) Lambert Conformal Conic}: \code{CONUS LCC} or \code{CONUS Lambert Conformal Conic}
-\item \strong{North Pole Lambert Azimuthal}: \code{N Pole LA} or \code{North Pole Lambert Azimuthal}
-\item \strong{South Pole Lambert Azimuthal}: \code{S Pole LA} or \code{South Pole Lambert Azimuthal}
-}
-}
-
-\section{Data-set specific (often same as one of the above, but easy to remember if you are using a specific data set)}{
-
-\itemize{
-\item \strong{ClimateNA}: \code{ClimateNA}
-\item \strong{CHELSA}: \code{CHELSA} (actually WGS84)
-\item \strong{DayMet}: \code{DayMet} (actually Lambert Conformal Conic for North America)
-\item \strong{GBIF}: \code{GBIF} (actually WGS84)
-\item \strong{PRISM}: \code{PRISM} (actually WGS84)
-}
-}
-
-\section{Universal Trans Mercator (UTM)}{
-
- UTM projections require the datum (e.g., NAD27, NAD83, WGS84, etc.), the hemisphere (north or south) and the zone. The "code" is as:
-\code{utm <coordinate system> <hemisphere> <zone>}. For example, \code{UTM NAD83 North 9} returns the CRS for UTM zone 9 in the northern hemisphere using the NAD83 coordinate reference system. Likewise, \code{UTM NAD27 South 6} returns the CRS for UTM zone 6 in the southern hemisphere using the NAD27 coordinate system.
-}
-
 \examples{
-getCRS('wgs84')
-getCRS('prism')
-getCRS('mollweide')
+
+# NB Using cat() make the CRS display nicely for human eyes.
+cat(getCRS('WGS 84'))
+cat(getCRS('Mollweide'))
+cat(getCRS('WorldClim'))
+
+getCRS()
+
+data(mad0)
+getCRS(mad0)
+
 }

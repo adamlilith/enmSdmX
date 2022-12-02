@@ -5,21 +5,21 @@
 \alias{mad0}
 \title{Madagascar spatial object}
 \format{
-An object of class \code{'sf'}.
+An object of class \code{sf}.
 }
 \source{
-www.gadm.org
+\href{GADM}{www.gadm.org}
 }
 \usage{
-data(mad0)
+data(mad0, package='enmSdmX')
 }
 \description{
-Outline of Madagascar from GADM
+Outline of Madagascar from GADM.  The geometry has been simplified from the version available in GADM, so pleased do not use this for "official" analyses.
 }
 \examples{
 data(mad0)
 mad0
-plot(mad0)
+plot(mad0[1], main='Madagascar')
 }
 \keyword{Madagascar}
 \keyword{datasets,}

@@ -44,7 +44,12 @@ trainNs(
 
 \item{w}{Either logical in which case \code{TRUE} causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.}
 
-\item{out}{Character or character vector. Indicates type of value returned. Values can be \code{'model'} (default; return model with lowest AICc), \code{'models'} (return a list of all models), and/or \code{'tuning'} (return a data frame with AICc for each model). If more than one value is specified, then the output will be a list with elements named "model", "models", and/or "tuning". If \code{'models'} is specified, they will only be produced if \code{select = TRUE}. The models will appear in the list in same order as they appear in the tuning table (i.e., model with the lowest AICc first, second-lowest next, etc.). If just one value is specified, the output will be either an object of class \code{glm}, a list with objects of class \code{glm}, or a data frame.}
+\item{out}{Character vector. One or more values:
+\itemize{
+    \item    \code{'model'}: Model with the lowest AICc.
+    \item    \code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
+    \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
+}}
 
 \item{verbose}{Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.}
 
@@ -57,76 +62,179 @@ If \code{out = 'model'} this function returns an object of class \code{gam}. If 
 This function constructs a natural-spline model piece-by-piece by first calculating AICc for all models with univariate and bivariate (interaction) terms. It then creates a "full" model with the highest-ranked uni/bivariate terms then implements an all-subsets model selection routine.
 }
 \examples{
-\dontrun{
-library(brglm2)
 
-### model red-bellied lemurs
-data(mad0)
+# The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models.
+set.seed(123)
+
+### setup data
+
+# environmental rasters
+rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+madEnv <- rast(rastFile)
+madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+
+crs <- sf::st_crs(madEnv)
+
+# lemur occurrence data
 data(lemurs)
+occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+occEnv <- extract(madEnv, occs, ID=FALSE)
+occEnv <- occEnv[complete.cases(occEnv), ]
+	
+# create 10000 background sites (or as many as raster can support)
+bgEnv <- terra::spatSample(madEnv, 20000)
+bgEnv <- bgEnv[complete.cases(bgEnv), ]
+bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
 
-# climate data
-bios <- c(1, 5, 12, 15)
-clim <- raster::getData('worldclim', var='bio', res=10)
-clim <- raster::subset(clim, bios)
-clim <- raster::crop(clim, mad0)
+# collate occurrences and background sites
+presBg <- data.frame(
+	presBg = c(
+   rep(1, nrow(occEnv)),
+   rep(0, nrow(bgEnv))
+   )
+)
 
-# occurrence data
-occs <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
-occsEnv <- raster::extract(clim, occs[ , c('longitude', 'latitude')])
-
-# background sites
-bg <- 2000 # too few cells to locate 10000 background points
-bgSites <- dismo::randomPoints(clim, 2000)
-bgEnv <- raster::extract(clim, bgSites)
-
-# collate
-presBg <- rep(c(1, 0), c(nrow(occs), nrow(bgSites)))
-env <- rbind(occsEnv, bgEnv)
+env <- rbind(occEnv, bgEnv)
 env <- cbind(presBg, env)
-env <- as.data.frame(env)
 
-preds <- paste0('bio', bios)
+predictors <- c('bio1', 'bio12')
 
-# GLM
+## MaxEnt
+mx <- trainMaxEnt(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	regMult = 1, # too few values for reliable model, but fast
+	verbose = TRUE
+)
+
+## generalized linear model (GLM)
+# Normally, we'd center and standardize variables before modeling.
 gl <- trainGlm(
 	data = env,
 	resp = 'presBg',
-	preds = preds,
- verbose = TRUE
+	preds = predictors,
+	verbose = TRUE
 )
 
-# GAM
+## generalized additive model (GAM)
 ga <- trainGam(
 	data = env,
 	resp = 'presBg',
-	preds = preds,
- verbose = TRUE
+	preds = predictors,
+	verbose = TRUE
 )
 
-# NS
-ns <- trainNs(
+## natural splines
+nat <- trainNs(
 	data = env,
 	resp = 'presBg',
-	preds = preds,
- verbose = TRUE
+	preds = predictors,
+	verbose = TRUE
 )
 
-# prediction rasters
-mapGlm <- predict(clim, gl, type='response')
-mapGam <- predict(clim, ga, type='response')
-mapNs <- predict(clim, ga, type='response')
+## boosted regression trees
+envSub <- env[1:2000, ] # subsetting data to run faster
+brt <- trainBrt(
+	data = envSub,
+	resp = 'presBg',
+	preds = predictors,
+	learningRate = 0.001, # too few values for reliable model(?)
+	treeComplexity = 2, # too few values for reliable model, but fast
+	minTrees = 1200, # minimum trees for reliable model(?), but fast
+	maxTrees = 1200, # too small for reliable model(?), but fast
+	tryBy = 'treeComplexity',
+	anyway = TRUE, # return models that did not converge
+	verbose = TRUE
+)
 
-par(mfrow=c(1, 3))
-plot(mapGlm, main='GLM')
-plot(mad0, add=TRUE)
-points(occs[ , c('longitude', 'latitude')])
-plot(mapGam, main='GAM')
-plot(mad0, add=TRUE)
-points(occs[ , c('longitude', 'latitude')])
-plot(mapNs, main='NS')
-plot(mad0, add=TRUE)
-points(occs[ , c('longitude', 'latitude')])
-}
+## random forests
+rf <- trainRf(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
+
+## make maps of models
+
+mxMap <- predictEnmSdm(mx, madEnv)
+glMap <- predictEnmSdm(gl, madEnv)
+gaMap <- predictEnmSdm(ga, madEnv)
+natMap <- predictEnmSdm(nat, madEnv)
+brtMap <- predictEnmSdm(brt, madEnv)
+rfMap <- predictEnmSdm(rf, madEnv)
+
+maps <- c(
+	mxMap,
+	glMap,
+	gaMap,
+	natMap,
+	brtMap,
+	rfMap
+)
+
+names(maps) <- c('MaxEnt', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
+fun <- function() plot(occs[1], col='black', add=TRUE)
+plot(maps, fun=fun)
+
+## compare model responses to BIO12 (mean annual precipitation)
+
+# make a data frame holding all other variables at mean across occurrences,
+# varying only BIO12
+occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
+occEnvMeans <- rbind(occEnvMeans)
+occEnvMeans <- as.data.frame(occEnvMeans)
+climFrame <- occEnvMeans[rep(1, 100), ]
+rownames(climFrame) <- NULL
+
+minBio12 <- min(env$bio12)
+maxBio12 <- max(env$bio12)
+climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
+
+predMx <- predictEnmSdm(mx, climFrame)
+predGl <- predictEnmSdm(gl, climFrame)
+predGa <- predictEnmSdm(ga, climFrame)
+predNat <- predictEnmSdm(nat, climFrame)
+predBrt <- predictEnmSdm(brt, climFrame)
+predRf <- predictEnmSdm(rf, climFrame)
+
+
+plot(climFrame$bio12, predMx,
+xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
+
+lines(climFrame$bio12, predGl, lty='dotted', col='blue')
+lines(climFrame$bio12, predGa, lty='dashed', col='green')
+lines(climFrame$bio12, predNat, lty=4, col='purple')
+lines(climFrame$bio12, predBrt, lty=5, col='orange')
+lines(climFrame$bio12, predRf, lty=6, col='cyan')
+
+legend(
+   'topleft',
+   inset = 0.01,
+   legend = c(
+	'MaxEnt',
+	'GLM',
+	'GAM',
+	'NS',
+	'BRT',
+	'RF'
+   ),
+   lty = 1:6,
+   col = c(
+	'black',
+	'blue',
+	'green',
+	'purple',
+	'orange',
+	'cyan'
+   ),
+   bg = 'white'
+)
+
+
 }
 \seealso{
 \code{\link[splines]{ns}}, \code{\link[mgcv]{gam}}, \code{\link{trainGam}}

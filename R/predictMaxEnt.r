@@ -1,6 +1,6 @@
 #' Predict a MaxEnt model object (with optional feature-level permutation)
 #'
-#' Takes a MaxEnt \code{lambda} object or a MaxEnt object and returns raw or logistic predictions.  Its output is the same as the function \code{raster::predict(maxentModelObject, dataFrame)} or \code{raster::predict(maxentModelObject, dataFrame, args='outputformat=raw')} (to within rounding error), and in fact those functions should be faster. However, this function does allow custom manipulations that those functions do not allow (e.g., permuting product features while leaving other features with the same variables intact).  This function does \emph{not} clamp predictions--beyond the range of the training data, it extends the prediction in the direction it was going (up/down/no change). The function is based on Peter D. Wilson's document "Guidelines for computing MaxEnt model output values from a lambdas file". The function has a special feature in that it allows you to permute single variables or combinations of variables in specific features before making predictions. This is potentially useful, for example, if you wanted to determine the relative importance of a quadratic feature for a particular variable in a Maxent model relative to the other features in the model.  You can also permute values of a variable regardless of which features they appear in. For product features, you can implement the permutation before or after the values are multiplied together (before often makes for bigger differences in predictions).
+#' Takes a MaxEnt \code{lambda} object or a MaxEnt object and returns raw or logistic predictions.  Its output is the same as the \code{\link[terra]{predict}} function from the \pkg{terra} package, and in fact, is slower than the function from \pkg{terra}. However, this function does allow custom manipulations that those functions do not allow (e.g., permuting product features while leaving other features with the same variables intact).  This function does \emph{not} clamp predictions--beyond the range of the training data, it extends the prediction in the direction it was going (up/down/no change). The function is based on Peter D. Wilson's document "Guidelines for computing MaxEnt model output values from a lambdas file". The function has a special feature in that it allows you to permute single variables or combinations of variables in specific features before making predictions. This is potentially useful, for example, if you wanted to determine the relative importance of a quadratic feature for a particular variable in a Maxent model relative to the other features in the model.  You can also permute values of a variable regardless of which features they appear in. For product features, you can implement the permutation before or after the values are multiplied together (before often makes for bigger differences in predictions).
 #' @param x Either a Maxent lambda object or a Maxent model object
 #' @param data Data frame. Data to which to make predictions
 #' @param type Character.  One of:
@@ -20,92 +20,57 @@
 #' @return Numeric.
 #' @seealso \code{\link[dismo]{maxent}}
 #' @examples
-#' ### model red-bellied lemurs
-#' data(mad0)
+#'
+#' # The example below shows a very basic modeling workflow. It has been 
+#' # designed to work fast, not produce accurate, defensible models.
+#' set.seed(123)
+#' 
+#' ### setup data
+#' 
+#' # environmental rasters
+#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+#' madEnv <- rast(rastFile)
+#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+#' 
+#' crs <- sf::st_crs(madEnv)
+#' 
+#' # lemur occurrence data
 #' data(lemurs)
+#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+#' occEnv <- extract(madEnv, occs, ID=FALSE)
+#' occEnv <- occEnv[complete.cases(occEnv), ]
+#' 	
+#' # create 10000 background sites (or as many as raster can support)
+#' bgEnv <- terra::spatSample(madEnv, 20000)
+#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
+#' bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
 #' 
-#' # climate data
-#' bios <- c(1, 5, 12, 15)
-#' clim <- raster::getData('worldclim', var='bio', res=10)
-#' clim <- raster::subset(clim, bios)
-#' clim <- raster::crop(clim, mad0)
+#' # collate occurrences and background sites
+#' presBg <- data.frame(
+#' 	presBg = c(
+#'    rep(1, nrow(occEnv)),
+#'    rep(0, nrow(bgEnv))
+#'    )
+#' )
 #' 
-#' # occurrence data
-#' occs <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
-#' occsEnv <- raster::extract(clim, occs[ , c('longitude', 'latitude')])
-#' occsEnv <- as.data.frame(occsEnv) # need to do this for prediction later
-#' 
-#' # background sites
-#' bg <- 2000 # too few cells to locate 10000 background points
-#' bgSites <- dismo::randomPoints(clim, 2000)
-#' bgEnv <- extract(clim, bgSites)
-#' 
-#' # collate
-#' presBg <- rep(c(1, 0), c(nrow(occs), nrow(bgSites)))
-#' env <- rbind(occsEnv, bgEnv)
+#' env <- rbind(occEnv, bgEnv)
 #' env <- cbind(presBg, env)
-#' env <- as.data.frame(env)
 #' 
-#' preds <- paste0('bio', bios)
+#' predictors <- c('bio1', 'bio12')
 #' 
-#' regMult <- 1:3 # default values are probably better, but these will be faster
-#' 
-#' # calibrate MaxEnt model
-#' ent <- trainMaxEnt(
-#' 	data=env,
-#' 	resp='presBg',
-#' 	preds=preds,
-#' 	regMult=regMult,
-#' 	classes='lpq',
-#' 	verbose=TRUE
+#' ## MaxEnt
+#' mx <- trainMaxEnt(
+#' 	data = env,
+#' 	resp = 'presBg',
+#' 	preds = predictors,
+#' 	regMult = 1, # too few values for reliable model, but fast
+#' 	verbose = TRUE
 #' )
-#' 
-#' # calibrate MaxNet model
-#' net <- trainMaxNet(
-#' 	data=env,
-#' 	resp='presBg',
-#' 	preds=preds,
-#' 	regMult=regMult,
-#' 	classes='lpq',
-#' 	verbose=TRUE
-#' )
-#' 
-#' # prediction rasters
-#' mapEnt <- predict(ent, clim, type='logistic')
-#' mapNet <- predict(clim, net, type='logistic')
 #'
-#' par(mfrow=c(1, 2))
-#' plot(mapEnt, main='MaxEnt')
-#' points(occs[ , c('longitude', 'latitude')])
-#' plot(mapNet, main='MaxNet')
-#' points(occs[ , c('longitude', 'latitude')])
+#' mxMap <- predictEnmSdm(mx, madEnv)
 #'
-#' # predictions to occurrences
-#' (dismo::predict(ent, occsEnv, args=c('outputformat=logistic')))
-#' (enmSdm::predictMaxEnt(ent, occsEnv, type='logistic'))
-#' (c(predict(net, occsEnv, type='logistic')))
-#' 
-#' # note the differences between the tuning of the two models...
-#' # this is because maxnet() (used by trainMaxNet())
-#' # uses an approximation:
-#' # (note maxnet() calculates hinges and thresholds differently
-#' # so we will turn them off)
-#' 
-#' data(bradypus, package='maxnet')
-#' p <- bradypus$presence
-#' data <- bradypus[ , 2:3] # easier to inspect betas
-#' mn <- maxnet::maxnet(p, data,
-#' maxnet::maxnet.formula(p, data, classes='lpq'))
-#' mx <- dismo::maxent(data, p,
-#' args=c('linear=true', 'product=true', 'quadratic=true', 'hinge=false',
-#' 'threshold=false'))
-#' 
-#' predMx <- dismo::predict(mx, data)
-#' predMn <- predict(mn, data, type='logistic')
-#' 
-#' par(mfrow=c(1, 1))
-#' plot(predMx, predMn)
-#' abline(0, 1)
+#'
 #' @export
 predictMaxEnt <- function(
 	x,

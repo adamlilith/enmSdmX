@@ -16,7 +16,7 @@
 #' x <- rast(nrow=10, ncol=10)
 #' x[] <- round(10 * runif(100))
 #' 
-#' cell=c(1, 20, 40, 80)
+#' cell <- c(1, 20, 40, 80)
 #' getValueByCell(x, cell = cell)
 #' getValueByCell(x, cell = cell, format = 'matrix')
 #' 
@@ -30,9 +30,11 @@
 
 getValueByCell <- function(x, cell, format = 'raster') {
 
+	if (any(cell) > terra::ncell(x)) stop('At least one cell index is greater than the total number of cells in the raster.')
+
 	# convert to row cells
 	if (format == 'matrix') {
-		dims <- dim(x)[1:2]
+		dims <- dim(x)[1L:2L]
 		cell <- omnibus::rowColIndexing(dims, cell=cell, dir='row')
 	}
 	
@@ -42,10 +44,16 @@ getValueByCell <- function(x, cell, format = 'raster') {
 
 }
 
+#' @name setValueByCell
+#' @title Get or assign values to cells in a raster
+#' @rdname getValueByCell
+#' @export
 setValueByCell <- function(x, val, cell, format = 'raster') {
 
 	# errors
 	if (terra::nlyr(x) > 1L) stop('"x" can contain only one raster.')
+	if (any(cell) > terra::ncell(x)) stop('At least one cell index is greater than the total number of cells in the raster.')
+	
 
 	lv <- length(val)
 	lc <- length(cell)
@@ -65,7 +73,7 @@ setValueByCell <- function(x, val, cell, format = 'raster') {
 		cell <- omnibus::rowColIndexing(dims, cell=cell, dir='row')
 	}
 
-	m <- as.data.frame(x, cell=TRUE)
+	m <- as.data.frame(x, cell=TRUE, na.rm=FALSE)
 	m[m$cell %in% cell, 2] <- val
 	out <- as.matrix(x, wide=TRUE)
 	m$newCell <- omnibus::rowColIndexing(dims, cell=m$cell, dir='col')

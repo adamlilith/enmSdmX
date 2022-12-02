@@ -2,9 +2,12 @@
 % Please edit documentation in R/getValueByCell.r
 \name{getValueByCell}
 \alias{getValueByCell}
+\alias{setValueByCell}
 \title{Get or assign values to cells in a raster}
 \usage{
 getValueByCell(x, cell, format = "raster")
+
+setValueByCell(x, val, cell, format = "raster")
 }
 \arguments{
 \item{x}{A \code{SpatRaster}.}
@@ -26,7 +29,7 @@ These functions get values from a raster at specific cells, or values to specifi
 x <- rast(nrow=10, ncol=10)
 x[] <- round(10 * runif(100))
 
-cell=c(1, 20, 40, 80)
+cell <- c(1, 20, 40, 80)
 getValueByCell(x, cell = cell)
 getValueByCell(x, cell = cell, format = 'matrix')
 

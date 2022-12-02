@@ -7,7 +7,7 @@
 longLatRasts(x, m = TRUE, filePath = NULL, ...)
 }
 \arguments{
-\item{x}{\code{SpatRast} object. The output will have the same resolution, extent, and coordinate projection system as \code{x}.}
+\item{x}{\code{SpatRaster} object. The output will have the same resolution, extent, and coordinate projection system as \code{x}.}
 
 \item{m}{Any of:
 \itemize{
