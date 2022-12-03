@@ -26,7 +26,7 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by deviance.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-defeault option.
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
 #'
@@ -207,7 +207,7 @@
 #' 
 #' 
 #' @export
-trainBrt_parallel <- function(
+trainBrt <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
@@ -269,19 +269,16 @@ trainBrt_parallel <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 
-			if (parallelType == 'doParallel') {
+			if (tolower(parallelType) == 'doparallel') {
 				doParallel::registerDoParallel(cl)
-				say('doParallel')
-			} else if (parallelType == 'doSNOW') {
+			} else if (tolower(parallelType) == 'dosnow') {
 				doSNOW::registerDoSNOW(cl)
-				say('doSNOW')
 			} else {
 				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
 			}
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
-			say('1 core')
 		}
 
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
@@ -289,7 +286,6 @@ trainBrt_parallel <- function(
 
 		work <- foreach::foreach(
 			i = 1L:nrow(params),
-			# .options.snow = opts,
 			.options.multicore = mcOptions,
 			.combine='c',
 			.inorder = FALSE,
@@ -316,7 +312,7 @@ trainBrt_parallel <- function(
 				
 		}
 						
-		if (cores > 1) parallel::stopCluster(cl)
+		if (cores > 1L) parallel::stopCluster(cl)
 
 	### collate models
 	##################
