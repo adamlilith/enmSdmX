@@ -26,7 +26,7 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by deviance.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-defeault option.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
 #'

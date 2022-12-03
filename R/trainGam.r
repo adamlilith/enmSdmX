@@ -23,7 +23,7 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-defeault option.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device.
 #' @param ... Extra arguments (not used).
 #' @return If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
@@ -287,14 +287,14 @@ trainGam_parallel <- function(
 	### make list of candidate model terms
 	######################################
 
-		n <- if (family == 'binomial') {
+		n <- if (family %in% c('binomial', 'quasibinomial')) {
 			sum(data[ , resp, drop=TRUE])
 		} else {
 			nrow(data)
 		}
 
 		### create vector of terms
-		terms <- c()
+		terms <- character()
 		
 		# single-predictor terms
 		for (thisPred in preds) {
@@ -389,7 +389,8 @@ trainGam_parallel <- function(
 			requiredPresPerTerm <- presPerTermFinal * 1L:nrow(assess)
 			
 			these <- which(requiredPresPerTerm <= n)
-			form <- paste(assess$formula[these], collapse=' + ')
+			theseTerms <- assess$formula[these]
+			form <- paste(theseTerms, collapse=' + ')
 			thisForm <- paste0(resp, ' ~ 1 + ', form)
 			
 			model <- mgcv::gam(
@@ -443,7 +444,7 @@ trainGam_parallel <- function(
 			numTerms <- rowSums(candidates)
 			candidates <- candidates[numTerms <= maxTerms, , drop=FALSE]
 
-			forms <- c()
+			forms <- character()
 			for (i in 1L:nrow(candidates)) {
 				thisForm <- paste0('1 + ', paste(terms[unlist(candidates[i, , drop = TRUE])], collapse = ' + '))
 				forms <- c(forms, thisForm)
@@ -451,7 +452,7 @@ trainGam_parallel <- function(
 			if (interceptOnly) forms <- c(forms, '1')
 
 			work <- foreach::foreach(
-				i = seq_along(terms),
+				i = seq_along(forms),
 				.options.multicore = mcOptions,
 				.combine = 'c',
 				.inorder = FALSE,
