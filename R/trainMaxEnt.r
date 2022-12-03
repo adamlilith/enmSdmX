@@ -2,9 +2,9 @@
 #'
 #' This function calculates the "best" Maxent model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better). The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).
 #'
-#' @param data	Data frame or matrix. Contains a column indicating whether each row is a presence (1) or background (0) site, plus column(s) for environmental predictor(s).
-#' @param resp Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.
-#' @param preds Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.
+#' @param data Data frame.
+#' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.
+#' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
 #' @param regMult Numeric vector. Values of the master regularization parameters (called \code{beta} in some publications) to test.
 #' @param classes Character list. Names of feature classes to use (either \code{default} to use \code{lpqh}) or any combination of \code{lpqht}, where \code{l} ==> linear features, \code{p} ==> product features, \code{q} ==> quadratic features, \code{h} ==> hinge features, and \code{t} ==> threshold features.
 #' @param testClasses Logical.  If \code{TRUE} (default) then test all possible combinations of classes (note that all tested models will at least have linear features). If \code{FALSE} then use the classes provided (these will not vary between models).
@@ -20,10 +20,13 @@
 #' @param jackknife Logical. If \code{TRUE} (default) the the returned model will be also include jackknife testing of variable importance.
 #' @param arguments \code{NULL} (default) or a character list. Options to pass to \code{maxent()}'s \code{args} argument. (Do not include \code{l}, \code{p}, \code{q}, \code{h}, \code{t}, \code{betamultiplier}, or \code{jackknife}!)
 #' @param scratchDir Character. Directory to which to write temporary files. Leave as NULL to create a temporary folder in the current working directory.
-#' @param cores Integer >= 1. Number of cores to use. Default is 1.
+#' @param cores Number of cores to use. Default is 1.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} report progress and AICc table.
 #' @param ... Extra arguments. Not used.
-#' @return If \code{out = 'model'} this function returns an object of class \code{MaxEnt}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters, log likelihood, and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{MaxEnt} object and the data frame.
+#'
+#' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
+#'
 #' @details This function is a wrapper for \code{maxent()}. That function relies on a maxent \code{jar} file being placed into the folder \code{./library/dismo/java}. See \code{\link[dismo]{maxent}} for more details. The \code{maxent()} function creates a series of files on disc for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \code{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion. \cr
 #' @seealso \code{\link[dismo]{maxent}}
 #' @references
@@ -213,12 +216,13 @@ trainMaxEnt <- function(
 	testClasses = TRUE,
 	dropOverparam = TRUE,
 	anyway = TRUE,
-	out = 'model',
 	forceLinear = TRUE,
 	jackknife = FALSE,
 	arguments = NULL,
 	scratchDir = NULL,
+	out = 'model',
 	cores = 1,
+	parallelType = 'doParallel',
 	verbose = FALSE,
 	...
 ) {
@@ -261,7 +265,7 @@ trainMaxEnt <- function(
 
 		# create df of 1/0 to indicate each combination of classes to test
 		if (testClasses) {
-			classGrid <- expand.grid(rep(list(c(1, 0)), length(classesToTest)))
+			classGrid <- expand.grid(rep(list(c(1, 0)), length(classesToTest)), stringsAsFactors = FALSE)
 			classGrid <- classGrid[-which(rowSums(classGrid) == 0), , drop=FALSE]
 		} else {
 			classGrid <- data.frame(matrix(rep(1, length(classesToTest)), nrow=1))
@@ -303,22 +307,39 @@ trainMaxEnt <- function(
 	### train models
 	################
 		
+	### parallelization
+	###################
+			
+		cores <- min(cores, nrow(tuning), parallel::detectCores(logical = FALSE))
+
 		if (cores > 1L) {
 
-			cores <- min(cores, parallel::detectCores(logical = FALSE))
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makePSOCKcluster(cores)
-			doParallel::registerDoParallel(cl)
-			parallel::clusterCall(cl, function(x) .libPaths(x), .libPaths()) # can find non-standard paths
+			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 
+			if (tolower(parallelType) == 'doparallel') {
+				doParallel::registerDoParallel(cl)
+			} else if (tolower(parallelType) == 'dosnow') {
+				doSNOW::registerDoSNOW(cl)
+			} else {
+				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
+			}
+			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}
-		
-		mcOptions <- list(preschedule=TRUE, set.seed=FALSE, silent=FALSE)
 
-		work <- foreach::foreach(i=1:nrow(tuning), .options.multicore=mcOptions, .combine='c', .inorder=FALSE, .export=c('.trainMaxEntWorker'),
-		.packages = c('rJava')) %makeWork%
+		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
+		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
+
+		work <- foreach::foreach(
+			i = 1L:nrow(tuning),
+			.options.multicore = mcOptions,
+			.combine = 'c',
+			.inorder = FALSE,
+			.export = c('.trainMaxEntWorker'),
+			.packages = c('rJava')
+		) %makeWork% {
 			.trainMaxEntWorker(
 				i = i,
 				scratchDir = scratchDir,
@@ -330,6 +351,7 @@ trainMaxEnt <- function(
 				jackknife = jackknife,
 				arguments = arguments
 			)
+		}
 
 		if (cores > 1L) parallel::stopCluster(cl)
 	

@@ -1,22 +1,15 @@
 #' Calibrate a natural splines model
 #'
-#' This function constructs a natural-spline model by evaluating all possible models given the available predictoes and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model.
-#'
-#' @param data Data frame.
-#' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.
-#' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
+#' This function constructs a natural-spline model piece-by-piece by first calculating AICc for all models with univariate and bivariate (interaction) terms. It then creates a "full" model with the highest-ranked uni/bivariate terms then implements an all-subsets model selection routine.
+#' @param data Data frame.  Must contain fields with same names as in \code{preds} object.
+#' @param resp Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.
+#' @param preds Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.
 #' @param family Name of family for data error structure (see \code{\link[stats]{family}}).
-#' @param df A vector of integers > 0 or \code{NULL}. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.
+#' @param df Integer > 0 \emph{or} vector of integers > 0. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.  If \code{construct} is \code{TRUE}, then univariate models for each term will be evaluated using each value in \code{df}. Note that \code{NULL} is also valid, but it can create problems when used with other functions in this package (and usually defaults to \code{df=3} anyway).
 #' @param interaction If \code{TRUE} (default), include two-way interaction terms.
 #' @param presPerTermFinal Minimum number of presence sites per term in initial starting model.
 #' @param maxTerms Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.
-#' @param w Weights. Any of:
-#' \itemize{
-#'	\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
-#' 	\item \code{FALSE}: Each datum is assigned a weight of 1.
-#'  \item A numeric vector of weights, one per row in \code{data}.
-#' 	\item The name of the column in \code{data} that contains site weights.
-#' }
+#' @param w Either logical in which case \code{TRUE} causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.
 #' @param out Character vector. One or more values:
 #' \itemize{
 #' 	\item	\code{'model'}: Model with the lowest AICc.
@@ -26,11 +19,9 @@
 #' @param cores Number of cores to use. Default is 1.
 #' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.
-#' @param ... Arguments to send to \code{\link[stats]{glm}}.
-#'
-#' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
-#'
-#' @seealso \code{\link[splines]{ns}}
+#' @param ... Arguments to send to \code{gam()} or \code{dredge()}.
+#' @return If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
+#' @seealso \code{\link[splines]{ns}}, \code{\link[mgcv]{gam}}, \code{\link{trainGam}}
 #'
 #' @examples
 #'
@@ -207,7 +198,7 @@
 #' 
 #' 
 #' @export
-trainNs <- function(
+trainNs_parallel <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],

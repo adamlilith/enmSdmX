@@ -1,9 +1,10 @@
 #' Calibrate a boosted regression tree (generalized boosting machine) model
 #'
-#' This function is a wrapper for \code{\link[dismo]{gbm.step}}. It returns the model with best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. It can also return a table with deviance of different combinations of tuning parameters that were tested, and all of the models tested. See Elith, J., J.R. Leathwick, and T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813.
-#' @param data data frame with first column being response
-#' @param resp Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.
-#' @param preds Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.
+#' This function is a wrapper for \code{\link[dismo]{gbm.step}}. It returns the model with best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. It can also return a table with deviance of different combinations of tuning parameters that were tested, and all of the models tested.
+#'
+#' @param data Data frame.
+#' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.
+#' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
 #' @param family Character. Name of error family.  See \code{\link[dismo]{gbm.step}}.
 #' @param learningRate Numeric. Learning rate at which model learns from successive trees (Elith et al. 2008 recommend 0.0001 to 0.1).
 #' @param treeComplexity Positive integer. Tree complexity: depth of branches in a single tree (1 to 16).
@@ -17,7 +18,13 @@
 #' * \code{maxTrees}: Increase number of trees by 20%.
 #' * \code{stepSize}: Increase step size (argument \code{n.trees} in \code{gbm.step()}) by 50%.
 #' If \code{tryBy} is NULL then the function attempts to train the model with the same parameters up to \code{tries} times.
-#' @param w Either logical in which case \code{TRUE} (default) causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) \emph{or} a numeric list of weights, one per row in \code{data} \emph{or} the name of the column in \code{data} that contains site weights. If \code{FALSE}, then each datum gets a weight of 1.
+#' @param w Weights. Any of:
+#' \itemize{
+#'	\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+#' 	\item \code{FALSE}: Each datum is assigned a weight of 1.
+#'  \item A numeric vector of weights, one per row in \code{data}.
+#' 	\item The name of the column in \code{data} that contains site weights.
+#' }
 #' @param anyway Logical. If \code{FALSE} (default), it is possible for no models to be returned if none converge and/or none had a number of trees is >= \code{minTrees}). If \code{TRUE} then all models are returned but with a warning.
 #' @param out Character vector. One or more values:
 #' \itemize{
@@ -30,8 +37,13 @@
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
 #'
-#' @return If \code{out = 'model'} this function returns an object of class \code{gbm}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and cross-validation deviance for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gbm} object and the data frame. Note that if a model does not converge or does not meet sufficiency criteria (i.e., the number of optimal trees is < \code{minTrees}, then the model is not returned (a \code{NULL} value is returned for \code{'model'} and models are simply missing from the \code{tuning} and \code{models} output.
+#' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
+#'
 #' @seealso \code{\link[dismo]{gbm.step}}
+#'
+#' @references
+#' Elith, J., J.R. Leathwick, & T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813. \doi{10.1111/j.1365-2656.2008.01390.x}
+#'
 #' @examples
 #'
 #' # The examples below show a very basic modeling workflow. They have been 
@@ -242,22 +254,12 @@ trainBrt <- function(
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 		# model weights
-		if (inherits(w, 'logical')) {
-			w <- if (w) {
-				c(rep(1, sum(data[ , resp])), rep(sum(data[ , resp]) / sum(data[ , resp] == 0), sum(data[ , resp] == 0)))
-			} else {
-				rep(1, nrow(data))
-			}
-		} else if (inherits(w, 'character')) {
-			w <- data[ , w, drop=TRUE]
-		}
-
-		w <- w / max(w)
+		w <- .calcWeights(w, data = data, resp = resp)
 
 	### generate table of parameterizations
 	#######################################
 		
-		params <- expand.grid(learningRate=learningRate, treeComplexity=treeComplexity, bagFraction=bagFraction, maxTrees=maxTrees)
+		params <- expand.grid(learningRate=learningRate, treeComplexity=treeComplexity, bagFraction=bagFraction, maxTrees=maxTrees, stringsAsFactors = FALSE)
 		
 	### MAIN
 	########

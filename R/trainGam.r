@@ -1,9 +1,10 @@
 #' Calibrate a generalized additive model (GAM)
 #'
 #' This function constructs a GAM piece-by-piece by first calculating AICc for all models with univariate and bivariate (interaction) terms. It then creates a "full" model with the highest-ranked uni/bivariate terms then implements an all-subsets model selection routine.
-#' @param data Data frame.  Must contain fields with same names as in \code{preds} object.
-#' @param resp Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.
-#' @param preds Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.
+#'
+#' @param data Data frame.
+#' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.
+#' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
 #' @param family Name of family for data error structure (see \code{?family}).
 #' @param gamma Initial penalty to degrees of freedom to use (larger ==> smoother fits).
 #' @param scale A numeric value indicating the "scale" parameter (see argument \code{scale} in \code{\link[mgcv]{gam}}). The default is 0 (which allows a single smoother for Poisson and binomial error families and unknown scale for all others.)
@@ -12,10 +13,16 @@
 #' @param interceptOnly If \code{TRUE} (default), include an intercept-only model among those assessed for "best" model.
 #' @param presPerTermInitial Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only if \code{construct} is \code{TRUE}.
 #' @param presPerTermFinal Positive integer. Minimum number of presence sites per term in initial starting model; used only if \code{select} is \code{TRUE}.
-#' @param maxTerms Maximum number of terms to be used in any model.
+#' @param maxTerms Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.
 #' @param interaction Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.
 #' @param smoothingBasis Character. Indicates the type of smoothing basis. The default is \code{'cs'} (cubic splines), but see \code{\link[mgcv]{smooth.terms}} for other options. This is the value of argument \code{bs} in a \code{\link[mgcv]{s}} function.
-#' @param w Either logical in which case TRUE causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.
+#' @param w Weights. Any of:
+#' \itemize{
+#'	\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+#' 	\item \code{FALSE}: Each datum is assigned a weight of 1.
+#'  \item A numeric vector of weights, one per row in \code{data}.
+#' 	\item The name of the column in \code{data} that contains site weights.
+#' }
 #' @param out Character vector. One or more values:
 #' \itemize{
 #' 	\item	\code{'model'}: Model with the lowest AICc.
@@ -26,7 +33,9 @@
 #' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device.
 #' @param ... Extra arguments (not used).
-#' @return If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
+#'
+#' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
+#'
 #' @seealso \code{\link[mgcv]{gam}}
 #' @examples
 #'
@@ -205,7 +214,7 @@
 #' @export
 
 
-trainGam_parallel <- function(
+trainGam <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
@@ -237,23 +246,7 @@ trainGam_parallel <- function(
 		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
-	#############
-	## weights ##
-	#############
-
-		# model weights
-		if (inherits(w, 'logical')) {
-			if (w & (family %in% c('binomial', 'quasibinomial'))) {
-				posCases <- sum(data[ , resp, drop=TRUE] == 1)
-				negCases <- sum(data[ , resp, drop=TRUE] == 0)
-				w <- c(rep(1, posCases), rep(posCases / (posCases + negCases), negCases))
-			} else {
-				w <- rep(1, nrow(data))
-			}
-		} else if (inherits(w, 'character')) {
-			w <- data[ , w, drop=TRUE]
-		}
-		w <- w / max(w)
+		w <- .calcWeights(w, data = data, resp = resp)
 
 	### parallelization
 	###################
@@ -370,7 +363,7 @@ trainGam_parallel <- function(
 				
 		}
 		
-		assess <- assess[order(assess$aicc), , drop=FALSE]
+		assess <- assess[order(assess$AICc), , drop=FALSE]
 		rownames(assess) <- NULL
 
 		if (verbose) {
@@ -406,11 +399,11 @@ trainGam_parallel <- function(
 				...
 			)
 			
-			aicc <- MuMIn::AICc(model)
+			AICc <- MuMIn::AICc(model)
 			
 			tuning <- data.frame(
 				model = form,
-				aicc = aicc
+				AICc = AICc
 			)
 
 			models <- NULL
@@ -433,7 +426,7 @@ trainGam_parallel <- function(
 			# make formulae for all possible models
 			candidates <- list(x = c(TRUE, FALSE))
 			if (length(terms) > 1L) for (i in 2L:length(terms)) candidates <- c(candidates, list(x = c(TRUE, FALSE)))
-			candidates <- expand.grid(candidates)
+			candidates <- expand.grid(candidates, stringsAsFactors = FALSE)
 			names(candidates) <- terms
 			candidates <- candidates[rowSums(candidates) != 0, , drop=FALSE]
 
@@ -477,7 +470,7 @@ trainGam_parallel <- function(
 			# tuning table
 			tuning <- data.frame(
 				model = work[[1L]]$formula,
-				aicc = work[[1L]]$aicc
+				AICc = work[[1L]]$AICc
 			)
 			
 			if (length(work) > 1L) {
@@ -487,14 +480,14 @@ trainGam_parallel <- function(
 						tuning,
 						data.frame(
 							model = work[[i]]$formula,
-							aicc = work[[i]]$aicc
+							AICc = work[[i]]$AICc
 						)
 					)
 					
 				}
 			}
 		
-			aiccOrder <- order(tuning$aicc)
+			aiccOrder <- order(tuning$AICc)
 			if ('model' %in% out) model <- work[[aiccOrder[1L]]]$model
 			if ('models' %in% out) {
 				models <- list()
@@ -535,11 +528,11 @@ trainGam_parallel <- function(
 			...
 		)
 		
-		aicc <- MuMIn::AICc(model)
+		AICc <- MuMIn::AICc(model)
 		
 		tuning <- data.frame(
 			model = form,
-			aicc = aicc
+			AICc = AICc
 		)
 		
 		models <- NULL
@@ -622,7 +615,7 @@ trainGam_parallel <- function(
 		...
 	)
 	
-	aicc <- MuMIn::AICc(model)
+	AICc <- MuMIn::AICc(model)
 	
 	# out
 	out <- if (modelOut) {
@@ -631,7 +624,7 @@ trainGam_parallel <- function(
 			list(
 				model = model,
 				formula = form,
-				aicc = aicc
+				AICc = AICc
 			)
 		)
 		
@@ -639,7 +632,7 @@ trainGam_parallel <- function(
 	
 		data.frame(
 			formula = form,
-			aicc = aicc
+			AICc = AICc
 		)
 	
 	}
