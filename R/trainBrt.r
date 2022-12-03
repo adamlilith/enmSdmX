@@ -26,6 +26,7 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by deviance.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}.
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
 #'
@@ -206,7 +207,7 @@
 #' 
 #' 
 #' @export
-trainBrt <- function(
+trainBrt_parallel <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
@@ -222,6 +223,7 @@ trainBrt <- function(
 	family = 'bernoulli',
 	out = 'model',
 	cores = 1,
+	parallelType = 'doParallel',
 	verbose = FALSE,
 	...
 ) {
@@ -236,18 +238,18 @@ trainBrt <- function(
 		# }
 
 		# response and predictors
-		if (class(resp) %in% c('integer', 'numeric')) resp <- names(data)[resp]
-		if (class(preds) %in% c('integer', 'numeric')) preds <- names(data)[preds]
+		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
+		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 		# model weights
-		if (class(w)[1] == 'logical') {
+		if (inherits(w, 'logical')) {
 			w <- if (w) {
 				c(rep(1, sum(data[ , resp])), rep(sum(data[ , resp]) / sum(data[ , resp] == 0), sum(data[ , resp] == 0)))
 			} else {
 				rep(1, nrow(data))
 			}
-		} else if (class(w) == 'character') {
-			w <- data[ , w]
+		} else if (inherits(w, 'character')) {
+			w <- data[ , w, drop=TRUE]
 		}
 
 		w <- w / max(w)
@@ -260,21 +262,39 @@ trainBrt <- function(
 	### MAIN
 	########
 
-		if (cores > 1) {
-			cores <- min(cores, parallel::detectCores(logical = FALSE))
+		cores <- min(cores, nrow(params), parallel::detectCores(logical = FALSE))
+
+		if (cores > 1L) {
+
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makePSOCKcluster(cores)
-			doParallel::registerDoParallel(cl)
-			parallel::clusterCall(cl, function(x) .libPaths(x), .libPaths()) # can find non-standard paths
+			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+
+			if (parallelType == 'doParallel') {
+				doParallel::registerDoParallel(cl)
+				say('doParallel')
+			} else if (parallelType == 'doSNOW') {
+				doSNOW::registerDoSNOW(cl)
+				say('doSNOW')
+			} else {
+				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
+			}
+			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
+			say('1 core')
 		}
-		
+
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
-		mcOptions <- list(preschedule=TRUE, set.seed=TRUE, silent=FALSE)
-		
-		# work <- foreach::foreach(i=1:nrow(tuning), .options.multicore=mcOptions, .combine='c', .inorder=FALSE, .export=c('.trainBrtWorker'), .packages = c('gbm')) %makeWork%
-		work <- foreach::foreach(i=1:nrow(params), .options.multicore=mcOptions, .combine='c', .inorder=FALSE, .export=c('.trainBrtWorker')) %makeWork%
+		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
+
+		work <- foreach::foreach(
+			i = 1L:nrow(params),
+			# .options.snow = opts,
+			.options.multicore = mcOptions,
+			.combine='c',
+			.inorder = FALSE,
+			.export = c('.trainBrtWorker')
+		) %makeWork% {
 			.trainBrtWorker(
 				i = i,
 				params = params,
@@ -294,6 +314,8 @@ trainBrt <- function(
 				...
 			)
 				
+		}
+						
 		if (cores > 1) parallel::stopCluster(cl)
 
 	### collate models
