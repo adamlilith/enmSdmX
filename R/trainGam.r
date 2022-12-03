@@ -6,12 +6,15 @@
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.
 #' @param family Name of family for data error structure (see \code{?family}).
 #' @param gamma Initial penalty to degrees of freedom to use (larger ==> smoother fits).
-#' @param construct Logical. If \code{TRUE} then construct model by computing AICc for all univariate and bivariate models. Then add terms up to maximum set by \code{presPerTermInitial} and \code{initialTerms}.
-#' @param select Logical. If \code{TRUE} then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if any).
+#' @param scale A numeric value indicating the "scale" parameter (see argument \code{scale} in \code{\link[mgcv]{gam}}). The default is 0 (which allows a single smoother for Poisson and binomial error families and unknown scale for all others.)
+#' @param construct If \code{TRUE} (default), then construct the model by computing AICc for all univariate and bivariate models. Then add terms up to maximum set by \code{presPerTermInitial} and \code{maxTerms}.
+#' @param select If \code{TRUE} (default), then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if \code{construct} is \code{TRUE}).
+#' @param interceptOnly If \code{TRUE} (default), include an intercept-only model among those assessed for "best" model.
 #' @param presPerTermInitial Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only if \code{construct} is \code{TRUE}.
 #' @param presPerTermFinal Positive integer. Minimum number of presence sites per term in initial starting model; used only if \code{select} is \code{TRUE}.
-#' @param initialTerms Positive integer. Maximum number of terms to be used in an initial model. Used only if \code{construct} is TRUE. The maximum that can be handled by \code{dredge()} is 31, so if this number is >31 and \code{select} is \code{TRUE} then it is forced to 31 with a warning. Note that the number of coefficients for factors is not calculated correctly, so if the predictors contain factors then this number might have to be reduced even more.
+#' @param maxTerms Maximum number of terms to be used in any model.
 #' @param interaction Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.
+#' @param smoothingBasis Character. Indicates the type of smoothing basis. The default is \code{'cs'} (cubic splines), but see \code{\link[mgcv]{smooth.terms}} for other options. This is the value of argument \code{bs} in a \code{\link[mgcv]{s}} function.
 #' @param w Either logical in which case TRUE causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.
 #' @param out Character vector. One or more values:
 #' \itemize{
@@ -19,7 +22,9 @@
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
 #' }
-#' @param verbose Logical. If TRUE then display intermediate results on the display device.
+#' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-defeault option.
+#' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device.
 #' @param ... Extra arguments (not used).
 #' @return If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
 #' @seealso \code{\link[mgcv]{gam}}
@@ -200,20 +205,24 @@
 #' @export
 
 
-trainGam <- function(
+trainGam_parallel <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
 	family = 'binomial',
 	gamma = 1,
+	scale = 0,
 	construct = TRUE,
 	select = TRUE,
 	presPerTermInitial = 10,
 	presPerTermFinal = 10,
-	initialTerms = 8,
+	maxTerms = 8,
+	smoothingBasis = 'cs',
 	interaction = 'te',
 	w = TRUE,
 	out = 'model',
+	cores = 1,
+	parallelType = 'doParallel',
 	verbose = FALSE,
 	...
 ) {
@@ -224,12 +233,6 @@ trainGam <- function(
 
 		# ellipses <- list(...)
 
-		# force number of starting terms to 31 or less
-		if (select & initialTerms > 31) {
-			initialTerms <- 31
-			warning('initialTerms must be 31 or less. Forcing to 31.')
-		}
-
 		# response and predictors
 		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
@@ -239,8 +242,8 @@ trainGam <- function(
 	#############
 
 		# model weights
-		if (is.logical(w)) {
-			if (w && (family %in% c('binomial', 'quasibinomial'))) {
+		if (inherits(w, 'logical')) {
+			if (w & (family %in% c('binomial', 'quasibinomial'))) {
 				posCases <- sum(data[ , resp, drop=TRUE] == 1)
 				negCases <- sum(data[ , resp, drop=TRUE] == 0)
 				w <- c(rep(1, posCases), rep(posCases / (posCases + negCases), negCases))
@@ -252,300 +255,311 @@ trainGam <- function(
 		}
 		w <- w / max(w)
 
-	################################
-	## initial model construction ##
-	################################
+	### parallelization
+	###################
+			
+		cores <- if (!construct) {
+			1L
+		} else {
+			min(cores, parallel::detectCores(logical = FALSE))
+		}
 
-		# create starting formula
-		form <- paste0(resp, ' ~ 1')
+		if (cores > 1L) {
 
-		if (construct) {
+			`%makeWork%` <- foreach::`%dopar%`
+			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 
-			### SINGLE-variable terms
-			for (thisPred in preds) { # for each predictor test single-variable terms
+			if (tolower(parallelType) == 'doparallel') {
+				doParallel::registerDoParallel(cl)
+			} else if (tolower(parallelType) == 'dosnow') {
+				doSNOW::registerDoSNOW(cl)
+			} else {
+				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
+			}
+			
+		} else {
+			`%makeWork%` <- foreach::`%do%`
+		}
 
-				term <- if (class(data[ , thisPred]) != 'factor') {
-					paste0('s(', thisPred, ', bs=\'cs\')')
-				} else {
-					thisPred
-				}
+		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
+		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
 
-				thisThisForm <- paste0(form, ' + ', term)
+	### make list of candidate model terms
+	######################################
 
-				thisAic <- MuMIn::AICc(
-					mgcv::gam(
-						formula=stats::as.formula(thisThisForm),
-						family=family,
-						data=data,
-						method='ML',
-						optimizer=c('outer', 'newton'),
-						scale=-1,
-						select=TRUE,
-						gamma=gamma,
-						weights=w,
-						na.action='na.fail',
-						...
-					)
-				)
+		n <- if (family == 'binomial') {
+			sum(data[ , resp, drop=TRUE])
+		} else {
+			nrow(data)
+		}
 
-				# remember
-				gamFrame <- if (exists('gamFrame', inherits=FALSE)) {
-					rbind(gamFrame, data.frame(term=term, AICc=thisAic))
-				} else {
-					data.frame(term=term, AICc=thisAic)
-				}
+		### create vector of terms
+		terms <- c()
+		
+		# single-predictor terms
+		for (thisPred in preds) {
+		
+			if (!inherits(data[ , thisPred], 'factor')) {
+				terms <- c(terms, paste0('s(', thisPred, ', bs=\'', smoothingBasis, '\')'))
+			} else {
+				thisPred
+			}
+		}
+		
+		# interaction terms
+		if (length(preds) > 1L & n >= 2 * presPerTermInitial) {
+		
+			for (countPred1 in 1L:(length(preds)-1L)) { # for each predictor test two-variable terms
 
-			} # next single-variable term
+				pred1 <- preds[countPred1]
 
-			### TWO-variable terms
-			if (length(preds) > 1 & !is.null(interaction)) {
+				for (countPred2 in 2:length(preds)) { # for each second predictor test two-variable terms
+
+					pred2 <- preds[countPred2]
+
+					# create term
+					if (!inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
+
+						terms <- c(terms, paste0(interaction, '(', pred1, ', ', pred2, ', bs=\'', smoothingBasis, '\')'))
+
+					} else if (inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
+
+						terms <- c(terms, paste0(interaction, '(', pred2, ', by=', pred1, ', bs=\'', smoothingBasis,'\')'))
+
+					} else if (!inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
+
+						terms <- c(terms, paste0(interaction, '(', pred1, ', by=', pred2, ', bs=\'', smoothingBasis, '\')'))
+
+					} else if (inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
+
+						terms <- c(terms, paste0(pred1, ' * ', pred2))
+
+					}
+					
+				} # next second term
 				
-				for (thisPred in preds[1:(length(preds)-1)]) { # for each predictor test two-variable terms
+			} # next first term
+			
+		} # if more than one term
+			
+	## term-by-term model construction
+	##################################
+	if (construct) {
 
-					for (thatPred in preds[ (which(preds==thisPred) + 1):length(preds) ]) { # for each second predictor test two-variable terms
-
-						# create term
-						term <- if (class(data[ , thisPred]) != 'factor' & class(data[ , thatPred]) != 'factor') {
-
-							term <- paste0(interaction, '(', thisPred, ', ', thatPred, ', bs=\'cs\')')
-
-						} else if (class(data[ , thisPred]) == 'factor' & class(data[ , thatPred]) != 'factor') {
-
-							paste0(interaction, '(', thatPred, ', by=', thisPred, ', bs=\'cs\')')
-
-						} else if (class(data[ , thisPred]) != 'factor' & class(data[ , thatPred]) == 'factor') {
-
-							paste0(interaction, '(', thisPred, ', by=', thatPred, ', bs=\'cs\')')
-
-						} else if (class(data[ , thisPred]) == 'factor' & class(data[ , thatPred]) == 'factor') {
-
-							paste0(thisPred, ' * ', thatPred)
-
-						}
-
-						thisAic <- MuMIn::AICc(
-							mgcv::gam(
-								formula=stats::as.formula(paste0(form, ' + ', term)),
-								family=family,
-								data=data,
-								method='ML',
-								optimizer=c('outer', 'newton'),
-								scale=-1,
-								select=TRUE,
-								gamma=gamma,
-								weights=w,
-								na.action='na.fail',
-								...
-							)
-						)
-
-						# remember
-						gamFrame <- if (exists('gamFrame', inherits=FALSE)) {
-							rbind(gamFrame, data.frame(term=term, AICc=thisAic))
-						} else {
-							data.frame(term=term, AICc=thisAic)
-						}
-
-					}  # for each second predictor test two-variable terms
-
-				} # for each predictor test two-variable terms
+		assess <- foreach::foreach(
+			i = seq_along(terms),
+			.options.multicore = mcOptions,
+			.combine = 'rbind',
+			.inorder = FALSE,
+			.export = c('.trainGamWorker')
+		) %makeWork% {
+			.trainGamWorker(
+				i = i,
+				forms = terms,
+				data = data,
+				resp = resp,
+				family = family,
+				gamma = gamma,
+				scale = scale,
+				w = w,
+				insertIntercept = FALSE,
+				paths = paths,
+				modelOut = FALSE,
+				...
+			)
 				
-			} # if interactions
+		}
+		
+		assess <- assess[order(assess$aicc), , drop=FALSE]
+		rownames(assess) <- NULL
 
-			# sort by AIC
-			gamFrame <- gamFrame[order(gamFrame$AICc), ]
+		if (verbose) {
+			omnibus::say('Term-by-term evaluation:', level=2)
+			print(assess)
+			utils::flush.console()
+		}
 
-			# print AICc frame
+		### no selection
+		################
+		
+		# just return model with "best" terms without further selection
+		
+		if (!select) {
+			
+			requiredPresPerTerm <- presPerTermFinal * 1L:nrow(assess)
+			
+			these <- which(requiredPresPerTerm <= n)
+			form <- paste(assess$formula[these], collapse=' + ')
+			thisForm <- paste0(resp, ' ~ 1 + ', form)
+			
+			model <- mgcv::gam(
+				formula = stats::as.formula(thisForm),
+				family = family,
+				data = data,
+				method = 'ML',
+				optimizer = c('outer', 'newton'),
+				scale = scale,
+				select = TRUE,
+				gamma = gamma,
+				weights = w,
+				...
+			)
+			
+			aicc <- MuMIn::AICc(model)
+			
+			tuning <- data.frame(
+				model = form,
+				aicc = aicc
+			)
+
+			models <- NULL
+
 			if (verbose) {
 
-				omnibus::say('GAM construction results for each term tested:', level=2)
-				print(gamFrame)
-				omnibus::say('')
-
+				omnibus::say('Final model (construction from best terms, but no selection):', level=2)
+				print(summary(model))
+				utils::flush.console()
+				
 			}
 
-			### no model selection
-			######################
-			if (!select) {
+		### model selection
+		###################
+		
+		# select best model from all possible subsets of "full" model with best terms
+		
+		} else {
 
-				## construct final model
-				form <- paste0(form, ' + ', gamFrame$term[1]) # add first term
+			# make formulae for all possible models
+			candidates <- list(x = c(TRUE, FALSE))
+			if (length(terms) > 1L) for (i in 2L:length(terms)) candidates <- c(candidates, list(x = c(TRUE, FALSE)))
+			candidates <- expand.grid(candidates)
+			names(candidates) <- terms
+			candidates <- candidates[rowSums(candidates) != 0, , drop=FALSE]
 
-				# for each set of presences > min num required, add a term
-				if (floor(sum(data[ , resp]) / presPerTermInitial ) - 1 > 1 & initialTerms > 1) {
+			numTerms <- rowSums(candidates)
+			requiredPresPerTerm <- numTerms * presPerTermFinal
+			candidates <- candidates[requiredPresPerTerm <= n, , drop = FALSE]
+			
+			numTerms <- rowSums(candidates)
+			candidates <- candidates[numTerms <= maxTerms, , drop=FALSE]
 
-					termsToAdd <- 2:min(initialTerms, c(floor(sum(data[ , resp]) / presPerTermInitial ) - 1, nrow(gamFrame) - 1))
+			forms <- c()
+			for (i in 1L:nrow(candidates)) {
+				thisForm <- paste0('1 + ', paste(terms[unlist(candidates[i, , drop = TRUE])], collapse = ' + '))
+				forms <- c(forms, thisForm)
+			}
+			if (interceptOnly) forms <- c(forms, '1')
 
-					form <- paste0(form, ' + ', paste0(gamFrame$term[termsToAdd], collapse=' + '))
-
-				} # if there are sufficient presences for additional terms beyond first
-				
-				# train FULL model
-				model <- mgcv::gam(
-					formula=stats::as.formula(form),
-					family=family,
-					data=data,
-					method='ML',
-					optimizer=c('outer', 'newton'),
-					select=TRUE,
-					gamma=gamma,
-					weights=w,
+			work <- foreach::foreach(
+				i = seq_along(terms),
+				.options.multicore = mcOptions,
+				.combine = 'c',
+				.inorder = FALSE,
+				.export = c('.trainGamWorker')
+			) %makeWork% {
+				.trainGamWorker(
+					i = i,
+					forms = forms,
+					data = data,
+					resp = resp,
+					family = family,
+					gamma = gamma,
+					scale = scale,
+					w = w,
+					insertIntercept = FALSE,
+					paths = paths,
+					modelOut = ('models' %in% out | 'model' %in% out),
 					...
 				)
-				
-
-			### model selection
-			###################
+			}
 			
-			} else if (select) {
+			# tuning table
+			tuning <- data.frame(
+				model = work[[1L]]$formula,
+				aicc = work[[1L]]$aicc
+			)
 			
-				if (verbose) omnibus::say('Selecting best model:', level=2)
-
-				# create grid of model terms
-				n <- nrow(gamFrame)
-				gamFrame$minPres <- seq(presPerTermFinal, presPerTermFinal * n, by=presPerTermFinal)
-				
-				numPres <- sum(data[ , resp, drop=TRUE])
-				totalTerms <- max(which(gamFrame$minPres <= numPres))
-				gamFrame <- gamFrame[1L:totalTerms, , drop=FALSE]
-				
-				grid <- list()
-				for (i in 1L:nrow(gamFrame)) grid <- c(grid, list(yesNo = c(FALSE, TRUE)))
-				grid <- expand.grid(grid)
-				colnames(grid) <- gamFrame$term
-			
-				### do all models
-				bestAicc <- Inf
-				tuning <- data.frame()
-				if ('models' %in% out) models <- list()
-				for (countModel in 1L:nrow(grid)) {
-				
-					form <- paste0(resp, ' ~ 1')
-					thisGridRow <- unlist(grid[countModel, ])
-					if (sum(thisGridRow) > 0) form <- paste(form, '+', paste(colnames(grid)[thisGridRow], collapse = ' + '))
+			if (length(work) > 1L) {
+				for (i in 2L:length(work)) {
 					
-					if (verbose) say('   Evaluating: ', form)
-					
-					thisModel <- mgcv::gam(
-						formula=stats::as.formula(form),
-						family=family,
-						data=data,
-						method='ML',
-						optimizer=c('outer', 'newton'),
-						select=TRUE,
-						gamma=gamma,
-						weights=w#,
-						# ...
-					)
-
-					# tuning table
-					thisAicc <- MuMIn::AICc(thisModel)
-
-					dev <- thisModel$deviance
-					nullDev <- thisModel$null.deviance
-					devExplained <- (nullDev - dev) / nullDev
-				
 					tuning <- rbind(
 						tuning,
 						data.frame(
-							model = form,
-							AICc = thisAicc,
-							deviance = dev,
-							devianceExplained = devExplained
+							model = work[[i]]$formula,
+							aicc = work[[i]]$aicc
 						)
 					)
 					
-					# remember best model
-					if ('model' %in% out) {
-						if (thisAicc < bestAicc) {
-							model <- thisModel
-							bestAicc <- thisAicc
-						}
-					}
-					
-					# remember model
-					if ('models' %in% out) models[[length(models) + 1L]] <- thisModel
-				
-				} # next model
-			
-				modelOrder <- order(tuning$AICc)
-				tuning <- tuning[modelOrder, , drop=FALSE]
-				if ('models' %in% out) models <- models[modelOrder]
-				rownames(tuning) <- NULL
-			
-			} # if selecing best model
-
-		# NO AUTOMATED MODEL CONSTRUCTION
-		# use all single-variable terms and two-variable terms
-		} else if (!construct) {
-
-			# single terms
-			for (thisPred in preds) {
-
-				if (class(data[ , thisPred]) != 'factor') {
-					# form <- paste0(form, ' + s(', thisPred, ', bs=\'cs\', k=basisK)')
-					form <- paste0(form, ' + s(', thisPred, ')')
-				} else {
-					form <- paste0(form, ' + ', thisPred)
 				}
-
 			}
-
-			# interaction terms
-			if (length(preds) > 1 & !is.null(interaction)) {
-
-				numPreds <- length(preds)
+		
+			aiccOrder <- order(tuning$aicc)
+			if ('model' %in% out) model <- work[[aiccOrder[1L]]]$model
+			if ('models' %in% out) {
+				models <- list()
+				models[[1]] <- work[[1L]]$model
+				for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
+				models <- models[aiccOrder]
+			}
+			tuning <- tuning[aiccOrder, , drop = FALSE]
+			rownames(tuning) <- NULL
+		
+			if (verbose) {
 			
-				for (countPred1 in 1:(numPreds - 1)) { # for each initial predictor
-
-					thisPred <- preds[countPred1]
-				
-					for (countPred2 in (countPred1 + 1):numPreds) {
-					
-						thatPred <- preds[countPred2]
-
-						form <- if (class(data[ , thisPred]) != 'factor' & class(data[ , thatPred]) != 'factor') {
-							paste0( form, ' + ', interaction, '(', thisPred, ', ', thatPred, ')')
-						} else if (class(data[ , thisPred]) == 'factor' & class(data[ , thatPred]) != 'factor') {
-							paste0( form, ' + ', interaction, '(', thatPred, ', by=', thisPred, ')')
-						} else if (class(data[ , thisPred]) != 'factor' & class(data[ , thatPred]) == 'factor') {
-							paste0( form, ' + ', interaction, '(', thisPred, ', by=', thatPred, ')')
-						} else if (class(data[ , thisPred]) == 'factor' & class(data[ , thatPred]) == 'factor') {
-							paste0(form, ' + ', thisPred, ' * ', thatPred)
-						}
-
-					}
-
-				}
-				
+				omnibus::say('Model selection:', level=2)
+				print(tuning)
+				utils::flush.console()
+			
 			}
+		
+		} # if selecting best model from subsets of "full" model
 
-			# train FULL model
-			model <- mgcv::gam(
-				formula=stats::as.formula(form),
-				family=family,
-				data=data,
-				method='ML',
-				optimizer=c('outer', 'newton'),
-				select=TRUE,
-				gamma=gamma,
-				weights=w,
-				na.action='na.fail',
-				...
-			)
+	### if not constructing model term-by-term (selection not possible)
+	###################################################################
+	} else {
+	
+		form <- paste(terms, collapse = ' + ')
+		thisForm <- paste0(resp, ' ~ 1 + ', form)
+	
+		model <- mgcv::gam(
+			formula = stats::as.formula(thisForm),
+			family = family,
+			data = data,
+			method = 'ML',
+			optimizer = c('outer', 'newton'),
+			scale = scale,
+			select = TRUE,
+			gamma = gamma,
+			weights = w,
+			...
+		)
+		
+		aicc <- MuMIn::AICc(model)
+		
+		tuning <- data.frame(
+			model = form,
+			aicc = aicc
+		)
+		
+		models <- NULL
+		
+		if (select) warning('Model selection is not performed when argument "construct" is FALSE.')
+		
+		if (verbose) {
+		
+			omnibus::say('Model (no construction or selection):', level=2)
+			print(summary(model))
+			utils::flush.console()
+		
+		}
+		
+	} # if not constructing model term-by-term
 
-		} # if NOT doing automated model construction
-
-	### summary
-	if (verbose & 'model' %in% out) {
-
-		omnibus::say('Best model:', level=2);
-		print(summary(model))
-		utils::flush.console()
-
-	}
+	if (cores > 1L) parallel::stopCluster(cl)
 
 	### return
+	##########
+
 	if (length(out) > 1L) {
 		output <- list()
 		if ('models' %in% out) output$models <- models
@@ -559,5 +573,76 @@ trainGam <- function(
 	} else if ('tuning' %in% out) {
 		tuning
 	}
+		
+}
+
+#################
+### train GAM ###
+#################
+
+.trainGamWorker <- function(
+	i,
+	forms, # formulae (without LHS and maybe without intercept)
+	data,
+	resp,
+	family,
+	gamma,
+	scale,
+	w,
+	paths,
+	insertIntercept, # if TRUE, add "1 +" to the RHS side
+	modelOut, # if TRUE, return model *and* data frame with model
+	...
+) {
+
+	 # need to call this to avoid "object '.doSnowGlobals' not found" error!!!
+	.libPaths(paths)
+
+	form <- forms[i]
+	if (insertIntercept) {
+		form <- if (form == '') {
+			'1'
+		} else {
+			paste('1', form, sep=' + ')
+		}
+	}
+	thisForm <- paste0(resp, ' ~ ', form)
+
+	model <- mgcv::gam(
+		formula = stats::as.formula(thisForm),
+		family = family,
+		data = data,
+		method = 'ML',
+		optimizer = c('outer', 'newton'),
+		scale = scale,
+		select = TRUE,
+		gamma = gamma,
+		weights = w,
+		...
+	)
+	
+	aicc <- MuMIn::AICc(model)
+	
+	# out
+	out <- if (modelOut) {
+		
+		list(
+			list(
+				model = model,
+				formula = form,
+				aicc = aicc
+			)
+		)
+		
+	} else {
+	
+		data.frame(
+			formula = form,
+			aicc = aicc
+		)
+	
+	}
+		
+	out
 
 }
