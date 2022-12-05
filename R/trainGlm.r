@@ -11,6 +11,7 @@
 #' @param quadratic Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include quadratic terms in model construction stage for non-factor predictors.
 #' @param interaction Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include 2-way interaction terms (including interactions between factor predictors).
 #' @param method Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.
+#' @param interceptOnly If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.
 #' @param presPerTermInitial Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only is \code{construct} is TRUE.
 #' @param presPerTermFinal Positive integer. Minimum number of presence sites per term in initial starting model. Used only if \code{select} is \code{TRUE}.
 #' @param maxTerms Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.
@@ -221,6 +222,7 @@ trainGlm <- function(
 	quadratic = TRUE,
 	interaction = TRUE,
 	method = 'glm.fit',
+	interceptOnly = TRUE,
 	presPerTermInitial = 10,
 	presPerTermFinal = 10,
 	maxTerms = 8,
@@ -240,7 +242,7 @@ trainGlm <- function(
 		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
-		w <- .calcWeights(w, data = data, resp = resp)
+		w <- .calcWeights(w, data = data, resp = resp, family = family)
 
 	### parallelization
 	###################
@@ -485,15 +487,15 @@ trainGlm <- function(
 				}
 			}
 		
-			aiccOrder <- order(tuning$AICc)
-			if ('model' %in% out) model <- work[[aiccOrder[1L]]]$model
+			bestOrder <- order(tuning$AICc)
+			if ('model' %in% out) model <- work[[bestOrder[1L]]]$model
 			if ('models' %in% out) {
 				models <- list()
 				models[[1]] <- work[[1L]]$model
 				for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
-				models <- models[aiccOrder]
+				models <- models[bestOrder]
 			}
-			tuning <- tuning[aiccOrder, , drop = FALSE]
+			tuning <- tuning[bestOrder, , drop = FALSE]
 			rownames(tuning) <- NULL
 		
 			if (verbose) {

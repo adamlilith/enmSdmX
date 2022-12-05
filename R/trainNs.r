@@ -8,6 +8,7 @@
 #' @param family Name of family for data error structure (see \code{\link[stats]{family}}).
 #' @param df A vector of integers > 0 or \code{NULL}. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.
 #' @param interaction If \code{TRUE} (default), include two-way interaction terms.
+#' @param interceptOnly If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.
 #' @param presPerTermFinal Minimum number of presence sites per term in initial starting model.
 #' @param maxTerms Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.
 #' @param w Weights. Any of:
@@ -214,6 +215,7 @@ trainNs <- function(
 	family = 'binomial',
 	df = 1:4,
 	interaction = TRUE,
+	interceptOnly = TRUE,
 	method = 'glm.fit',
 	presPerTermFinal = 10,
 	maxTerms = 8,
@@ -236,16 +238,12 @@ trainNs <- function(
 		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
-		w <- .calcWeights(w, data = data, resp = resp)
+		w <- .calcWeights(w, data = data, resp = resp, family = family)
 		
 	### parallelization
 	###################
 			
-		cores <- if (!construct) {
-			1L
-		} else {
-			min(cores, parallel::detectCores(logical = FALSE))
-		}
+		cores <- min(cores, parallel::detectCores(logical = FALSE))
 
 		if (cores > 1L) {
 
@@ -352,7 +350,6 @@ trainNs <- function(
 			
 		} # if more than one term
 
-
 		candidates <- expand.grid(candidates, stringsAsFactors = FALSE)
 		
 		numTerms <- rowSums(!is.na(candidates))
@@ -421,15 +418,15 @@ trainNs <- function(
 			}
 		}
 	
-		aiccOrder <- order(tuning$AICc)
-		if ('model' %in% out) model <- work[[aiccOrder[1L]]]$model
+		bestOrder <- order(tuning$AICc)
+		if ('model' %in% out) model <- work[[bestOrder[1L]]]$model
 		if ('models' %in% out) {
 			models <- list()
 			models[[1]] <- work[[1L]]$model
 			for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
-			models <- models[aiccOrder]
+			models <- models[bestOrder]
 		}
-		tuning <- tuning[aiccOrder, , drop = FALSE]
+		tuning <- tuning[bestOrder, , drop = FALSE]
 		rownames(tuning) <- NULL
 	
 		if (verbose) {

@@ -13,22 +13,23 @@ trainMaxEnt(
   testClasses = TRUE,
   dropOverparam = TRUE,
   anyway = TRUE,
-  out = "model",
   forceLinear = TRUE,
   jackknife = FALSE,
   arguments = NULL,
   scratchDir = NULL,
+  out = "model",
   cores = 1,
+  parallelType = "doParallel",
   verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{Data frame or matrix. Contains a column indicating whether each row is a presence (1) or background (0) site, plus column(s) for environmental predictor(s).}
+\item{data}{Data frame.}
 
-\item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{regMult}{Numeric vector. Values of the master regularization parameters (called \code{beta} in some publications) to test.}
 
@@ -40,13 +41,6 @@ trainMaxEnt(
 
 \item{anyway}{Logical. Same as \code{dropOverparam} (included for backwards compatibility. If \code{NULL} (default), then the value of \code{dropOverparam} will take precedence. If \code{TRUE} or \code{FALSE} then \code{anyway} will override the value of \code{dropOverparam}.}
 
-\item{out}{Character vector. One or more values:
-\itemize{
-    \item    \code{'model'}: Model with the lowest AICc.
-    \item    \code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
-    \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
-}}
-
 \item{forceLinear}{Logical. If \code{TRUE} (default) then require any tested models to include at least linear features.}
 
 \item{jackknife}{Logical. If \code{TRUE} (default) the the returned model will be also include jackknife testing of variable importance.}
@@ -55,14 +49,23 @@ trainMaxEnt(
 
 \item{scratchDir}{Character. Directory to which to write temporary files. Leave as NULL to create a temporary folder in the current working directory.}
 
-\item{cores}{Integer >= 1. Number of cores to use. Default is 1.}
+\item{out}{Character vector. One or more values:
+\itemize{
+    \item    \code{'model'}: Model with the lowest AICc.
+    \item    \code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
+    \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
+}}
+
+\item{cores}{Number of cores to use. Default is 1.}
+
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
 \item{verbose}{Logical. If \code{TRUE} report progress and AICc table.}
 
 \item{...}{Extra arguments. Not used.}
 }
 \value{
-If \code{out = 'model'} this function returns an object of class \code{MaxEnt}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters, log likelihood, and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{MaxEnt} object and the data frame.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
 This function calculates the "best" Maxent model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better). The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).

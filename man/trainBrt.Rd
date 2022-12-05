@@ -20,16 +20,17 @@ trainBrt(
   family = "bernoulli",
   out = "model",
   cores = 1,
+  parallelType = "doParallel",
   verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{data frame with first column being response}
+\item{data}{Data frame.}
 
-\item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{learningRate}{Numeric. Learning rate at which model learns from successive trees (Elith et al. 2008 recommend 0.0001 to 0.1).}
 
@@ -50,7 +51,13 @@ trainBrt(
 * \code{stepSize}: Increase step size (argument \code{n.trees} in \code{gbm.step()}) by 50%.
 If \code{tryBy} is NULL then the function attempts to train the model with the same parameters up to \code{tries} times.}
 
-\item{w}{Either logical in which case \code{TRUE} (default) causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) \emph{or} a numeric list of weights, one per row in \code{data} \emph{or} the name of the column in \code{data} that contains site weights. If \code{FALSE}, then each datum gets a weight of 1.}
+\item{w}{Weights. Any of:
+\itemize{
+\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+    \item \code{FALSE}: Each datum is assigned a weight of 1.
+ \item A numeric vector of weights, one per row in \code{data}.
+    \item The name of the column in \code{data} that contains site weights.
+}}
 
 \item{anyway}{Logical. If \code{FALSE} (default), it is possible for no models to be returned if none converge and/or none had a number of trees is >= \code{minTrees}). If \code{TRUE} then all models are returned but with a warning.}
 
@@ -65,15 +72,17 @@ If \code{tryBy} is NULL then the function attempts to train the model with the s
 
 \item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.}
 
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
+
 \item{verbose}{Logical. If \code{TRUE} display progress.}
 
 \item{...}{Arguments to pass to \code{\link[dismo]{gbm.step}}.}
 }
 \value{
-If \code{out = 'model'} this function returns an object of class \code{gbm}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and cross-validation deviance for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gbm} object and the data frame. Note that if a model does not converge or does not meet sufficiency criteria (i.e., the number of optimal trees is < \code{minTrees}, then the model is not returned (a \code{NULL} value is returned for \code{'model'} and models are simply missing from the \code{tuning} and \code{models} output.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
-This function is a wrapper for \code{\link[dismo]{gbm.step}}. It returns the model with best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. It can also return a table with deviance of different combinations of tuning parameters that were tested, and all of the models tested. See Elith, J., J.R. Leathwick, and T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813.
+This function is a wrapper for \code{\link[dismo]{gbm.step}}. It returns the model with best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. It can also return a table with deviance of different combinations of tuning parameters that were tested, and all of the models tested.
 }
 \examples{
 
@@ -249,6 +258,9 @@ legend(
 )
 
 
+}
+\references{
+Elith, J., J.R. Leathwick, & T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813. \doi{10.1111/j.1365-2656.2008.01390.x}
 }
 \seealso{
 \code{\link[dismo]{gbm.step}}

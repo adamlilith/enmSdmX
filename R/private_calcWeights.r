@@ -9,7 +9,7 @@
 #' @returns A numeric vector.
 #' @keywords internal
 
-.calcWeights <- function(w, data, resp) {
+.calcWeights <- function(w, data, resp, family) {
 
 	if (inherits(w, 'logical')) {
 		if (w & (family %in% c('binomial', 'quasibinomial'))) {

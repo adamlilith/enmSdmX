@@ -19,13 +19,8 @@ predictEnmSdm <- function(
 	nrows = nrow(newdata),
 	...
 ) {
-
-	cores <- if (inherits(newdata, c('SpatRaster'))) {
-		1L
-	} else {
-		# min(cores, parallel::detectCores(logical=FALSE))
-		min(cores, parallelly::availableCores(logical=FALSE))
-	}
+	
+	cores <- min(cores, parallel::detectCores(logical = FALSE))
 	
 	### predict to each subset of rows
 	##################################
@@ -157,7 +152,9 @@ predictEnmSdm <- function(
 			nd <- terra::as.data.frame(newdata, na.rm=FALSE)
 			notNas <- which(complete.cases(nd))
 			nd <- nd[notNas, , drop=FALSE]
-			preds <- predict(model, nd, type='prob', ...)
+			# preds <- randomForest:::predict.randomForest(model, nd, type='prob', ...)
+			preds <- do.call(predict, args=list(object=model, newdata=nd, type='prob', ...))
+			# preds <- predict(model, nd, type='prob', ...)
 			preds <- preds[ , '1']
 
 			if (inherits(newdata, 'SpatRaster')) {

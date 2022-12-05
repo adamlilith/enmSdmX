@@ -9,9 +9,11 @@ trainRf(
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
   family = "binomial",
-  numTrees = 500,
+  numTrees = c(500, 1000),
   mtryFactor = 2,
   w = TRUE,
+  cores = 1,
+  parallelType = "doParallel",
   out = "model",
   verbose = FALSE,
   ...
@@ -20,17 +22,27 @@ trainRf(
 \arguments{
 \item{data}{Data frame.}
 
-\item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{family}{Character. If "\code{binomial}" then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect.}
 
-\item{numTrees}{Positive integer.  Number of trees to grow.  Default is 500.}
+\item{numTrees}{Vector of number of trees to grow. All possible combinations of \code{mtry} and \code{numTrees} will be assessed.}
 
 \item{mtryFactor}{Positive integer (default is 2).  Number of predictors to add to \code{mtry} until all predictors are in each tree.}
 
-\item{w}{Either logical in which case \code{TRUE} causes the total weight of presences to equal the total weight of non-presence sites (if \code{family='binomial'}) \emph{or} a numeric vector of weights, one per row in \code{data}. The default is to assign equal total weight to presences and contrast sites (\code{TRUE}). Note that weights in random forests are simply used as relative probabilities of selecting a row in \code{data} to be used in a particular tree.}
+\item{w}{Weights. For random forests, weights are simply used as relative probabilities of selecting a row in \code{data} to be used in a particular tree. This argument takes any of:
+\itemize{
+\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+    \item \code{FALSE}: Each datum is assigned a weight of 1.
+ \item A numeric vector of weights, one per row in \code{data}.
+    \item The name of the column in \code{data} that contains site weights.
+}}
+
+\item{cores}{Number of cores to use. Default is 1.}
+
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
 \item{out}{Character vector. One or more values:
 \itemize{
@@ -44,7 +56,7 @@ trainRf(
 \item{...}{Arguments to pass to \code{\link[randomForest]{randomForest}}.}
 }
 \value{
-Object of class \code{\link[randomForest]{randomForest}}.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
 This function trains a random forest model. It identifies the optimal value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). See \code{\link[randomForest]{randomForest}} for more details.

@@ -5,7 +5,7 @@
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
 #' @param family Character. If "\code{binomial}" then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect.
-#' @param numTrees Positive integer.  Number of trees to grow.  Default is 500.
+#' @param numTrees Vector of number of trees to grow. All possible combinations of \code{mtry} and \code{numTrees} will be assessed.
 #' @param mtryFactor Positive integer (default is 2).  Number of predictors to add to \code{mtry} until all predictors are in each tree.
 #' @param w Weights. For random forests, weights are simply used as relative probabilities of selecting a row in \code{data} to be used in a particular tree. This argument takes any of:
 #' \itemize{
@@ -20,6 +20,8 @@
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest OOB.
 #' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by OOB error rate.
 #' }
+#' @param cores Number of cores to use. Default is 1.
+#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} then display progress for finding optimal value of \code{mtry}.
 #' @param ... Arguments to pass to \code{\link[randomForest]{randomForest}}.
 #'
@@ -207,9 +209,11 @@ trainRf <- function(
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
 	family = 'binomial',
-	numTrees = 500,
+	numTrees = c(500, 1000),
 	mtryFactor = 2,
 	w = TRUE,
+	cores = 1,
+	parallelType = 'doParallel',
 	out = 'model',
 	verbose = FALSE,
 	...
@@ -220,7 +224,7 @@ trainRf <- function(
 	if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 	# model weights
-	w <- .calcWeights(w, data = data, resp = resp)
+	w <- .calcWeights(w, data = data, resp = resp, family = family)
 	
 	# binomial response
 	if (family == 'binomial') data[ , resp] <- factor(data[ , resp], levels=0:1, labels=c('0', '1'))
@@ -233,38 +237,99 @@ trainRf <- function(
 	mtries <- seq(mtryStart, mtryEnd, mtryFactor)
 	if (tail(mtries)[1L] != mtryEnd) mtries <- c(mtries, mtryEnd)
 
-	tuning <- data.frame()
-	if ('models' %in% out) models <- list()
-	bestOob <- Inf
-	for (countMtry in seq_along(mtries)) {
+	params <- expand.grid(numTrees = numTrees, mtry = mtries, stringsAsFactors = FALSE)
+
+	### parallelization
+	###################
+			
+		cores <- min(cores, nrow(params), parallel::detectCores(logical = FALSE))
+
+		if (cores > 1L) {
+
+			`%makeWork%` <- foreach::`%dopar%`
+			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+
+			if (tolower(parallelType) == 'doparallel') {
+				doParallel::registerDoParallel(cl)
+			} else if (tolower(parallelType) == 'dosnow') {
+				doSNOW::registerDoSNOW(cl)
+			} else {
+				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
+			}
+			
+		} else {
+			`%makeWork%` <- foreach::`%do%`
+		}
+
+		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
+		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
+
+	### grow forest
+	###############
 	
-		thisModel <- randomForest::randomForest(x=x, y=y, ntree=numTrees, weights=w, strata=y, ...)
-		oob <- thisModel$err.rate[numTrees, 1L]
-		
-		tuning <- rbind(
-			tuning,
-			data.frame(
-				mtry = mtries[countMtry],
-				oob = oob
+		work <- foreach::foreach(
+			i = 1L:nrow(params),
+			.options.multicore = mcOptions,
+			.combine = 'c',
+			.inorder = FALSE,
+			.export = c('.trainRfWorker')
+		) %makeWork% {
+			.trainRfWorker(
+				i = i,
+				x = x,
+				y = y,
+				w = w,
+				params = params,
+				paths = paths,
+				modelOut = ('models' %in% out | 'model' %in% out),
+				...
 			)
+		}
+	
+		if (cores > 1L) parallel::stopCluster(cl)
+	
+		# tuning table
+		tuning <- data.frame(
+			numTrees = work[[1L]]$numTrees,
+			oobError = work[[1L]]$oob
 		)
 		
-		if ('models' %in% out) models[[length(models) + 1L]] <- thisModel
-		if ('model' %in% out) {
-			if (oob < bestOob) {
-				model <- thisModel
-				bestOob <- oob
+		if (length(work) > 1L) {
+			for (i in 2L:length(work)) {
+				
+				tuning <- rbind(
+					tuning,
+					data.frame(
+						numTrees = work[[i]]$numTrees,
+						oobError = work[[i]]$oob
+					)
+				)
+				
 			}
 		}
 	
-	}
+		bestOrder <- order(tuning$oobError, tuning$numTrees)
+		if ('model' %in% out) model <- work[[bestOrder[1L]]]$model
+		if ('models' %in% out) {
+			models <- list()
+			models[[1]] <- work[[1L]]$model
+			for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
+			models <- models[bestOrder]
+		}
+		tuning <- tuning[bestOrder, , drop = FALSE]
+		rownames(tuning) <- NULL
 	
-	modelOrder <- order(tuning$oob)
-	tuning <- tuning[modelOrder, , drop=FALSE]
-	if ('models' %in% out) models <- models[modelOrder]
-	rownames(tuning) <- NULL
+		if (verbose) {
+		
+			omnibus::say('Model selection:', level=2)
+			print(tuning)
+			utils::flush.console()
 
+		}
+	
 	### return
+	##########
+	
 	if (length(out) > 1L) {
 		output <- list()
 		if ('models' %in% out) output$models <- models
@@ -281,3 +346,56 @@ trainRf <- function(
 
 }
 
+.trainRfWorker <- function(
+	i,
+	x,
+	y,
+	w,
+	params,
+	paths,
+	modelOut,
+	...
+) {
+
+	.libPaths(paths)
+
+	ntree <- params$numTrees[i]
+	mtry <- params$mtry[i]
+
+	model <- randomForest::randomForest(
+		x = x,
+		y = y,
+		mtry = mtry,
+		ntree = ntree,
+		weights = w,
+		strata = y,
+		...
+	)
+
+	oob <- model$err.rate[ntree, 1L]
+
+	# out
+	out <- if (modelOut) {
+		
+		list(
+			list(
+				model = model,
+				numTrees = ntree,
+				mtry = mtry,
+				oob = oob
+			)
+		)
+		
+	} else {
+	
+		data.frame(
+			numTrees = ntree,
+			mtry = mtry,
+			oob = oob
+		)
+	
+	}
+		
+	out
+	
+}

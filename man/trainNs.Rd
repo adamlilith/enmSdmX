@@ -10,39 +10,46 @@ trainNs(
   preds = names(data)[2:ncol(data)],
   family = "binomial",
   df = 1:4,
-  construct = TRUE,
-  select = TRUE,
-  presPerTermInitial = 10,
+  interaction = TRUE,
+  method = "glm.fit",
   presPerTermFinal = 10,
-  initialTerms = 8,
+  maxTerms = 8,
   w = TRUE,
+  cores = 1,
+  parallelType = "doParallel",
   out = "model",
   verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{Data frame.  Must contain fields with same names as in \code{preds} object.}
+\item{data}{Data frame.}
 
-\item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{family}{Name of family for data error structure (see \code{\link[stats]{family}}).}
 
-\item{df}{Integer > 0 \emph{or} vector of integers > 0. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.  If \code{construct} is \code{TRUE}, then univariate models for each term will be evaluated using each value in \code{df}. Note that \code{NULL} is also valid, but it can create problems when used with other functions in this package (and usually defaults to \code{df=3} anyway).}
+\item{df}{A vector of integers > 0 or \code{NULL}. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.}
 
-\item{construct}{Logical. If TRUE then construct model by computing AICc for all univariate and bivariate models. Then add terms up to maximum set by \code{presPerTermInitial} and \code{initialTerms}.}
+\item{interaction}{If \code{TRUE} (default), include two-way interaction terms.}
 
-\item{select}{Logical. If TRUE then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if any).}
+\item{presPerTermFinal}{Minimum number of presence sites per term in initial starting model.}
 
-\item{presPerTermInitial}{Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only is \code{construct} is \code{TRUE}.}
+\item{maxTerms}{Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.}
 
-\item{presPerTermFinal}{Positive integer. Minimum number of presence sites per term in initial starting model; used only if \code{select} is \code{TRUE}.}
+\item{w}{Weights. Any of:
+\itemize{
+\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+    \item \code{FALSE}: Each datum is assigned a weight of 1.
+ \item A numeric vector of weights, one per row in \code{data}.
+    \item The name of the column in \code{data} that contains site weights.
+}}
 
-\item{initialTerms}{Positive integer. Maximum number of terms to be used in an initial model. Used only if \code{construct} is TRUE. The maximum that can be handled by \code{\link[MuMIn]{dredge}} is 31, so if this number is >31 and \code{select} is \code{TRUE} then it is forced to 31 with a warning. Note that the number of coefficients for factors is not calculated correctly, so if the predictors contain factors then this number might have to be reduced even more.}
+\item{cores}{Number of cores to use. Default is 1.}
 
-\item{w}{Either logical in which case \code{TRUE} causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.}
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
 \item{out}{Character vector. One or more values:
 \itemize{
@@ -53,13 +60,13 @@ trainNs(
 
 \item{verbose}{Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.}
 
-\item{...}{Arguments to send to \code{gam()} or \code{dredge()}.}
+\item{...}{Arguments to send to \code{\link[stats]{glm}}.}
 }
 \value{
-If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
-This function constructs a natural-spline model piece-by-piece by first calculating AICc for all models with univariate and bivariate (interaction) terms. It then creates a "full" model with the highest-ranked uni/bivariate terms then implements an all-subsets model selection routine.
+This function constructs a natural-spline model by evaluating all possible models given the available predictoes and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model.
 }
 \examples{
 
@@ -237,5 +244,5 @@ legend(
 
 }
 \seealso{
-\code{\link[splines]{ns}}, \code{\link[mgcv]{gam}}, \code{\link{trainGam}}
+\code{\link[splines]{ns}}
 }

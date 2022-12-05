@@ -11,54 +11,56 @@ trainGlm(
   family = "binomial",
   construct = TRUE,
   select = TRUE,
-  anyway = FALSE,
   quadratic = TRUE,
   interaction = TRUE,
-  verboten = NULL,
-  verbotenCombos = NULL,
+  method = "glm.fit",
   presPerTermInitial = 10,
   presPerTermFinal = 10,
-  initialTerms = 10,
+  maxTerms = 8,
   w = TRUE,
-  method = "glm.fit",
+  cores = 1,
+  parallelType = "doParallel",
   out = "model",
-  tooBig = 1e+07,
   verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{Data frame. Must contain fields with same names as in \code{preds} object.}
+\item{data}{Data frame.}
 
-\item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{family}{Name of family for data error structure (see \code{\link[stats]{family}}). Default is to use the 'binomial' family.}
 
-\item{construct}{Logical. If \code{TRUE} (default) then construct model from individual terms entered in order from lowest to highest AICc up to limits set by \code{presPerTermInitial} or \code{initialTerms} is met. If \code{FALSE} then the "full" model consists of all terms allowed by \code{quadratic} and \code{interaction}.}
+\item{construct}{Logical. If \code{TRUE} (default) then construct model from individual terms entered in order from lowest to highest AICc up to limits set by \code{presPerTermInitial} or \code{maxTerms} is met. If \code{FALSE} then the "full" model consists of all terms allowed by \code{quadratic} and \code{interaction}.}
 
 \item{select}{Logical. If \code{TRUE} (default) then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if any).}
-
-\item{anyway}{Logical. If \code{FALSE} (default), then during model construction, if no univariate models have valid coefficients (< \code{tooBog}), then do not proceed and return \code{NULL}. If \code{TRUE}, then proceed with instable models (with a warning), but if teh final "best" model has unstable coefficients, then return \code{NULL} for the best model.}
 
 \item{quadratic}{Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include quadratic terms in model construction stage for non-factor predictors.}
 
 \item{interaction}{Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include 2-way interaction terms (including interactions between factor predictors).}
 
-\item{verboten}{Either \code{NULL} (default) in which case \code{forms} is returned without any manipulation. Alternatively, this is a character list of terms that are not allowed to appear in any model in \code{forms}. Models with these terms are removed from \code{forms}. Note that the order of variables in interaction terms does not matter (e.g., \code{x1:x2} will cause the removal of models with this term verbatim as well as \code{x2:x1}). All possible permutations of three-way interaction terms are treated similarly.}
-
-\item{verbotenCombos}{Either \code{NULL} or a list of lists. This argument allows excluding particular combinations of variables using exact matches (i.e., a variable appears exactly as stated) or general matches (i.e., a variable appears in any term). Please see the \emph{Details} section of \code{\link[statisfactory]{makeFormulae}} for more information on how to use this argument. The default is \code{NULL} in which case any combination of variables is allowed.}
+\item{method}{Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.}
 
 \item{presPerTermInitial}{Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only is \code{construct} is TRUE.}
 
 \item{presPerTermFinal}{Positive integer. Minimum number of presence sites per term in initial starting model. Used only if \code{select} is \code{TRUE}.}
 
-\item{initialTerms}{Positive integer. Maximum number of terms to be used in an initial model. Used only if \code{construct} is \code{TRUE}.}
+\item{maxTerms}{Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.}
 
-\item{w}{Either logical in which case \code{TRUE} causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign equal total weights to presences and contrast sites (\code{TRUE}).}
+\item{w}{Weights. Any of:
+\itemize{
+\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+    \item \code{FALSE}: Each datum is assigned a weight of 1.
+ \item A numeric vector of weights, one per row in \code{data}.
+    \item The name of the column in \code{data} that contains site weights.
+}}
 
-\item{method}{Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.}
+\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.}
+
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
 \item{out}{Character vector. One or more values:
 \itemize{
@@ -67,11 +69,12 @@ trainGlm(
     \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
 }}
 
-\item{tooBig}{Numeric. Used to catch errors when fitting a model fit with the \code{brglmFit} function in the \pkg{brglm2} package. In some cases fitted coefficients are unstable and tend toward very high values, even if training data is standardized. Models with such coefficients will be discarded if any one coefficient is \code{> tooBig}. Set equal to \code{Inf} to keep all models.}
-
-\item{verbose}{Logical. If \code{TRUE} then display intermediate results on the display device.}
+\item{verbose}{Logical. If \code{TRUE} then display progress.}
 
 \item{...}{Arguments to pass to \code{glm}.}
+}
+\value{
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
 This function constructs a GLM piece-by-piece by first calculating AICc for all models with univariate, quadratic, and 2-way-interaction terms. It then creates a "full" model with the highest-ranked uni/bivariate terms. Finally, it implements an all-subsets model selection routine using AICc. Its output is any or all of: a table with AICc for all possible models, all possible models (after model construction), and/or the model with the lowest AICc.

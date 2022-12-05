@@ -10,11 +10,11 @@
 #' @param scale A numeric value indicating the "scale" parameter (see argument \code{scale} in \code{\link[mgcv]{gam}}). The default is 0 (which allows a single smoother for Poisson and binomial error families and unknown scale for all others.)
 #' @param construct If \code{TRUE} (default), then construct the model by computing AICc for all univariate and bivariate models. Then add terms up to maximum set by \code{presPerTermInitial} and \code{maxTerms}.
 #' @param select If \code{TRUE} (default), then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if \code{construct} is \code{TRUE}).
-#' @param interceptOnly If \code{TRUE} (default), include an intercept-only model among those assessed for "best" model.
 #' @param presPerTermInitial Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only if \code{construct} is \code{TRUE}.
 #' @param presPerTermFinal Positive integer. Minimum number of presence sites per term in initial starting model; used only if \code{select} is \code{TRUE}.
 #' @param maxTerms Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.
 #' @param interaction Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.
+#' @param interceptOnly If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.
 #' @param smoothingBasis Character. Indicates the type of smoothing basis. The default is \code{'cs'} (cubic splines), but see \code{\link[mgcv]{smooth.terms}} for other options. This is the value of argument \code{bs} in a \code{\link[mgcv]{s}} function.
 #' @param w Weights. Any of:
 #' \itemize{
@@ -221,13 +221,14 @@ trainGam <- function(
 	family = 'binomial',
 	gamma = 1,
 	scale = 0,
+	smoothingBasis = 'cs',
+	interaction = 'te',
+	interceptOnly = TRUE,
 	construct = TRUE,
 	select = TRUE,
 	presPerTermInitial = 10,
 	presPerTermFinal = 10,
 	maxTerms = 8,
-	smoothingBasis = 'cs',
-	interaction = 'te',
 	w = TRUE,
 	out = 'model',
 	cores = 1,
@@ -236,9 +237,8 @@ trainGam <- function(
 	...
 ) {
 
-	###########
-	## setup ##
-	###########
+	### setup
+	#########
 
 		# ellipses <- list(...)
 
@@ -246,7 +246,7 @@ trainGam <- function(
 		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
-		w <- .calcWeights(w, data = data, resp = resp)
+		w <- .calcWeights(w, data = data, resp = resp, family = family)
 
 	### parallelization
 	###################
@@ -487,15 +487,15 @@ trainGam <- function(
 				}
 			}
 		
-			aiccOrder <- order(tuning$AICc)
-			if ('model' %in% out) model <- work[[aiccOrder[1L]]]$model
+			bestOrder <- order(tuning$AICc)
+			if ('model' %in% out) model <- work[[bestOrder[1L]]]$model
 			if ('models' %in% out) {
 				models <- list()
 				models[[1]] <- work[[1L]]$model
 				for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
-				models <- models[aiccOrder]
+				models <- models[bestOrder]
 			}
-			tuning <- tuning[aiccOrder, , drop = FALSE]
+			tuning <- tuning[bestOrder, , drop = FALSE]
 			rownames(tuning) <- NULL
 		
 			if (verbose) {

@@ -10,42 +10,56 @@ trainGam(
   preds = names(data)[2:ncol(data)],
   family = "binomial",
   gamma = 1,
+  scale = 0,
   construct = TRUE,
   select = TRUE,
   presPerTermInitial = 10,
   presPerTermFinal = 10,
-  initialTerms = 8,
+  maxTerms = 8,
+  smoothingBasis = "cs",
   interaction = "te",
   w = TRUE,
   out = "model",
+  cores = 1,
+  parallelType = "doParallel",
   verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{Data frame.  Must contain fields with same names as in \code{preds} object.}
+\item{data}{Data frame.}
 
-\item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{family}{Name of family for data error structure (see \code{?family}).}
 
 \item{gamma}{Initial penalty to degrees of freedom to use (larger ==> smoother fits).}
 
-\item{construct}{Logical. If \code{TRUE} then construct model by computing AICc for all univariate and bivariate models. Then add terms up to maximum set by \code{presPerTermInitial} and \code{initialTerms}.}
+\item{scale}{A numeric value indicating the "scale" parameter (see argument \code{scale} in \code{\link[mgcv]{gam}}). The default is 0 (which allows a single smoother for Poisson and binomial error families and unknown scale for all others.)}
 
-\item{select}{Logical. If \code{TRUE} then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if any).}
+\item{construct}{If \code{TRUE} (default), then construct the model by computing AICc for all univariate and bivariate models. Then add terms up to maximum set by \code{presPerTermInitial} and \code{maxTerms}.}
+
+\item{select}{If \code{TRUE} (default), then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if \code{construct} is \code{TRUE}).}
 
 \item{presPerTermInitial}{Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only if \code{construct} is \code{TRUE}.}
 
 \item{presPerTermFinal}{Positive integer. Minimum number of presence sites per term in initial starting model; used only if \code{select} is \code{TRUE}.}
 
-\item{initialTerms}{Positive integer. Maximum number of terms to be used in an initial model. Used only if \code{construct} is TRUE. The maximum that can be handled by \code{dredge()} is 31, so if this number is >31 and \code{select} is \code{TRUE} then it is forced to 31 with a warning. Note that the number of coefficients for factors is not calculated correctly, so if the predictors contain factors then this number might have to be reduced even more.}
+\item{maxTerms}{Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.}
+
+\item{smoothingBasis}{Character. Indicates the type of smoothing basis. The default is \code{'cs'} (cubic splines), but see \code{\link[mgcv]{smooth.terms}} for other options. This is the value of argument \code{bs} in a \code{\link[mgcv]{s}} function.}
 
 \item{interaction}{Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.}
 
-\item{w}{Either logical in which case TRUE causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) OR a numeric list of weights, one per row in \code{data} OR the name of the column in \code{data} that contains site weights. The default is to assign a weight of 1 to each datum.}
+\item{w}{Weights. Any of:
+\itemize{
+\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+    \item \code{FALSE}: Each datum is assigned a weight of 1.
+ \item A numeric vector of weights, one per row in \code{data}.
+    \item The name of the column in \code{data} that contains site weights.
+}}
 
 \item{out}{Character vector. One or more values:
 \itemize{
@@ -54,12 +68,18 @@ trainGam(
     \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
 }}
 
-\item{verbose}{Logical. If TRUE then display intermediate results on the display device.}
+\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.}
+
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
+
+\item{verbose}{Logical. If \code{TRUE} then display intermediate results on the display device.}
 
 \item{...}{Extra arguments (not used).}
+
+\item{interceptOnly}{If \code{TRUE} (default), include an intercept-only model among those assessed for "best" model.}
 }
 \value{
-If \code{out = 'model'} this function returns an object of class \code{gam}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{gam} object and the data frame.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
 This function constructs a GAM piece-by-piece by first calculating AICc for all models with univariate and bivariate (interaction) terms. It then creates a "full" model with the highest-ranked uni/bivariate terms then implements an all-subsets model selection routine.

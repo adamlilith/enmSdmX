@@ -254,7 +254,7 @@ trainBrt <- function(
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 		# model weights
-		w <- .calcWeights(w, data = data, resp = resp)
+		w <- .calcWeights(w, data = data, resp = resp, family = family)
 
 	### generate table of parameterizations
 	#######################################
