@@ -15,7 +15,6 @@ trainMaxNet(
   forceLinear = TRUE,
   out = "model",
   cores = 1,
-  parallelType = "doParallel",
   verbose = FALSE,
   ...
 )
@@ -45,8 +44,6 @@ trainMaxNet(
 }}
 
 \item{cores}{Number of cores to use. Default is 1.}
-
-\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
 \item{verbose}{Logical. If \code{TRUE} report the AICc table.}
 
@@ -105,6 +102,9 @@ predictors <- c('bio1', 'bio12')
 
 ### calibrate models
 ####################
+
+# Note that all of the trainXYZ functions can made to go faster using the
+# "cores" argument (set to just 1, by default).
 
 # MaxEnt
 mx <- trainMaxEnt(

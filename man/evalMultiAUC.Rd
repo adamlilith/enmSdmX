@@ -49,5 +49,5 @@ evalMultiAUC(low, middle, high, weightBySize=TRUE)
 Hand, DJ and Till, RJ. 2001. A simple generalisation of the area under the ROC curve for multiple class classification problems. \emph{Machine Learning} 45:171-186 \doi{10.1023/A:1010920819831}.
 }
 \seealso{
-\code{\link[dismo]{evaluate}}, \code{link[enmSdmX]{evalAUC}}
+\code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 }

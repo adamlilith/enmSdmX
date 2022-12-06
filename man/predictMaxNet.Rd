@@ -83,6 +83,9 @@ predictors <- c('bio1', 'bio12')
 ### calibrate models
 ####################
 
+# Note that all of the trainXYZ functions can made to go faster using the
+# "cores" argument (set to just 1, by default).
+
 # MaxEnt
 mx <- trainMaxEnt(
 	data = env,

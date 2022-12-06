@@ -76,5 +76,5 @@ presWeight <- c(rep(0.1, 100), rep(1, 100))
 evalThresholdStats(thresholds, pres, contrast, presWeight=presWeight)
 }
 \seealso{
-\code{\link[dismo]{threshold}}, \code{\link[enmSdmX]{evalThreshold}}, \code{\link[dismo]{evaluate}}
+\code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 }

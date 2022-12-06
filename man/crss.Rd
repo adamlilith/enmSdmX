@@ -5,7 +5,7 @@
 \alias{crss}
 \title{Coordinate reference systems (CRSs)}
 \format{
-An object of class \code{data.table}. This is a table with "named" coordinate referenbce systems and their well-known-text (WKT2) representation. It can be used as-is, or with \code{\link{crsGet}}. The fields are as:
+An object of class \code{data.frame}. This is a table with "named" coordinate referenbce systems and their well-known-text (WKT2) representation. It can be used as-is, or with \code{\link{crsGet}}. The fields are as:
 \itemize{
 \item \code{long}: "Long" name of the CRS
 \item \code{short1} and \code{short2}: "Short" names of the CRS
@@ -22,7 +22,7 @@ An object of class \code{data.table}. This is a table with "named" coordinate re
 data(crss)
 }
 \description{
-Outline of Madagascar from GADM
+A table of commonly-used coordinate reference systems
 }
 \examples{
 
@@ -31,5 +31,4 @@ data(crss)
 }
 \keyword{CRS}
 \keyword{coordinate}
-\keyword{reference}
-\keyword{system,}
+\keyword{projection}

@@ -13,8 +13,6 @@ evalThreshold(
   sensitivity = 0.9,
   thresholds = seq(0, 1, by = 0.001),
   na.rm = FALSE,
-  bg = NULL,
-  bgWeight = NULL,
   ...
 )
 }
@@ -41,10 +39,6 @@ evalThreshold(
 \item{thresholds}{Numeric vector. Thresholds at which to calculate the sum of sensitivity and specificity. The default evaluates all values from 0 to 1 in steps of 0.01.}
 
 \item{na.rm}{Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.}
-
-\item{bg}{Same as \code{contrast}. Included for backwards compatibility. Ignored if \code{contrast} is not \code{NULL}.}
-
-\item{bgWeight}{Same as \code{contrastWeight}. Included for backwards compatibility. Ignored if \code{contrastWeight} is not \code{NULL}.}
 
 \item{...}{Other arguments (unused).}
 }
@@ -76,5 +70,5 @@ presWeight <- c(rep(0.1, 100), rep(1, 100))
 evalThreshold(pres, contrast, presWeight=presWeight)
 }
 \seealso{
-\code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}
+\code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 }

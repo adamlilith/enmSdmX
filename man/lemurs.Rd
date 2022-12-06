@@ -8,7 +8,7 @@
 An object of class \code{'data.frame'}.
 }
 \source{
-www.gbif.org
+\href{www.gbif.org}{GBIF}
 }
 \usage{
 data(lemurs)
@@ -21,5 +21,4 @@ data(lemurs)
 lemurs
 }
 \keyword{Madagascar}
-\keyword{datasets,}
-\keyword{lemurs,}
+\keyword{lemurs}

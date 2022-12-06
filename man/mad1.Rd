@@ -8,7 +8,7 @@
 An object of class \code{sf}.
 }
 \source{
-\href{GADM}{www.gadm.org}
+\href{www.gadm.org}{GADM}
 }
 \usage{
 data(mad1, package='enmSdmX')
@@ -22,4 +22,3 @@ mad1
 plot(mad1['NAME_2'], main='Malagasy Faritra')
 }
 \keyword{Madagascar}
-\keyword{datasets,}

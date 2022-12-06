@@ -11,8 +11,6 @@ evalTSS(
   contrastWeight = rep(1, length(contrast)),
   thresholds = seq(0, 1, by = 0.001),
   na.rm = FALSE,
-  bg = NULL,
-  bgWeight = NULL,
   ...
 )
 }
@@ -29,10 +27,6 @@ evalTSS(
 
 \item{na.rm}{Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.}
 
-\item{bg}{Same as \code{contrast}. Included for backwards compatibility. Ignored if \code{contrast} is not \code{NULL}.}
-
-\item{bgWeight}{Same as \code{contrastWeight}. Included for backwards compatibility. Ignored if \code{contrastWeight} is not \code{NULL}.}
-
 \item{...}{Other arguments (unused).}
 }
 \value{
@@ -48,8 +42,8 @@ This function calculates the maximum value of the True Skill Statistic (i.e., ac
 set.seed(123)
 
 # set of bad and good predictions at presences
-bad <- runif(100)^2
-good <- runif(100)^0.1
+bad <- runif(30)^2
+good <- runif(30)^0.1
 hist(good, breaks=seq(0, 1, by=0.1), border='green', main='Presences')
 hist(bad, breaks=seq(0, 1, by=0.1), border='red', add=TRUE)
 pres <- c(bad, good)
@@ -57,24 +51,25 @@ contrast <- runif(1000)
 evalTSS(pres, contrast)
 
 # upweight bad predictions
-presWeight <- c(rep(1, 100), rep(0.1, 100))
+presWeight <- c(rep(1, 100), rep(0.1, 30))
 evalTSS(pres, contrast, presWeight=presWeight)
 
 # upweight good predictions
-presWeight <- c(rep(0.1, 100), rep(1, 100))
+presWeight <- c(rep(0.1, 100), rep(1, 30))
 evalTSS(pres, contrast, presWeight=presWeight)
 
 e <- dismo::evaluate(pres, contrast)
 max(e@TPR + e@TNR) - 1
 
-# why different from dismo's evaluate() function?
-# because uses different thresholds based on values of
-# presence and absence predictions
+# Why different values from dismo's evaluate() function?
+# Because dismo's function uses thresholds based on presence/non-presence
+# values, whereas evalTSS uses equall-spaced thresholds.
 head(e@t)
+
 }
 \references{
 See Allouche, O., Tsoar, A., and Kadmon, R. 2006. Assessing the accuracy of species distribution models: Prevalence, kappa and the true skill statistic (TSS). \emph{Journal of Applied Ecology} 43:1223-1232. \doi{10.1111/j.1365-2664.2006.01214.x}
 }
 \seealso{
-\code{\link{evalAUC}}, \code{link{evalContBoyce}}
+\code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}
 }
