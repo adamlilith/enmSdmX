@@ -8,7 +8,7 @@
 An object of class \code{sf}.
 }
 \source{
-\href{www.gadm.org}{GADM}
+\href{http://www.gadm.org}{GADM}
 }
 \usage{
 data(mad1, package='enmSdmX')

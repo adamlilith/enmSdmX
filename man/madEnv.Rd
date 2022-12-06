@@ -8,7 +8,7 @@
 An object of class \code{'SpatRaster'}.
 }
 \source{
-\href{www.worldclim.org}{WorldClim}
+\href{http://www.worldclim.org}{WorldClim}
 }
 \description{
 Climate rasters for Madagascar from WorldClim version 1.4. Values of these rasters have been rounded, so please do not use them for "official" work.

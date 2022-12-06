@@ -51,11 +51,11 @@ contrast <- runif(1000)
 evalTSS(pres, contrast)
 
 # upweight bad predictions
-presWeight <- c(rep(1, 100), rep(0.1, 30))
+presWeight <- c(rep(1, 30), rep(0.1, 30))
 evalTSS(pres, contrast, presWeight=presWeight)
 
 # upweight good predictions
-presWeight <- c(rep(0.1, 100), rep(1, 30))
+presWeight <- c(rep(0.1, 30), rep(1, 30))
 evalTSS(pres, contrast, presWeight=presWeight)
 
 e <- dismo::evaluate(pres, contrast)

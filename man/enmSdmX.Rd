@@ -105,7 +105,7 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://github.com/adamlilith/enmSdmX}
+  \item \url{https://github.com/adamlilith/enmSdmX}
   \item Report bugs at \url{https://github.com/adamlilith/enmSdmX}
 }
 
