@@ -3,11 +3,11 @@ Tools for modeling niches and distributions of species
 
 <img align="right" src="enmSdmX.png" height="223"/>
 
-This package contains a suite of efficiency functions for species distribution modeling and ecological niche modeling. You can install this package from CRAN using:
+This package for R contains a suite of efficiency functions for species distribution modeling and ecological niche modeling. You can install this package from CRAN using:
 
 `install.packages('enmSdmX', dependencies = TRUE)`
 
-You can install the development version of this package in R using:
+You can install the development version of this package using:
 
 `remotes::install_github('adamlilith/enmSdmX', dependencies=TRUE)`  
 
@@ -16,7 +16,7 @@ You can install the development version of this package in R using:
 
 ### Using spatially imprecise records
 * `mcpFromPointsPolys`: Minimum convex polygon from a set of spatial polygons and/or points ("nearest geographic point" method)
-* `nearestEnvs:  Extract "most conservative" environments from points and/or polygons ("nearest environmental point" method)
+* `nearestEnvs`:  Extract "most conservative" environments from points and/or polygons ("nearest environmental point" method)
 
 ### Bias correction
 * `pointDistWeights`: Proximity-based weighting for occurrences to correct for spatial bias
@@ -26,7 +26,7 @@ You can install the development version of this package in R using:
 * `trainBRT`: Boosted regression trees (BRTs)
 * `trainGAM`: Generalized additive models (GAMs)
 * `trainGLM`: Generalized linear models (GLMs)
-* `trainMaxEnt: MaxEnt models
+* `trainMaxEnt`: MaxEnt models
 * `trainMaxNet`: MaxNet models
 * `trainNS`: Natural splines (NSs)
 * `trainRF`: Random forests (RFs)  
@@ -65,7 +65,7 @@ You can install the development version of this package in R using:
 
 ### Geographic utility functions ###
 * `coordImprecision`: Calculate maximum possible coordinate precision
-* `makePlotPoly`: Create a `SpatialPolygon` the same size as a plot region
+* `makePlotPoly`: Create a spatial polygon the same size as a plot region
 * `decimalToDms`: Convert decimal coordinate to degrees-minutes-seconds
 * `dmsToDecimal`: Convert degrees-minutes-seconds coordinate to decimal
 * `extentToVect`: Convert extent to a spatial polygon
@@ -80,8 +80,13 @@ You can install the development version of this package in R using:
 * `madEnv`: Madagascar climate rasters
 
 ## Citation ##
-As of October 2020 there is no package-specific publication for `enmSdmX`, but the package was first used and cited in:
+As of December 2022 there is no package-specific publication for `enmSdmX`, but the package was first used and cited in:
 
-Morelli*, T.L., Smith*, A.B., Mancini, A.N., Balko, E. A., Borgenson, C., Dolch, R., Farris, Z., Federman, S., Golden, C.D., Holmes, S., Irwin, M., Jacobs, R.L., Johnson, S., King, T., Lehman, S., Louis, E.E. Jr., Murphy, A., Randriahaingo, H.N.T., Lucien, Randriannarimanana, H.L.L., Ratsimbazafy, J., Razafindratsima, O.H., and Baden, A.L. 2020. The fate of Madagascar’s rainforest habitat.  **Nature Climate Change** 10:89-96. * Equal contribution https://doi.org/10.1038/s41558-019-0647-x
+Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  <italic>Global Ecology and Biogeography</italic> In press. <a href='http://dx.doi.org/10.1101/2021.06.10.447988'>Open access pre-print</a>
 
-**Abstract**. Madagascar has experienced extensive deforestation and overharvesting, and anthropogenic climate change will compound these pressures. Anticipating these threats to endangered species and their ecosystems requires considering both climate change and habitat loss effects. The genus **Varecia** (ruffed lemurs), which is composed of two Critically Endangered forest-obligate species, can serve as a status indicator of the biodiverse eastern rainforest of Madagascar. Here, we combined decades of research to show that the suitable habitat for ruffed lemurs could be reduced by 29–59% from deforestation, 14–75% from climate change (representative concentration pathway 8.5) or 38–93% from both by 2070. If current protected areas avoid further deforestation, climate change will still reduce the suitable habitat by 62% (range: 38–83%). If ongoing deforestation continues, the suitable habitat will decline by 81% (range: 66–93%). Maintaining and enhancing the integrity of protected areas, where rates of forest loss are lower, will be essential for ensuring persistence of the diversity of the rapidly diminishing Malagasy rainforests.
+Abstract
+Aim Museum and herbarium specimen records are frequently used to assess species’ conservation status and responses to climate change. Typically, occurrences with imprecise geolocality information are discarded because they cannot be matched confidently to environmental conditions, and are thus expected to increase uncertainty in downstream analyses. However, using only precisely georeferenced records risks undersampling of species’ environmental and geographic distributions. We present two related methods to allow the use of imprecisely georeferenced occurrences in biogeographic analysis.
+
+Innovation: Our two procedures assign imprecise records to the 1) locations or 2) climates that are closest to the geographic or environmental centroid of the precise records of a species. For virtual species, including imprecise records alongside precise records improved the accuracy of ecological niche models projected to the present and the future, especially for species with ~20 or fewer precise occurrences. Using only precise records underestimates loss in suitable habitat and overestimates the amount of suitable habitat in both the present and future. Including imprecise records also improves estimates of niche breadth and extent of occurrence. An analysis of 44 species of North American Asclepias (Apocynaceae) yielded similar results.
+
+Main conclusions: Existing studies examining the effects of spatial imprecision compare outcomes based on precise records to the same records with spatial error added to them. However, in real-world cases, analysts possess a mix of precise and imprecise records and must decide whether to retain or discard the latter. Discarding imprecise records can undersample species’ geographic and environmental distributions and lead to mis-estimation of responses to past and future climate change. Our method, for which we provide a software implementation in the enmSdmX package for R, is simple to employ and can help leverage the large number of specimen records that are typically deemed “unusable” because of spatial imprecision in their geolocation.
