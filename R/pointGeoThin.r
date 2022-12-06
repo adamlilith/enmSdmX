@@ -22,31 +22,26 @@
 #' @return Object of class \code{x}.
 #' @seealso \code{\link{geoThinApprox}}
 #' @examples
-
-# lemur occurrence data
-
-library(sf)
-
-data(lemurs)
-crs <- crsGet('WGS84')
-occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-
-dists <- sf::st_distance(occs)
-diag(dists) <- NA
-distsDists <- stats::as.dist(dists)
-
-clust <- stats::hclust(distsDists, method = 'single')
-
-minDist <- 10000 # in meters
-
-
-plot(cutree(clust, h = minDist))
-
-
-
+#' 
+#' library(sf)
+#' 
+#' # lemur occurrence data
+#' data(mad0)
+#' data(lemurs)
+#' crs <- crsGet('WGS84')
+#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+#' ll <- c('longitude', 'latitude')
+#' occs <- st_as_sf(x, coords = ll, crs = crsGet('WGS84'))
+#' 
+#' # thin
+#' thinned <- geoThin(x = occs, minDist = 50000)
+#' 
+#' # plot
+#' plot(st_geometry(occs), cex = 2, main = 'Selected Points')
+#' plot(st_geometry(thinned), pch = 21, cex = 2, bg = 1:nrow(out), add = TRUE)
+#' plot(st_geometry(mad0), add = TRUE)
+#' 
 #' @export
-
 geoThin <- function(
 	x,
 	minDist,
@@ -55,6 +50,53 @@ geoThin <- function(
 	...
 ) {
 
-	dists <- 
+	if (!inherits(x, c('SpatVector', 'sf'))) x <- sf::st_as_sf(x, coords = longLat, crs = crsGet('WGS84'))
+
+	# cluster based on distances
+	dists <- sf::st_distance(x)
+	diag(dists) <- NA
+	distsDists <- stats::as.dist(dists)
+	clust <- stats::hclust(distsDists, method = 'single')
+
+	# define groups
+	groups <- stats::cutree(clust, h = minDist)
+	uniqueGroups <- sort(unique(groups))
+
+	if (length(uniqueGroups) == 1L) {
+	
+		warning(paste('All points are less than', minDist, 'm from one another.\nOnly the point farthest from its nearest neighbor\nwillbe returned. Try increasing "minDist".'))
+		
+		minDist <- apply(dists, 1, min, na.rm = TRUE)
+		out <- x[which.max(minDist), ]
+		
+	# points in > 1 group
+	} else {
+
+		# within each group, find point that is least close to point in any other group
+		if (exists('out', inherits = FALSE)) rm(out)
+		for (i in seq_along(uniqueGroups)) {
+
+			group <- uniqueGroups[i]
+
+			inPoints <- x[groups == group, , drop=FALSE]
+			outPoints <- x[groups != group, , drop=FALSE]
+
+			distsToOtherPoints <- sf::st_distance(inPoints, outPoints)
+			minDistToOtherPoints <- apply(distsToOtherPoints, 1, min)
+			whichMaxDistToOtherPoints <- which.max(minDistToOtherPoints)
+			
+			keep <- inPoints[whichMaxDistToOtherPoints, ]
+			
+			out <- if (exists('out', inherits = FALSE)) {
+				rbind(out, keep)
+			} else {
+				keep
+			}
+
+		}
+		
+	}
+		
+	out
 
 }

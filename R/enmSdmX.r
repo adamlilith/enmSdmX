@@ -8,12 +8,13 @@
 #' @section Data preparation:
 #' 		\code{\link{pointElimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
 #'
-#' @section Bias correction:
-#'		\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
-#'
 #' @section Using imprecisely-georeferenced occurrences:
 #' 		\code{\link{nearestEnvPoints}}: Extract "most conservative" environments from points and/or polygons \cr
 #' 		\code{\link{nearestGeogPoints}}: Minimum convex polygon from a set of spatial polygons and/or points \cr
+#'
+#' @section Bias correction:
+#'		\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
+#'		\code{\link{pointGeoThin}}: Deterministic geographic thinning of points \cr
 #'
 #' @section Model calibration:
 #' 		\code{\link{trainByCrossValid}}: and \code{\link{summaryByCrossValid}}: Implement a \code{trainXYZ} function across calibration folds (which are distinct from evaluation folds). \cr
