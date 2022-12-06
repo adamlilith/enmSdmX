@@ -20,6 +20,7 @@ You can install the development version of this package using:
 
 ### Bias correction
 * `pointDistWeights`: Proximity-based weighting for occurrences to correct for spatial bias
+* `pointGeoThin`: Deterministic geographic thinning of points
 
 ### Model training ###
 * `trainByCrossValid` and `summaryByCrossValid`: Calibrate a distribution/niche model using cross-validation
