@@ -10,9 +10,9 @@
 #'
 #' @format An object of class \code{sf}.
 #'
-#' @keywords datasets, Madagascar
+#' @keywords Madagascar
 #'
-#' @source \href{GADM}{www.gadm.org}
+#' @source \href{www.gadm.org}{GADM}
 #' 
 #' @examples
 #' data(mad0)

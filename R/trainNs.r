@@ -26,7 +26,6 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
 #' @param cores Number of cores to use. Default is 1.
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.
 #' @param ... Arguments to send to \code{\link[stats]{glm}}.
 #'
@@ -51,7 +50,6 @@ trainNS <- function(
 	family = 'binomial',
 	out = 'model',
 	cores = 1,
-	parallelType = 'doParallel',
 	verbose = FALSE,
 	...
 ) {
@@ -78,14 +76,7 @@ trainNS <- function(
 
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
-
-			if (tolower(parallelType) == 'doparallel') {
-				doParallel::registerDoParallel(cl)
-			} else if (tolower(parallelType) == 'dosnow') {
-				doSNOW::registerDoSNOW(cl)
-			} else {
-				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
-			}
+			doParallel::registerDoParallel(cl)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`

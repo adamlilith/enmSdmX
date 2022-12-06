@@ -8,9 +8,9 @@
 #'
 #' @format An object of class \code{'SpatRaster'}.
 #'
-#' @keywords datasets, Madagascar
+#' @keywords climate Madagascar
 #'
-#' @source \href{WorldClim}{www.worldclim.org}
+#' @source \href{www.worldclim.org}{WorldClim}
 #' 
 #' @examples
 #'

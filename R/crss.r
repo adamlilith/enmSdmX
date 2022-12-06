@@ -1,12 +1,12 @@
 #' Coordinate reference systems (CRSs)
 #'
-#' Outline of Madagascar from GADM
+#' A table of commonly-used coordinate reference systems
 #'
 #' @docType data
 #'
 #' @usage data(crss)
 #'
-#' @format An object of class \code{data.table}. This is a table with "named" coordinate referenbce systems and their well-known-text (WKT2) representation. It can be used as-is, or with \code{\link{crsGet}}. The fields are as:
+#' @format An object of class \code{data.frame}. This is a table with "named" coordinate referenbce systems and their well-known-text (WKT2) representation. It can be used as-is, or with \code{\link{crsGet}}. The fields are as:
 #' \itemize{
 #'	\item \code{long}: "Long" name of the CRS
 #'	\item \code{short1} and \code{short2}: "Short" names of the CRS
@@ -19,7 +19,7 @@
 #'	\item \code{notes}: Notes.
 #'}
 #'
-#' @keywords coordinate reference system, CRS
+#' @keywords coordinate projection CRS
 #'
 #' @examples
 #'

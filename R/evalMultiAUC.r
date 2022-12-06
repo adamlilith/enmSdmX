@@ -8,7 +8,7 @@
 #'
 #' @return Named numeric vector. The names will appear as \code{case2_over_case1} (which in this example means the AUC of item #1 in the \code{...} when compared to the second item in \code{...}), plus \code{multivariate} (which is the multivariate AUC).
 #' 
-#' @seealso \code{\link[dismo]{evaluate}}, \code{link[enmSdmX]{evalAUC}}
+#' @seealso \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 #'
 #' @references
 #' Hand, DJ and Till, RJ. 2001. A simple generalisation of the area under the ROC curve for multiple class classification problems. \emph{Machine Learning} 45:171-186 \doi{10.1023/A:1010920819831}.

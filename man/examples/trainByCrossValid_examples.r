@@ -54,7 +54,6 @@ folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
 ####################
 
 cores <- 1 # increase this to go faster, if your computer can handle it
-parallelType <- 'doParallel' # if this doesn't work, try 'doSNOW'
 
 ## MaxEnt
 mxx <- trainByCrossValid(
@@ -65,8 +64,7 @@ mxx <- trainByCrossValid(
 	trainFx = trainMaxEnt,
 	regMult = 1:2, # too few values for valid model, but fast!
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize MaxEnt feature sets and regularization across folds
@@ -81,8 +79,7 @@ mnx <- trainByCrossValid(
 	trainFx = trainMaxNet,
 	regMult = 1:2, # too few values for valid model, but fast!
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize MaxEnt feature sets and regularization across folds
@@ -96,8 +93,7 @@ glx <- trainByCrossValid(
 	folds = folds,
 	trainFx = trainGLM,
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize GLM terms in best models
@@ -111,8 +107,7 @@ gax <- trainByCrossValid(
 	folds = folds,
 	trainFx = trainGAM,
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize GAM terms in best models
@@ -127,8 +122,7 @@ nsx <- trainByCrossValid(
 	trainFx = trainNS,
 	df = 1:2,
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize NS terms in best models
@@ -148,8 +142,7 @@ brtx <- trainByCrossValid(
 	tryBy = 'treeComplexity',
 	anyway = TRUE, # return models that did not converge
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize BRT parameters in best models
@@ -163,8 +156,7 @@ rfx <- trainByCrossValid(
 	folds = folds,
 	trainFx = trainRF,
 	verbose = 1,
-	cores = cores,
-	parallelType = parallelType
+	cores = cores
 )
 
 # summarize RF parameters in best models

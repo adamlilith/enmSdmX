@@ -6,14 +6,13 @@
 #' @param presWeight Weights of presence cases. The default is to assign each presence case a weight of 1.
 #' @param contrastWeight Weights of absence/background cases. The default is to assign each case a weight of 1.
 #' @param na.rm Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.
-#' @param bg Same as \code{contrast}. Included for backwards compatibility. Ignored if \code{contrast} is not \code{NULL}.
-#' @param bgWeight Same as \code{contrastWeight}. Included for backwards compatibility. Ignored if \code{contrastWeight} is not \code{NULL}.
 #' @param ... Other arguments (unused).
 #'
 #' @return Numeric value.
 #'
 #' @references Tjur, T. 2009. Coefficients of determination in logistic regression models—A new proposal: The coefficient of discrimination. \emph{The American Statistician} 63:366–372. \doi{10.1198/tast.2009.08210}.
-#' @seealso \code{\link[dismo]{evaluate}}
+#'
+#' @seealso \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTSS}}
 #'
 #' @examples
 #' pres <- seq(0.5, 1, by=0.1)
@@ -40,13 +39,8 @@ evalTjursR2 <- function(
 	presWeight = rep(1, length(pres)),
 	contrastWeight = rep(1, length(contrast)),
 	na.rm = FALSE,
-	bg = NULL,
-	bgWeight = NULL,
 	...
 ) {
-
-	if (missing(contrast) & !is.null(bg)) contrast <- bg
-	if (missing(contrastWeight) & !is.null(bgWeight)) contrast <- bgWeight
 
 	# if all NAs
 	if (all(is.na(pres)) | all(is.na(contrast)) | all(is.na(presWeight)) | all(is.na(contrastWeight))) return(NA)

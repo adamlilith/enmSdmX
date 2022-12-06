@@ -22,7 +22,9 @@
 #' 		\item \code{'mr'}: Misclassification rate ((\emph{b} + \emph{c}) / \emph{N})
 #' }
 #' Fielding, A.H. and J.F. Bell. 1997. A review of methods for the assessment of prediction errors in conservation presence/absence models. \emph{Environmental Conservation} 24:38-49. \doi{10.1017/S0376892997000088}
-#' @seealso \code{\link[dismo]{threshold}}, \code{\link[enmSdmX]{evalThreshold}}, \code{\link[dismo]{evaluate}}
+#'
+#' @seealso \code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
+#'
 #' @examples
 #' set.seed(123)
 #' 

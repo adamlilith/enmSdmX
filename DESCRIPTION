@@ -14,13 +14,16 @@ Authors@R:
 		)
 	)
 Maintainer: Adam B. Smith <adam.smith@mobot.org>
-Description: Tools for implementing species distribution models (SDMs) and
-	ecological niche models (ENMs), including: bias correction, spatial
-	cross-validation, model evaluation, raster interpolation, and biotic
-	"velocity" (speed and direction of movement of a "mass" represented by
-	a raster). The heart of the package is a set of "training" functions
-	which automatically tune and parameterize models based on several popular
-	algorithms (e.g., MaxEnt, MaxNet, GLMs, GAMs, BRTs, etc.).
+Description: Tools for implementing species distribution models and ecological
+	niche models, including: bias correction, spatial cross-validation, model
+	evaluation, raster interpolation, biotic "velocity" (speed and
+	direction of movement of a "mass" represented by a raster), and functions
+	for using spatially imprecise records. The heart of the package is a set
+	of "training" functions which automatically tune and parameterize models
+	based on several popular algorithms (e.g., MaxEnt, MaxNet, boosted
+	regression trees, generalized additive models, etc.). To enhance
+	transportability to and from other packages, the package uses base-R
+	classes as much as possible.
 Depends:
 	R (>= 4.0.0),
 Imports:
@@ -44,7 +47,6 @@ Imports:
 	stats,
 	terra,
 	utils
-Remotes:
 Suggests:
 	geodata,
 	knitr

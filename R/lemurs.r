@@ -8,9 +8,9 @@
 #'
 #' @format An object of class \code{'data.frame'}.
 #'
-#' @keywords datasets, lemurs, Madagascar
+#' @keywords lemurs Madagascar
 #'
-#' @source www.gbif.org
+#' @source \href{www.gbif.org}{GBIF}
 #' 
 #' @examples
 #' data(lemurs)

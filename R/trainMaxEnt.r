@@ -21,7 +21,6 @@
 #' @param arguments \code{NULL} (default) or a character list. Options to pass to \code{maxent()}'s \code{args} argument. (Do not include \code{l}, \code{p}, \code{q}, \code{h}, \code{t}, \code{betamultiplier}, or \code{jackknife}!)
 #' @param scratchDir Character. Directory to which to write temporary files. Leave as NULL to create a temporary folder in the current working directory.
 #' @param cores Number of cores to use. Default is 1.
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} report progress and AICc table.
 #' @param ... Extra arguments. Not used.
 #'
@@ -51,7 +50,6 @@ trainMaxEnt <- function(
 	scratchDir = NULL,
 	out = 'model',
 	cores = 1,
-	parallelType = 'doParallel',
 	verbose = FALSE,
 	...
 ) {
@@ -142,14 +140,7 @@ trainMaxEnt <- function(
 
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
-
-			if (tolower(parallelType) == 'doparallel') {
-				doParallel::registerDoParallel(cl)
-			} else if (tolower(parallelType) == 'dosnow') {
-				doSNOW::registerDoSNOW(cl)
-			} else {
-				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
-			}
+			doParallel::registerDoParallel(cl)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`

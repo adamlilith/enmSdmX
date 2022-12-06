@@ -6,7 +6,6 @@
 #' @param newdata	Data frame or matrix, or \code{SpatRaster} with data to which to predict.
 #' @param maxentFun	This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used.
 #' @param cores		Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!)
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param nrows		Number of rows of \code{newdata} to predict at a time. This ignored is only used if \code{newdata} is a \code{data.frame} or \code{matrix}. The default is to predict all rows at once, but for very large data frames/matrices this can lead to memory issues in some cases. By setting the number of rows, \code{newdata} is divided into chunks, and predictions made to each chunk, which may ease memory limitations. This can be combined with multi-coring (which will increase memory requirements). In this case, all cores combined will get \code{nrows} of data. How many rows are too many? You will have to decide depending on the capabilities of your system. For example, predicting the outcome of a GLM on data with 10E6 rows may be fine, but predicting a PCA (with multiple axes) to the data data may require too much memory.
 #' @param paths Locations where packages are stored. This is typically not useful to the general user, and is only supplied for when the function is called as a functional.
 #' @param ... Arguments to pass to the algorithm-specific \code{predict} function.
@@ -23,7 +22,6 @@ predictEnmSdm <- function(
 	newdata,
 	maxentFun = 'terra',
 	cores = 1,
-	parallelType = 'doParallel',
 	nrows = nrow(newdata),
 	paths = .libPaths(),
 	...
@@ -66,14 +64,7 @@ predictEnmSdm <- function(
 
 		`%makeWork%` <- foreach::`%dopar%`
 		cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
-
-		if (tolower(parallelType) == 'doparallel') {
-			doParallel::registerDoParallel(cl)
-		} else if (tolower(parallelType) == 'dosnow') {
-			doSNOW::registerDoSNOW(cl)
-		} else {
-			stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
-		}
+		doParallel::registerDoParallel(cl)
 			
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = TRUE)

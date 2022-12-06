@@ -13,8 +13,6 @@
 #' @param dropZeros Logical. If \code{TRUE} then drop all bins in which the frequency of presences is 0.
 #' @param graph Logical. If \code{TRUE} then plot P vs E and P/E versus bin.
 #' @param na.rm Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.
-#' @param bg Same as \code{contrast}. Included for backwards compatibility. Ignored if \code{contrast} is not \code{NULL}.
-#' @param bgWeight Same as \code{contrastWeight}. Included for backwards compatibility. Ignored if \code{contrastWeight} is not \code{NULL}.
 #' @param ... Other arguments (not used).
 #' @return Numeric value.
 #' 
@@ -23,7 +21,7 @@
 #' @references Boyce, M.S., Vernier, P.R., Nielsen, S.E., and Schmiegelow, F.K.A.  2002.  Evaluating resource selection functions.  \emph{Ecological Modeling} 157:281-300. \doi{https://doi.org/10.1016/S0304-3800(02)00200-4}
 #' @references Hirzel, A.H., Le Lay, G., Helfer, V., Randon, C., and Guisan, A.  2006.  Evaluating the ability of habitat suitability models to predict species presences.  \emph{Ecological Modeling} 199:142-152. \doi{10.1016/j.ecolmodel.2006.05.017}
 #'
-#' @seealso \code{\link[stats]{cor}}
+#' @seealso \code{\link[stats]{cor}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 #'
 #' @examples
 #'
@@ -98,13 +96,8 @@ evalContBoyce <- function(
 	dropZeros = TRUE,
 	graph = FALSE,
 	na.rm = FALSE,
-	bg = NULL,
-	bgWeight = NULL,
 	...
 ) {
-
-	if (missing(contrast) & !is.null(bg)) contrast <- bg
-	if (missing(contrastWeight) & !is.null(bgWeight)) contrastWeight <- bgWeight
 
 	# if all NAs
 	if (all(is.na(pres)) | all(is.na(contrast)) | all(is.na(presWeight)) | all(is.na(contrastWeight))) return(NA)

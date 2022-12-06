@@ -16,13 +16,12 @@
 #' @param sensitivity Value of specificity to match (used only if \code{at} contains \code{'sensitivity'}).
 #' @param thresholds Numeric vector. Thresholds at which to calculate the sum of sensitivity and specificity. The default evaluates all values from 0 to 1 in steps of 0.01.
 #' @param na.rm Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.
-#' @param bg Same as \code{contrast}. Included for backwards compatibility. Ignored if \code{contrast} is not \code{NULL}.
-#' @param bgWeight Same as \code{contrastWeight}. Included for backwards compatibility. Ignored if \code{contrastWeight} is not \code{NULL}.
 #' @param ... Other arguments (unused).
 #' @return Named numeric vector.
 #' Fielding, A.H. and J.F. Bell. 1997. A review of methods for the assessment of prediction errors in conservation presence/absence models. \emph{Environmental Conservation} 24:38-49. \doi{10.1017/S0376892997000088}
 #'
-#' @seealso  \code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}
+#' @seealso \code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
+#'
 #' @examples
 #' set.seed(123)
 #' 
@@ -53,13 +52,8 @@ evalThreshold <- function(
 	sensitivity = 0.9,
 	thresholds = seq(0, 1, by=0.001),
 	na.rm = FALSE,
-	bg = NULL,
-	bgWeight = NULL,
 	...
 ) {
-
-	if (missing(contrast) & !is.null(bg)) contrast <- bg
-	if (missing(contrastWeight) & !is.null(bgWeight)) contrastWeight <- bgWeight
 
 	# if all NAs
 	if (all(is.na(pres)) | all(is.na(contrast))) return(NA)
