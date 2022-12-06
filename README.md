@@ -60,9 +60,6 @@ You can install the development version of this package using:
 * `rastSetValueByCell`: Set raster values(s) by cell number
 * `squareRastCells`: Resample a raster so cells are square
 
-### Range area based on minimum convex polygons ###
-* `mcpFromPolys`: Minimum convex polygon from a set of polygons *and* points
-
 ### Coordinate reference systems ###
 * `crss`: Coordinate reference systems
 * `crsGet`: Return a WKT2 (well-known text) string using a nickname
