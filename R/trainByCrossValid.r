@@ -10,23 +10,12 @@
 #' 	\item If a vector, there must be one value per row in \code{data}. If there are \emph{K} unique values in the vector, then \emph{K} unique models will be trained. Each model will use all of the data except for rows that match a particular value in the \code{folds} vector. For example, if \code{folds = c(1, 1, 1, 2, 2, 2, 3, 3, 3)}, then three models will be trained, one with all rows that match the 2s and 3s, one with all rows matching 1s and 2s, and one will all rows matching 1s and 3s. The models will be evaluated against the training data and against the withheld data. Use \code{NA} to exclude rows from all testing/training. The default is to construct 5 folds of roughly equal size.
 #' \item If a matrix or data frame, there must be one row per row in \code{data}. Each column corresponds to a different model to be trained. For a given column there should be only two unique values, plus possibly \code{NA}s. Of the two values, the lesser value will be used to identify the calibration data and the greater value the evaluation data. Rows with \code{NA}s will be ignored and not used in training or testing.  For example, a particular column could contain 1s, 2, and \code{NA}s. Data rows corresponding to 1s will be used as training data, data rows corresponding to 2s as test data, and rows with \code{NA} are dropped. The \code{NA} flag is useful for creating spatially-structured cross-validation folds where training and test sites are separated (spatially) by censored (ignored) data.
 #' }
-#' @param trainFx Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBrt}}, \code{\link[enmSdmX]{trainGam}}, \code{\link[enmSdmX]{trainGlm}}, \code{\link[enmSdmX]{trainMaxEnt}}, and \code{\link[enmSdmX]{trainNs}}.
+#' @param trainFx Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, and \code{\link[enmSdmX]{trainNS}}.
 #' @param ... Arguments to pass to the "trainXYZ" function.
-#' @param metrics Character vector, names of evaluation metrics to calculate. If \code{weightEvalTrain} and/or \code{weightEvalTest} is \code{TRUE}, then the "train" and "test" version of each metric will be weighted versions of each. The default is to calculate all of:
-#' \itemize{
-#' 	\item \code{'logLoss'}: Log loss. Higher (less negative) values imply better fit.
-#' 	\item \code{'cbi'}: Continuous Boyce Index (CBI). Calculated with \code{\link[enmSdmX]{evalContBoyce}}.
-#' 	\item \code{'auc'}: Area under the receiver-operator characteristic curve (AUC). Calculated with \code{\link[enmSdmX]{evalAUC}}.
-#' 	\item \code{'tss'}: Maximum value of the True Skill Statistic. Calculated with \code{\link[enmSdmX]{evalTSS}}.
-#' 	\item \code{'msss'}: Sensitivity and specificity calculated at the threshold that maximizes sensitivity (true presence prediction rate) plus specificity (true absence prediction rate).
-#' 	\item \code{'mdss'}: Sensitivity (se) and specificity (sp) calculated at the threshold that minimizes the difference between sensitivity and specificity.
-#' 	\item \code{'minTrainPres'}: Sensitivity and specificity at the greatest threshold at which all training presences are classified as "present".
-#' 	\item \code{'trainSe95'} and/or \code{'trainSe90'}: Sensitivity at the threshold that ensures either 95 or 90 percent of all training presences are classified as "present" (training sensitivity = 0.95 or 0.9).
-#' }
 #' @param weightEvalTrain Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "train" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of sites. Note that this applies \emph{only} to the calculation of evaluation statistics, not to model calibration.  If \code{w} is supplied, they will be used for model calibration.
 #' @param weightEvalTest Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "test" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of sites. Note that this applies \emph{only} to the calculation of evaluation statistics.  If \code{w} is supplied, they will be used for model calibration.
 #' @param na.rm Logical, if \code{TRUE} then remove \code{NA} predictions before calculating evaluation statistics. If \code{FALSE} (default), propagate \code{NA}s (meaning if predictions contain \code{NA}s, then the evaluation statistic will most likely also be \code{NA}.)
-#' @param outputModels If \code{TRUE}, then return all models (in addition to tables reporting tuning paramaeters and evaluation metrics). \emph{WARNING}: Depending on the type of model and amount of data, using \code{'models'} may produce objects that are very large in memory.
+#' @param outputModels If \code{TRUE}, then return all models (in addition to tables reporting tuning paramaeters and evaluation metrics). \emph{WARNING}: Depending on the type of model and amount of data, retuning all models may produce objects that are very large in memory.
 #' @param verbose Numeric. If 0 show no progress updates. If > 0 then show minimal progress updates for this function only. If > 1 show detailed progress for this function. If > 2 show detailed progress plus detailed progress for the \code{trainXYZ} function.
 #'
 #' @return A list object with several named elements:
@@ -34,7 +23,17 @@
 #' 		\item \code{meta}: Meta-data on the model call.
 #' 		\item \code{folds}: The \code{folds} object.
 #' 		\item \code{models} (if \code{outputModels} is \code{TRUE}): A list of model objects, one per  data fold.
-#'		\item \code{tuning}: One data frame per k-fold, each containing evaluation statistics for all candidate models in the fold.
+#'		\item \code{tuning}: One data frame per k-fold, each containing evaluation statistics for all candidate models in the fold. In addition to algorithm-specific fields, these consist of:
+#' 	\itemize{
+#' 		\item \code{'logLoss'}: Log loss. Higher (less negative) values imply better fit.
+#' 		\item \code{'cbi'}: Continuous Boyce Index (CBI). Calculated with \code{\link[enmSdmX]{evalContBoyce}}.
+#' 		\item \code{'auc'}: Area under the receiver-operator characteristic curve (AUC). Calculated with \code{\link[enmSdmX]{evalAUC}}.
+#' 		\item \code{'tss'}: Maximum value of the True Skill Statistic. Calculated with \code{\link[enmSdmX]{evalTSS}}.
+#' 		\item \code{'msss'}: Sensitivity and specificity calculated at the threshold that maximizes sensitivity (true presence prediction rate) plus specificity (true absence prediction rate).
+#' 		\item \code{'mdss'}: Sensitivity (se) and specificity (sp) calculated at the threshold that minimizes the difference between sensitivity and specificity.
+#' 		\item \code{'minTrainPres'}: Sensitivity (se) and specificity (sp) at the greatest threshold at which all training presences are classified as "present".
+#' 		\item \code{'trainSe95'} and/or \code{'trainSe90'}: Sensitivity (se) and specificity (sp) at the threshold that ensures either 95 or 90 percent of all training presences are classified as "present" (training sensitivity = 0.95 or 0.9).
+#' 	}
 #' }
 #'
 #' @references
@@ -42,134 +41,11 @@
 #' La Rest, K., Pinaud, D., Monestiez, P., Chadoeuf, J., and Bretagnolle, V.  2014.  Spatial leave-one-out cross-validation for variable selection in the presence of spatial autocorrelation. \emph{Global Ecology and Biogeography} 23:811-820. \doi{https://doi.org/10.1111/geb.12161}
 #' Radosavljevic, A. and Anderson, R.P.  2014.  Making better Maxent models of species distributions: complexity, overfitting and evaluation.  \emph{Journal of Biogeography} 41:629-643. \doi{10.1111/jbi.12227}
 #'
-#' @details In some cases models do not converge (e.g., boosted regression trees and generalized additive models sometimes suffer from this issue). In this case the model will be skipped, but a data frame with the k-fold and model number in the fold will be returned in the $meta element in the output. If np models converged, then this data frame will be empty.
+#' @details In some cases models do not converge (e.g., boosted regression trees and generalized additive models sometimes suffer from this issue). In this case the model will be skipped, but a data frame with the k-fold and model number in the fold will be returned in the $meta element in the output. If no models converged, then this data frame will be empty.
 #'
-#' @seealso \code{\link[enmSdmX]{trainBrt}}, \code{\link[enmSdmX]{trainGam}}, \code{\link[enmSdmX]{trainGlm}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainMaxNet}}, \code{\link[enmSdmX]{trainNs}}, \code{\link[enmSdmX]{trainRf}}
+#' @seealso \code{\link[enmSdmX]{summaryByCrossValid}}, \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainMaxNet}}, \code{\link[enmSdmX]{trainNS}}, \code{\link[enmSdmX]{trainRF}}
 #'
-#' @examples
-#' 
-#' # The examples below show a very basic modeling workflow. They have been 
-#' # designed to work fast, not produce accurate, defensible models.
-#' set.seed(123)
-#' 
-#' ### setup data
-#' 
-#' # environmental rasters
-#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
-#' madEnv <- rast(rastFile)
-#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
-#' 
-#' crs <- sf::st_crs(madEnv)
-#' 
-#' # lemur occurrence data
-#' data(lemurs)
-#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-#' occEnv <- extract(madEnv, occs, ID=FALSE)
-#' occEnv <- occEnv[complete.cases(occEnv), ]
-#' 	
-#' # create background sites (using just 1000 to speed things up!)
-#' bgEnv <- terra::spatSample(madEnv, 3000)
-#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
-#' bgEnv <- bgEnv[sample(nrow(bgEnv), 1000), ]
-#' 
-#' # collate occurrences and background sites
-#' presBg <- data.frame(
-#'    presBg = c(
-#'       rep(1, nrow(occEnv)),
-#'       rep(0, nrow(bgEnv))
-#'    )
-#' )
-#' 
-#' env <- rbind(occEnv, bgEnv)
-#' env <- cbind(presBg, env)
-#' 
-#' predictors <- c('bio1', 'bio12')
-#' 
-#' # using "vector" form of "folds" argument
-#' folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
-#' 
-#' ## MaxEnt
-#' mxx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainMaxEnt,
-#' 	regMult = 1:2 # too few values for valid model, but fast!
-#' )
-#' 
-#' ## generalized linear models
-#' glx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainGlm
-#' )
-#' 
-#' ## generalized linear models
-#' gax <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainGam
-#' )
-#' 
-#' ## natural splines
-#' natx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainNs
-#' )
-#' 
-#' ## boosted regression trees
-#' brtx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainBrt,
-#' 	learningRate = 0.001, # too few values for reliable model(?)
-#' 	treeComplexity = 2, # too few values for reliable model, but fast
-#' 	minTrees = 1200, # minimum trees for reliable model(?), but fast
-#' 	maxTrees = 1200, # too small for reliable model(?), but fast
-#' 	tryBy = 'treeComplexity',
-#' 	anyway = TRUE # return models that did not converge
-#' )
-#' 
-#' 
-#' ## random forests
-#' rfx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainRf
-#' )
-#' 
-#' # summarize MaxEnt feature sets and regularization across folds
-#' summaryByCrossValid(mxx, trainFxName = 'trainMaxEnt')
-#' 
-#' # summarize GLM terms across folds
-#' summaryByCrossValid(glx, trainFxName = 'trainGlm')
-#' 
-#' # summarize GAM terms across folds
-#' summaryByCrossValid(gax, trainFxName = 'trainGam')
-#' 
-#' # summarize natural splines terms across folds
-#' summaryByCrossValid(natx, trainFxName = 'trainNs')
-#' 
-#' # summarize BRT parameters across folds
-#' # Note that to get BRTs to run fast we allowed no variation
-#' # so the summary in this example is fairly boring.
-#' summaryByCrossValid(brtx, trainFxName = 'trainBrt')
-#' 
-#' # summarize random forests 'mtry' parameter across folds
-#' summaryByCrossValid(natx, trainFxName = 'trainRf')
+#' @example man/examples/trainByCrossValid_examples.r
 #' 
 #' @export
 trainByCrossValid <- function(
@@ -177,14 +53,13 @@ trainByCrossValid <- function(
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
 	folds = dismo::kfold(data),
-	trainFx = enmSdmX::trainGlm,
+	trainFx = enmSdmX::trainGLM,
 	...,
-	metrics = c('logLoss', 'cbi', 'auc', 'tss', 'msss', 'mdss', 'minTrainPres', 'trainSe95', 'trainSe90'),
 	weightEvalTrain = TRUE,
 	weightEvalTest = TRUE,
 	na.rm = FALSE,
 	outputModels = TRUE,
-	verbose = 1
+	verbose = 0
 ) {
 
 	ellipses <- list(...)
@@ -215,12 +90,7 @@ trainByCrossValid <- function(
 	# create list of threshold types to be analyzed
 	# have to do this because evalThresholdStats uses slightly different names
 	# since it does not know if a set of presences is test/train
-	threshTypes <- character()
-	if ('msss' %in% metrics) threshTypes <- c(threshTypes, 'msss')
-	if ('mdss' %in% metrics) threshTypes <- c(threshTypes, 'mdss')
-	if ('minTrainPres' %in% metrics) threshTypes <- c(threshTypes, 'minTrainPres')
-	if ('trainSe95' %in% metrics) threshTypes <- c(threshTypes, 'trainSe95')
-	if ('trainSe90' %in% metrics) threshTypes <- c(threshTypes, 'trainSe90')
+	threshTypes <- c('msss', 'mdss', 'minTrainPres', 'trainSe95', 'trainSe90')
 
 	### by fold
 	###########
@@ -385,114 +255,92 @@ trainByCrossValid <- function(
 					predToTestContrast <- predToTest[whichTestContrast]
 
 					# log loss
-					if ('logLoss' %in% metrics) {
+					metricTrain <- -1 * mean(c(trainPresWeights * log(predToTrainPres), trainContrastWeights * log(1 - predToTrainContrast)), na.rm=na.rm)
+					metricTest <- -1 * mean(c(testPresWeights * log(predToTestPres), testContrastWeights * log(1 - predToTestContrast)), na.rm=na.rm)
 
-						metricTrain <- -1 * mean(c(trainPresWeights * log(predToTrainPres), trainContrastWeights * log(1 - predToTrainContrast)), na.rm=na.rm)
-						metricTest <- -1 * mean(c(testPresWeights * log(predToTestPres), testContrastWeights * log(1 - predToTestContrast)), na.rm=na.rm)
-
-						if (countModel == 1) kTuning$logLossDelta <- kTuning$logLossTest <- kTuning$logLossTrain <- NA
-						kTuning$logLossTrain[countModel] <- metricTrain
-						kTuning$logLossTest[countModel] <- metricTest
-						kTuning$logLossDelta[countModel] <- metricTrain - metricTest
-
-					}
+					if (countModel == 1) kTuning$logLossDelta <- kTuning$logLossTest <- kTuning$logLossTrain <- NA
+					kTuning$logLossTrain[countModel] <- metricTrain
+					kTuning$logLossTest[countModel] <- metricTest
+					kTuning$logLossDelta[countModel] <- metricTrain - metricTest
 
 					# CBI
-					if ('cbi' %in% metrics) {
+					# metricTrain <- evalContBoyce(pres=predToTrainPres, bg=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm, ...)
+					# metricTest <- evalContBoyce(pres=predToTestPres, bg=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm, ...)
 
-						# metricTrain <- evalContBoyce(pres=predToTrainPres, bg=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm, ...)
-						# metricTest <- evalContBoyce(pres=predToTestPres, bg=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm, ...)
+					metricTrain <- evalContBoyce(pres=predToTrainPres, bg=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
+					metricTest <- evalContBoyce(pres=predToTestPres, bg=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
 
-						metricTrain <- evalContBoyce(pres=predToTrainPres, bg=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
-						metricTest <- evalContBoyce(pres=predToTestPres, bg=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
-
-						if (countModel == 1) kTuning$cbiDelta <- kTuning$cbiTest <- kTuning$cbiTrain <- NA
-						kTuning$cbiTrain[countModel] <- metricTrain
-						kTuning$cbiTest[countModel] <- metricTest
-						kTuning$cbiDelta[countModel] <- metricTrain - metricTest
-
-					}
+					if (countModel == 1) kTuning$cbiDelta <- kTuning$cbiTest <- kTuning$cbiTrain <- NA
+					kTuning$cbiTrain[countModel] <- metricTrain
+					kTuning$cbiTest[countModel] <- metricTest
+					kTuning$cbiDelta[countModel] <- metricTrain - metricTest
 
 					# AUC
-					if ('auc' %in% metrics) {
+					metricTrain <- evalAUC(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
+					metricTest <- evalAUC(pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
 
-						metricTrain <- evalAUC(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
-						metricTest <- evalAUC(pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
-
-						if (countModel == 1) kTuning$aucDelta <- kTuning$aucTest <- kTuning$aucTrain <- NA
-						kTuning$aucTrain[countModel] <- metricTrain
-						kTuning$aucTest[countModel] <- metricTest
-						kTuning$aucDelta[countModel] <- metricTrain - metricTest
-
-					}
+					if (countModel == 1) kTuning$aucDelta <- kTuning$aucTest <- kTuning$aucTrain <- NA
+					kTuning$aucTrain[countModel] <- metricTrain
+					kTuning$aucTest[countModel] <- metricTest
+					kTuning$aucDelta[countModel] <- metricTrain - metricTest
 
 					# TSS
-					if ('tss' %in% metrics) {
+					# metricTrain <- evalTSS(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm, ...)
+					# metricTest <- evalTSS(pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm, ...)
 
-						# metricTrain <- evalTSS(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm, ...)
-						# metricTest <- evalTSS(pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm, ...)
+					metricTrain <- evalTSS(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
+					metricTest <- evalTSS(pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
 
-						metricTrain <- evalTSS(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
-						metricTest <- evalTSS(pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
-
-						if (countModel == 1) kTuning$tssDelta <- kTuning$tssTest <- kTuning$tssTrain <- NA
-						kTuning$tssTrain[countModel] <- metricTrain
-						kTuning$tssTest[countModel] <- metricTest
-						kTuning$tssDelta[countModel] <- metricTrain - metricTest
-
-					}
+					if (countModel == 1) kTuning$tssDelta <- kTuning$tssTest <- kTuning$tssTrain <- NA
+					kTuning$tssTrain[countModel] <- metricTrain
+					kTuning$tssTest[countModel] <- metricTest
+					kTuning$tssDelta[countModel] <- metricTrain - metricTest
 
 					# threshold-dependent
-					if (length(threshTypes) > 0) {
+					for (thisThreshType in threshTypes) {
 
-						for (thisThreshType in threshTypes) {
+						# threshold
+						if (thisThreshType == 'minTrainPres') {
+							threshCode <- 'minPres'
+							sensitivity <- 0
+						} else if (thisThreshType == 'trainSe95') {
+							threshCode <- 'sensitivity'
+							sensitivity <- 0.95
+						} else if (thisThreshType == 'trainSe90') {
+							threshCode <- 'sensitivity'
+							sensitivity <- 0.9
+						} else {
+							threshCode <- thisThreshType
+							sensitivity <- 0
+						}
 
-							# threshold
-							if (thisThreshType == 'minTrainPres') {
-								threshCode <- 'minPres'
-								sensitivity <- 0
-							} else if (thisThreshType == 'trainSe95') {
-								threshCode <- 'sensitivity'
-								sensitivity <- 0.95
-							} else if (thisThreshType == 'trainSe90') {
-								threshCode <- 'sensitivity'
-								sensitivity <- 0.9
-							} else {
-								threshCode <- thisThreshType
-								sensitivity <- 0
-							}
+						# get thresholds
+						# thresholds <- evalThreshold(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm, ...)
+						thresholds <- evalThreshold(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, sensitivity=sensitivity, na.rm=na.rm)
 
-							# get thresholds
-							# thresholds <- evalThreshold(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm, ...)
-							thresholds <- evalThreshold(pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, sensitivity=sensitivity, na.rm=na.rm)
+						thold <- thresholds[[threshCode]]
 
-							thold <- thresholds[[threshCode]]
+						# evaluate
+						trainEval <- evalThresholdStats(thold, pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
+						testEval <- evalThresholdStats(thold, pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
 
-							# evaluate
-							trainEval <- evalThresholdStats(thold, pres=predToTrainPres, contrast=predToTrainContrast, presWeight=trainPresWeights, contrastWeight=trainContrastWeights, na.rm=na.rm)
-							testEval <- evalThresholdStats(thold, pres=predToTestPres, contrast=predToTestContrast, presWeight=testPresWeights, contrastWeight=testContrastWeights, na.rm=na.rm)
+						# remember
+						if (countModel == 1) {
 
-							# remember
-							if (countModel == 1) {
+							kTuning$TEMP1 <- kTuning$TEMP2 <- kTuning$TEMP3 <- kTuning$TEMP4 <- kTuning$TEMP5 <- kTuning$TEMP6 <- kTuning$TEMP7 <- NA
+							names(kTuning)[(ncol(kTuning) - 6):ncol(kTuning)] <- paste0(thisThreshType, c('Thold', 'SeTrain', 'SeTest', 'SeDelta', 'SpTrain', 'SpTest', 'SpDelta'))
 
-								kTuning$TEMP1 <- kTuning$TEMP2 <- kTuning$TEMP3 <- kTuning$TEMP4 <- kTuning$TEMP5 <- kTuning$TEMP6 <- kTuning$TEMP7 <- NA
-								names(kTuning)[(ncol(kTuning) - 6):ncol(kTuning)] <- paste0(thisThreshType, c('Thold', 'SeTrain', 'SeTest', 'SeDelta', 'SpTrain', 'SpTest', 'SpDelta'))
+						}
 
-							}
+						kTuning[countModel, paste0(thisThreshType, 'Thold')] <- thold
+						kTuning[countModel, paste0(thisThreshType, 'SeTrain')] <- trainEval[['sensitivity']]
+						kTuning[countModel, paste0(thisThreshType, 'SeTest')] <- testEval[['sensitivity']]
+						kTuning[countModel, paste0(thisThreshType, 'SeDelta')] <- trainEval[['sensitivity']] - testEval[['sensitivity']]
+						kTuning[countModel, paste0(thisThreshType, 'SpTrain')] <- trainEval[['specificity']]
+						kTuning[countModel, paste0(thisThreshType, 'SpTest')] <- testEval[['specificity']]
+						kTuning[countModel, paste0(thisThreshType, 'SpDelta')] <- trainEval[['specificity']] - testEval[['specificity']]
 
-							kTuning[countModel, paste0(thisThreshType, 'Thold')] <- thold
-							kTuning[countModel, paste0(thisThreshType, 'SeTrain')] <- trainEval[['sensitivity']]
-							kTuning[countModel, paste0(thisThreshType, 'SeTest')] <- testEval[['sensitivity']]
-							kTuning[countModel, paste0(thisThreshType, 'SeDelta')] <- trainEval[['sensitivity']] - testEval[['sensitivity']]
-							kTuning[countModel, paste0(thisThreshType, 'SpTrain')] <- trainEval[['specificity']]
-							kTuning[countModel, paste0(thisThreshType, 'SpTest')] <- testEval[['specificity']]
-							kTuning[countModel, paste0(thisThreshType, 'SpDelta')] <- trainEval[['specificity']] - testEval[['specificity']]
-
-						} # next threshold-dependent evaluation metric!
-
-					} else { # threshold-specific metrics
-						sensitivity <- NA
-					}
+					} # next threshold-dependent evaluation metric!
 
 				} # if model converged
 
@@ -508,11 +356,32 @@ trainByCrossValid <- function(
 	##########
 	output <- list()
 
+	someModel <- FALSE
+	k <- 1L
+	while (inherits(someModel, 'logical') & k <= numFolds) {
+		someModel <- models[[k]][[1L]]
+		k <- k + 1L
+	}
+	
+	trainFxName <- if (inherits(someModel, 'MaxEnt')) {
+		'trainMaxEnt'
+	} else if (inherits(someModel, 'maxnet')) {
+		'trainMaxNet'
+	} else if (inherits(someModel, 'gbm')) {
+		'trainBRT'
+	} else if (inherits(someModel, 'gam')) {
+		'trainGAM'
+	} else if (inherits(someModel, 'glm')) {
+		'trainGLM'
+	} else if (inherits(someModel, 'randomForest')) {
+		'trainRF'
+	}
+
 	# meta data
 	meta <- list(
+		trainFxName = trainFxName,
 		resp = resp,
 		preds = preds,
-		metrics = metrics,
 		sensitivity = sensitivity,
 		weightEvalTrain = weightEvalTrain,
 		weightEvalTest = weightEvalTest,

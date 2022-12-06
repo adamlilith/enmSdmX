@@ -14,6 +14,7 @@
 #' @seealso \code{\link[terra]{spatSample}}
 #'
 #' @examples
+#'
 #' library(terra)
 #' r <- rast()
 #' nc <- ncell(r)
@@ -74,10 +75,10 @@ sampleRast <- function(x, n, adjArea = TRUE, replace = TRUE, prob = TRUE) {
 	# move within cells
 	from <- -0.5 * terra::res(x)[1]
 	to <- 0.5 * terra::res(x)[1]
-	rands1 <- runif(n, from, to)
+	rands1 <- stats::runif(n, from, to)
 	from <- -0.5 * terra::res(x)[2]
 	to <- 0.5 * terra::res(x)[2]
-	rands2 <- runif(n, from, to)
+	rands2 <- stats::runif(n, from, to)
 
 	xy[ , 'x'] <- xy[ , 'x'] + rands1
 	xy[ , 'y'] <- xy[ , 'y'] + rands2

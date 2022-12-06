@@ -7,11 +7,11 @@
 coordImprecision(x, dms = FALSE, epsilon = 2)
 }
 \arguments{
-\item{x}{Spatial points represemted as a \code{SpatVector} or \code{sf} object. Alternatively, this can also be a data frame or matrix, in which the first two columns must represent longitude and latitude (in that order). If \code{x} is a matrix or data frame, the coordinates are assumed to be unprojected (WGS84).}
+\item{x}{Spatial points represented as a \code{SpatVector} or \code{sf} object. Alternatively, this can also be a data frame or matrix, in which the first two columns must represent longitude and latitude (in that order). If \code{x} is a matrix or data frame, the coordinates are assumed to be unprojected (WGS84).}
 
 \item{dms}{Logical, if \code{FALSE} (default), it is assumed that the original format in which coordinate were reported is in decimal notation. If \code{TRUE}, then it will be calculated assuming the coordinate were originally in degrees-minutes-seconds format.  If you do not know the original format, the less presumptive approach is to calculate coordinate imprecision twice with or without \code{dm = TRUE}, and use the larger of the two values.}
 
-\item{epsilon}{Zero or positive integer, number of digits to which to round seconds value if \code{dms} is \code{TRUE}. Ignored if \code{dms} is \code{FALSE}. This is used to accommodate inexact integer values when converting from DMS to decimal. For example, -108.932222 converted to DMS format is 108deg 55min 7.9992sec, but if \code{episilon} = 2 then it would be converted to 108deg 55min 08sec.}
+\item{epsilon}{Zero or positive integer, number of digits to which to round seconds value if \code{dms} is \code{TRUE}. Ignored if \code{dms} is \code{FALSE}. This is used to accommodate inexact integer values when converting from DMS to decimal. For example, -108.932222 converted to DMS format is 108deg 55min 7.9992sec, but if \code{epsilon} = 2 then it would be converted to 108deg 55min 08sec.}
 }
 \value{
 Numeric values (by default in units of meters).
@@ -75,12 +75,12 @@ decimal <- cbind(longDec, latDec)
 # is to use maximum:
 pmax(decImp, dmsImp)
 
-\dontrun{
-# known error when longitude is negative and latitude is -90
-long <- -45
-lat <- -90
-ll <- cbind(long, lat)
-coordImprecision(ll)
+if (FALSE) {
+  # known error when longitude is negative and latitude is -90
+  long <- -45
+  lat <- -90
+  ll <- cbind(long, lat)
+  coordImprecision(ll)
 }
 
 }

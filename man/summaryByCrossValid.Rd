@@ -4,17 +4,10 @@
 \alias{summaryByCrossValid}
 \title{Summarize distribution/niche model cross-validation object}
 \usage{
-summaryByCrossValid(
-  x,
-  trainFxName = "trainGlm",
-  metric = "cbiTest",
-  decreasing = TRUE
-)
+summaryByCrossValid(x, metric = "cbiTest", decreasing = TRUE)
 }
 \arguments{
-\item{x}{The output from the \code{\link{trainCrossValid}} function (which is a list). Note that the object \emph{must} include a sublist named \code{tuning}.}
-
-\item{trainFxName}{Character, name of function used to train the SDM (examples: \code{'trainGlm'}, \code{'trainMaxEnt'}, \code{'trainBrt'}).}
+\item{x}{The output from the \code{\link{trainByCrossValid}} function (which is a list). Note that the object \emph{must} include a sublist named \code{tuning}.}
 
 \item{metric}{Metric by which to select the best model in each k-fold. This can be any of the columns that appear in the data frames in \code{x$tuning} (or any columns added manually), but typically is one of the following \emph{plus} either \code{Train}, \code{Test}, or \code{Delta} (e.g., \code{'logLossTrain'}, \code{'logLossTest'}, or \code{'logLossDelta'}):
 \itemize{
@@ -44,17 +37,27 @@ Data frame with statistics on the best set of models across k-folds. Depending o
 This function summarizes models calibrated using the \code{\link[enmSdmX]{trainByCrossValid}} function. It returns aspects of the best models across k-folds (the particular aspects depends on the kind of models used).
 }
 \examples{
-
-# The examples below show a very basic modeling workflow. They have been 
+# The example below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models.
+# The general idea is to calibrate a series of models and evaluate them
+# against a withheld set of data. One can then use the series of models
+# of the top models to better select a "final" model.
+
+# Runing the entire set of commands can take quite a bit of time.
+
+if (FALSE) {
+
+library(sf)
+library(terra)
 set.seed(123)
 
 ### setup data
+##############
 
 # environmental rasters
 rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
 madEnv <- rast(rastFile)
-madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+madEnv <- madEnv
 
 crs <- sf::st_crs(madEnv)
 
@@ -86,6 +89,12 @@ predictors <- c('bio1', 'bio12')
 # using "vector" form of "folds" argument
 folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
 
+### calibrate models
+####################
+
+cores <- 1 # increase this to go faster, if your computer can handle it
+parallelType <- 'doParallel' # if this doesn't work, try 'doSNOW'
+
 ## MaxEnt
 mxx <- trainByCrossValid(
 	data = env,
@@ -93,8 +102,30 @@ mxx <- trainByCrossValid(
 	preds = c('bio1', 'bio12'),
 	folds = folds,
 	trainFx = trainMaxEnt,
-	regMult = 1:2 # too few values for valid model, but fast!
+	regMult = 1:2, # too few values for valid model, but fast!
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
 )
+
+# summarize MaxEnt feature sets and regularization across folds
+summaryByCrossValid(mxx)
+
+## MaxNet
+mnx <- trainByCrossValid(
+	data = env,
+	resp = 'presBg',
+	preds = c('bio1', 'bio12'),
+	folds = folds,
+	trainFx = trainMaxNet,
+	regMult = 1:2, # too few values for valid model, but fast!
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
+)
+
+# summarize MaxEnt feature sets and regularization across folds
+summaryByCrossValid(mnx)
 
 ## generalized linear models
 glx <- trainByCrossValid(
@@ -102,26 +133,45 @@ glx <- trainByCrossValid(
 	resp = 'presBg',
 	preds = c('bio1', 'bio12'),
 	folds = folds,
-	trainFx = trainGlm
+	trainFx = trainGLM,
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
 )
 
-## generalized linear models
+# summarize GLM terms in best models
+summaryByCrossValid(glx)
+
+## generalized additive models
 gax <- trainByCrossValid(
 	data = env,
 	resp = 'presBg',
 	preds = c('bio1', 'bio12'),
 	folds = folds,
-	trainFx = trainGam
+	trainFx = trainGAM,
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
 )
 
+# summarize GAM terms in best models
+summaryByCrossValid(gax)
+
 ## natural splines
-natx <- trainByCrossValid(
+nsx <- trainByCrossValid(
 	data = env,
 	resp = 'presBg',
 	preds = c('bio1', 'bio12'),
 	folds = folds,
-	trainFx = trainNs
+	trainFx = trainNS,
+	df = 1:2,
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
 )
+
+# summarize NS terms in best models
+summaryByCrossValid(nsx)
 
 ## boosted regression trees
 brtx <- trainByCrossValid(
@@ -129,15 +179,20 @@ brtx <- trainByCrossValid(
 	resp = 'presBg',
 	preds = c('bio1', 'bio12'),
 	folds = folds,
-	trainFx = trainBrt,
-	learningRate = 0.001, # too few values for reliable model(?)
-	treeComplexity = 2, # too few values for reliable model, but fast
-	minTrees = 1200, # minimum trees for reliable model(?), but fast
-	maxTrees = 1200, # too small for reliable model(?), but fast
+	trainFx = trainBRT,
+	learningRate = c(0.001, 0.0001), # too few values for reliable model(?)
+	treeComplexity = c(2, 4), # too few values for reliable model, but fast
+	minTrees = 1000,
+	maxTrees = 1500, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',
-	anyway = TRUE # return models that did not converge
+	anyway = TRUE, # return models that did not converge
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
 )
 
+# summarize BRT parameters in best models
+summaryByCrossValid(brtx)
 
 ## random forests
 rfx <- trainByCrossValid(
@@ -145,30 +200,17 @@ rfx <- trainByCrossValid(
 	resp = 'presBg',
 	preds = c('bio1', 'bio12'),
 	folds = folds,
-	trainFx = trainRf
+	trainFx = trainRF,
+	verbose = 1,
+	cores = cores,
+	parallelType = parallelType
 )
 
-# summarize MaxEnt feature sets and regularization across folds
-summaryByCrossValid(mxx, trainFxName = 'trainMaxEnt')
-
-# summarize GLM terms across folds
-summaryByCrossValid(glx, trainFxName = 'trainGlm')
-
-# summarize GAM terms across folds
-summaryByCrossValid(gax, trainFxName = 'trainGam')
-
-# summarize natural splines terms across folds
-summaryByCrossValid(natx, trainFxName = 'trainNs')
-
-# summarize BRT parameters across folds
-# Note that to get BRTs to run fast we allowed no variation
-# so the summary in this example is fairly boring.
-summaryByCrossValid(brtx, trainFxName = 'trainBrt')
-
-# summarize random forests 'mtry' parameter across folds
-summaryByCrossValid(natx, trainFxName = 'trainRf')
+# summarize RF parameters in best models
+summaryByCrossValid(rfx)
 
 }
+}
 \seealso{
-\code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBrt}}, \code{\link[enmSdmX]{trainGam}}, \code{\link[enmSdmX]{trainGlm}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNs}}, \code{\link[enmSdmX]{trainRf}}
+\code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNS}}, \code{\link[enmSdmX]{trainRF}}
 }

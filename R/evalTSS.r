@@ -12,8 +12,9 @@
 #' @param ... Other arguments (unused).
 #' @return Numeric value.
 #' @details This function calculates the maximum value of the True Skill Statistic (i.e., across all thresholds, the values that maximizes sensitivity plus specificity).
-#' @references  See Allouche, O., Tsoar, A., and Kadmon, R. 2006. Assessing the accuracy of species distribution models: Prevalence, kappa and the true skill statistic (TSS). \emph{Journal of Applied Ecology} 43:1223-1232. \link{10.1111/j.1365-2664.2006.01214.x}
-#' @seealso \code{\link{fpb}}, \code{\link{evalAUC}}, \code{link{evalContBoyce}}
+#' @references  See Allouche, O., Tsoar, A., and Kadmon, R. 2006. Assessing the accuracy of species distribution models: Prevalence, kappa and the true skill statistic (TSS). \emph{Journal of Applied Ecology} 43:1223-1232. \doi{10.1111/j.1365-2664.2006.01214.x}
+#'
+#' @seealso \code{\link{evalAUC}}, \code{link{evalContBoyce}}
 #' @examples
 #' set.seed(123)
 #' 

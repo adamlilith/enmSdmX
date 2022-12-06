@@ -7,7 +7,7 @@
 #' \itemize{
 #' 		\item \code{'raw'}: Maxent "raw" values
 #' 		\item \code{'logistic'}: Maxent logistic values
-#' 		\item \code{'cloglog'} complementary log-log output (as per version 3.4.0+ of maxent--called "\code{maxnet()}" in the package of the same name)
+#' 		\item \code{'cloglog'} Complementary log-log output (as per version 3.4.0+ of maxent--called "\code{maxnet()}" in the package of the same name)
 #' }
 #' @param perm Character vector. Name(s) of variable to permute before calculating predictions. This permutes the variables for \emph{all} features in which they occur.  If a variable is named here, it overrides permutation settings for each feature featType.  Note that for product features the variable is permuted before the product is taken. This permutation is performed before any subsequent permutations (i.e., so if both variables in a product feature are included in \code{perms}, then this is equivalent to using the \code{'before'} rule for \code{permProdRule}). Ignored if \code{NULL}.
 #' @param permLinear Character list. Names(s) of variables to permute in linear features before calculating predictions.  Ignored if \code{NULL}.
@@ -17,59 +17,12 @@
 #' @param permProd Character list. A list object of \code{n} elements, each of which has two character elements naming the variables to permute if they occur in a product feature.  Depending on the value of \code{permProdRule}, the function will either permute the individual variables then calculate their product or calculate their product, then permute the product across observations.  Any other features containing the variables will produce values as normal.  Example: \code{permProd=list(c('precipWinter', 'tempWinter'), c('tempSummer', 'precipFall'))}.  The order of the variables in each element of \code{permProd} doesn't matter, so \code{permProd=list(c('temp', 'precip'))} is the same as \code{permProd=list(c('precip', 'temp'))}.  Ignored if \code{NULL}.
 #' @param permProdRule Character. Rule for how permutation of product features is applied: \code{'before'} ==> Permute individual variable values then calculate product; \code{'after'} ==> calculate product then permute across these values. Ignored if \code{permProd} is \code{NULL}.
 #' @param ... Extra arguments (not used).
+#'
 #' @return Numeric.
+#'
 #' @seealso \code{\link[dismo]{maxent}}
-#' @examples
 #'
-#' # The example below shows a very basic modeling workflow. It has been 
-#' # designed to work fast, not produce accurate, defensible models.
-#' set.seed(123)
-#' 
-#' ### setup data
-#' 
-#' # environmental rasters
-#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
-#' madEnv <- rast(rastFile)
-#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
-#' 
-#' crs <- sf::st_crs(madEnv)
-#' 
-#' # lemur occurrence data
-#' data(lemurs)
-#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-#' occEnv <- extract(madEnv, occs, ID=FALSE)
-#' occEnv <- occEnv[complete.cases(occEnv), ]
-#' 	
-#' # create 10000 background sites (or as many as raster can support)
-#' bgEnv <- terra::spatSample(madEnv, 20000)
-#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
-#' bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
-#' 
-#' # collate occurrences and background sites
-#' presBg <- data.frame(
-#' 	presBg = c(
-#'    rep(1, nrow(occEnv)),
-#'    rep(0, nrow(bgEnv))
-#'    )
-#' )
-#' 
-#' env <- rbind(occEnv, bgEnv)
-#' env <- cbind(presBg, env)
-#' 
-#' predictors <- c('bio1', 'bio12')
-#' 
-#' ## MaxEnt
-#' mx <- trainMaxEnt(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	regMult = 1, # too few values for reliable model, but fast
-#' 	verbose = TRUE
-#' )
-#'
-#' mxMap <- predictEnmSdm(mx, madEnv)
-#'
+#' @example man/examples/trainXYZ_examples.R
 #'
 #' @export
 predictMaxEnt <- function(

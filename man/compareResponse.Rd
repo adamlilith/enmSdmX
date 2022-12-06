@@ -35,7 +35,7 @@ compareResponse(
 
 \item{smoothN}{\code{NULL} or positive integer. Number of values along "pred" at which to calculate comparisons. Only used if \code{smooth} is \code{TRUE}. If \code{NULL}, then comparisons are calculated at each value in data. If a number, then comparisons are calculated at \code{smoothN} values of \code{data[ , pred]} that cover the range of \code{data[ , pred]}.}
 
-\item{smoothRange}{2-element numeric list or \code{NULL}. If \code{smooth} is TRUE, then force loess'ed predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.}
+\item{smoothRange}{2-element numeric list or \code{NULL}. If \code{smooth} is \code{TRUE}, then force loess predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.}
 
 \item{graph}{Logical. If \code{TRUE} then plot predictions.}
 
@@ -82,7 +82,7 @@ Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Environmental niche equivalenc
 
 Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Erratum.  Evolution 62:2868-2883.
 
-Godsoe, W.  2014.  Inferring the similarity of species distributions using Species’ Distribution Models.  Ecography 37:130-136.
+Godsoe, W.  2014.  Inferring the similarity of species distributions using Species Distribution Models.  Ecography 37:130-136.
 }
 \seealso{
 \code{\link[enmSdmX]{compareNiches}}

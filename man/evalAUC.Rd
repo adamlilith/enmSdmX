@@ -58,5 +58,5 @@ contrastWeight <- sqrt(contrast)
 evalAUC(pres, contrast, presWeight=presWeight, contrastWeight=contrastWeight)
 }
 \seealso{
-\code{\link[dismo]{evaluate}}, \code{\link{aucMultiWeighted}}
+\code{\link[dismo]{evaluate}}, \code{\link{evalMultiAUC}}
 }

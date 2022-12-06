@@ -10,17 +10,16 @@ An object of class \code{'SpatRaster'}.
 \source{
 \href{WorldClim}{www.worldclim.org}
 }
-\usage{
-rastFile <- system.file('extdata', 'madEnv.tif', package='enmSdmX')
-madEnv <- rast(rastFile)
-}
 \description{
 Climate rasters for Madagascar from WorldClim version 1.4. Values of these rasters have been rounded, so please do not use them for "official" work.
 }
 \examples{
+
+library(terra)
 rastFile <- system.file('extdata', 'madEnv.tif', package='enmSdmX')
 madEnv <- rast(rastFile)
 plot(madEnv)
+
 }
 \keyword{Madagascar}
 \keyword{datasets,}

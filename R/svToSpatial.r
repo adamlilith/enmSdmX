@@ -6,8 +6,9 @@
 #' @return Object of class \code{Spatial}.
 #' @examples
 #'
+#' library(terra)
 #' f <- system.file('ex/lux.shp', package='terra')
-#' v <- terra::vect(f)
+#' v <- vect(f)
 #' spat <- svToSpatial(v)
 #' class(spat)
 #'
@@ -16,7 +17,7 @@
 svToSpatial <- function(x) {
 
 	x <- sf::st_as_sf(x)
-	x <- as(x, 'Spatial')
+	x <- methods::as(x, 'Spatial')
 	x
 
 }

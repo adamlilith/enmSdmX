@@ -26,5 +26,5 @@ plot(mad0[1], add=TRUE)
 
 }
 \seealso{
-\link{createPlotPoly}
+\link{makePlotPoly}
 }

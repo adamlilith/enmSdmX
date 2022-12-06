@@ -11,7 +11,7 @@
 #' \item \code{spline}: A natural splines-based model. Splines will intersect each value being interpolated from.
 #' \item \code{gam}: A generalized additive model. Note that the GAM is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link[mgcv]{gam}} can be supplied via \code{...}. Especially note the \code{family} argument! You can use the \code{onFail} argument with this method since in some cases \code{\link[mgcv]{gam}} if there are too few data points.
 #' \item \code{glm}: A generalized linear model. Note that the GLM is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link[mgcv]{gam}} can be supplied via \code{...}. Especially note the \code{family} argument (the main reason for why you would use a GLM versus just linear interpolation)! You can use the \code{onFail} argument with this method since in some cases \code{\link[stats]{glm}} if there are too few data points.
-#' \item \code{ns}: A natural splines model. Note that the NS is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link{trainNs}} can be supplied via \code{...}. Especially note the \code{family} argument and the \code{df} argument! If \code{df} is not supplied, then the number of splines attempted will be equal to \code{1:(length(interpFrom) - 1)}. You can use the \code{onFail} argument with this method.
+#' \item \code{ns}: A natural splines model. Note that the NS is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link{trainNS}} can be supplied via \code{...}. Especially note the \code{family} argument and the \code{df} argument! If \code{df} is not supplied, then the number of splines attempted will be equal to \code{1:(length(interpFrom) - 1)}. You can use the \code{onFail} argument with this method.
 #' \item \code{poly}: A polynomial model. This method constructs an \emph{n}-degree polynomial where \emph{n} = \code{length(interpFrom) - 1}. The most parsimonious model is then selected from all possible subsets of models (including an intercept-only model) using AICc. This method is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link{glm}} can be supplied via \code{...}. Especially note the \code{family} argument! If \code{family} is not supplied, then the response is assumed to have a Gaussian distribution. You can use the \code{onFail} argument with this method.
 #' \item \code{bs}: A basis-spline model. This method constructs a series of models with \emph{n}-degree basis-spline model where \emph{n} ranges from 3 to \code{length(interpFrom) - 1}. The most parsimonious model is then selected from all possible subsets of models (including an intercept-only model) using AICc. This method is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link{glm}} can be supplied via \code{...}. Especially note the \code{family} argument! If \code{family} is not supplied, then the response is assumed to have a Gaussian distribution. You can use the \code{onFail} argument with this method.
 #' \item \code{smooth.spline}: A smooth-spline model (see \code{\link{smooth.spline}}). This method is \emph{not} guaranteed to intersect each value being interpolated from. Arguments to \code{\link{smooth.spline}} can be supplied via \code{...}. Unlike some other methods, a \code{family} cannot be specified (Gaussian is assumed)! You can use the \code{onFail} argument with this method.
@@ -24,10 +24,13 @@
 #' @return A \code{SpatRaster} "stack" with one layer per element in \code{interpTo}.
 #'
 #' @details This function can be very memory-intensive for large rasters.  It may speed things up (and make them possible) to do interpolations piece by piece (e.g., instead of interpolating between times t0, t1, t2, t3, ..., interpolate between t0 and t1, then t1 and t2, etc. This may give results that differ from using the entire set, however, depending on what type of interpolation is used. Note that using linear and splines will often yield very similar results, except that in a small number of cases splines may produce very extreme interpolated values.
-#' @seealso \code{\link[terra]{approximate}}, \code{\link[stats]{approxfun}}, \code{\link[stats]{splinefun}}, \code{\link{trainNs}}, \code{\link{glm}}, , \code{\link[splines]{bs}}, \code{\link[stats]{smooth.spline}}.
+#' @seealso \code{\link[terra]{approximate}}, \code{\link[stats]{approxfun}}, \code{\link[stats]{splinefun}}, \code{\link{trainNS}}, \code{\link{glm}}, , \code{\link[splines]{bs}}, \code{\link[stats]{smooth.spline}}.
 #'
 #' @examples
+#'
 #' \dontrun{
+#' library(terra)
+#'
 #' interpFrom <- c(1, 3, 4, 8, 10, 11, 15)
 #' interpTo <- 1:15
 #' rx <- rast(nrows=10, ncols=10)
@@ -41,13 +44,13 @@
 #' rasts <- c(r1, r3, r4, r8, r10, r11, r15)
 #' names(rasts) <- paste0('rasts', interpFrom)
 #' 
-#' linear <- interpolateRasters(rasts, interpFrom, interpTo)
-#' spline <- interpolateRasters(rasts, interpFrom, interpTo, type='spline')
-#' gam <- interpolateRasters(rasts, interpFrom, interpTo, type='gam', onFail='linear')
-#' ns <- interpolateRasters(rasts, interpFrom, interpTo, type='ns', onFail='linear', verbose=FALSE)
-#' poly <- interpolateRasters(rasts, interpFrom, interpTo, type='poly', onFail='linear')
-#' bs <- interpolateRasters(rasts, interpFrom, interpTo, type='bs', onFail='linear')
-#' ss <- interpolateRasters(rasts, interpFrom, interpTo, type='smooth.spline', onFail='linear',
+#' linear <- interpolateRasts(rasts, interpFrom, interpTo)
+#' spline <- interpolateRasts(rasts, interpFrom, interpTo, type='spline')
+#' gam <- interpolateRasts(rasts, interpFrom, interpTo, type='gam', onFail='linear')
+#' ns <- interpolateRasts(rasts, interpFrom, interpTo, type='ns', onFail='linear', verbose=FALSE)
+#' poly <- interpolateRasts(rasts, interpFrom, interpTo, type='poly', onFail='linear')
+#' bs <- interpolateRasts(rasts, interpFrom, interpTo, type='bs', onFail='linear')
+#' ss <- interpolateRasts(rasts, interpFrom, interpTo, type='smooth.spline', onFail='linear',
 #' verbose=FALSE)
 #' 
 #' # examine trends for a particular point on the landscape
@@ -80,9 +83,10 @@
 #' 'orange', 'gray', 'magenta', 'cyan'), pch=c(rep(NA, 7), 1))
 #'
 #' }
+#'
 #' @export
 
-interpolateRasters <- function(
+interpolateRasts <- function(
 	rasts,
 	interpFrom,
 	interpTo,
@@ -186,7 +190,7 @@ interpolateRasters <- function(
 							thisArgs <- c(thisArgs, family=family)
 						}
 
-						interpModel <- tryCatch(do.call(trainNs, thisArgs), error=function(err) FALSE)
+						interpModel <- tryCatch(do.call(trainNS, thisArgs), error=function(err) FALSE)
 
 						
 					} else if (type == 'poly') {

@@ -363,8 +363,9 @@ elevation=elev2)
 rbind(bv1, bv2)
 }
 
-\dontrun{
 ### multi-core
+##############
+if (FALSE) {
 mats <- array(runif(100 * 100 * 1000), dim=c(100, 100, 500))
 mats <- brick(mats)
 projection(mats) <- getCRS('wgs84')

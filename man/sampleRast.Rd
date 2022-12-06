@@ -24,6 +24,7 @@ sampleRast(x, n, adjArea = TRUE, replace = TRUE, prob = TRUE)
 This function returns coordinates randomly located on a raster where cells can be sampled with replacement (if desired) and where the probability of selection is proportionate to the cell value, cell area, or the product of cell value times cell area.
 }
 \examples{
+
 library(terra)
 r <- rast()
 nc <- ncell(r)

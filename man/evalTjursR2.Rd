@@ -61,5 +61,5 @@ evalTjursR2(pres, contrast, presWeight=presWeight, contrastWeight=contrastWeight
 Tjur, T. 2009. Coefficients of determination in logistic regression models—A new proposal: The coefficient of discrimination. \emph{The American Statistician} 63:366–372. \doi{10.1198/tast.2009.08210}.
 }
 \seealso{
-\code{\link{evalTjursR2}}, \code{\link{fpb}}, \code{\link{evalContBoyce}}, \code{\link[dismo]{evaluate}}
+\code{\link[dismo]{evaluate}}
 }

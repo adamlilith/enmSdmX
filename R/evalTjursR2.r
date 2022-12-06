@@ -9,9 +9,12 @@
 #' @param bg Same as \code{contrast}. Included for backwards compatibility. Ignored if \code{contrast} is not \code{NULL}.
 #' @param bgWeight Same as \code{contrastWeight}. Included for backwards compatibility. Ignored if \code{contrastWeight} is not \code{NULL}.
 #' @param ... Other arguments (unused).
+#'
 #' @return Numeric value.
+#'
 #' @references Tjur, T. 2009. Coefficients of determination in logistic regression models—A new proposal: The coefficient of discrimination. \emph{The American Statistician} 63:366–372. \doi{10.1198/tast.2009.08210}.
-#' @seealso \code{\link{evalTjursR2}}, \code{\link{fpb}}, \code{\link{evalContBoyce}}, \code{\link[dismo]{evaluate}}
+#' @seealso \code{\link[dismo]{evaluate}}
+#'
 #' @examples
 #' pres <- seq(0.5, 1, by=0.1)
 #' contrast <- seq(0, 1, by=0.01)
@@ -31,7 +34,6 @@
 #' contrastWeight <- sqrt(contrast)
 #' evalTjursR2(pres, contrast, presWeight=presWeight, contrastWeight=contrastWeight)
 #' @export
-
 evalTjursR2 <- function(
 	pres,
 	contrast,
