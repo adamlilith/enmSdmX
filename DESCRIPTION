@@ -30,7 +30,6 @@ Imports:
 	boot,
 	dismo,
 	doParallel,
-	doSNOW,
 	foreach,
 	gbm,
 	graphics,
