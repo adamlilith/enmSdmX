@@ -104,14 +104,7 @@ trainBRT <- function(
 
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
-
-			if (tolower(parallelType) == 'doparallel') {
-				doParallel::registerDoParallel(cl)
-			} else if (tolower(parallelType) == 'dosnow') {
-				doSNOW::registerDoSNOW(cl)
-			} else {
-				stop('Argument "parallelType" must be either "doParallel" or "doSNOW".')
-			}
+			doParallel::registerDoParallel(cl)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`

@@ -47,13 +47,11 @@ Imports:
 	terra,
 	utils
 Suggests:
-	geodata,
-	knitr
+	geodata
 LazyData: true
 LazyLoad: yes
-URL: http://github.com/adamlilith/enmSdmX
+URL: https://github.com/adamlilith/enmSdmX
 BugReports: https://github.com/adamlilith/enmSdmX
 Encoding: UTF-8
-License: file LICENSE
+License: MIT
 RoxygenNote: 7.2.1
-VignetteBuilder: knitr
