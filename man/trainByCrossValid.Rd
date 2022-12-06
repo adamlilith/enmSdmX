@@ -79,7 +79,7 @@ In some cases models do not converge (e.g., boosted regression trees and general
 
 # Runing the entire set of commands can take quite a bit of time.
 
-if (FALSE) {
+\dontrun{
 
 library(sf)
 library(terra)

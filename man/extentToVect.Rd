@@ -2,7 +2,7 @@
 % Please edit documentation in R/extentToVect.r
 \name{extentToVect}
 \alias{extentToVect}
-\title{Convert extent to polygon}
+\title{Convert extent to a spatial polygon}
 \usage{
 extentToVect(x, ...)
 }
@@ -26,5 +26,5 @@ plot(mad0[1], add=TRUE)
 
 }
 \seealso{
-\link{makePlotPoly}
+\link{plotExtent}
 }

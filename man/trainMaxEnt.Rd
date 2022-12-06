@@ -77,7 +77,7 @@ This function is a wrapper for \code{maxent()}. That function relies on a maxent
 # The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models.
 
-\donttest{
+\dontrun{
 
 library(sf)
 library(terra)

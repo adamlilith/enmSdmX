@@ -88,7 +88,7 @@ coordImprecision <- function(
 		crs <- sf::st_crs(x)
 		x <- sf::st_coordinates(x)[ , c('x', 'y')]
 	} else if (inherits(x, c('matrix', 'data.frame'))) {
-		crs <- getCRS('wgs84')
+		crs <- crsGet('wgs84')
 	} else {
 		stop('Argument "x" must be a SpatVector or sf object, or a matrix or data.frame.')
 	}

@@ -1,10 +1,10 @@
 #' WKT string for a named coordinate reference system or a spatial object
 #'
-#' Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getsCRS()}.
+#' Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{crsGet('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getsCRS()}.
 #'
 #' @param x This can be any of:
 #' \itemize{
-#'		\item Name of CRS: Each CRS has one "long" name and at least one "short" name, which appear in the table returned by \code{getCRS()}. You can use the "long" name of the CRS, or either of the two "short" names.  Spaces, case, and dashes are ignored, but to make the codes more memorable, they are shown as having them.
+#'		\item Name of CRS: Each CRS has one "long" name and at least one "short" name, which appear in the table returned by \code{crsGet()}. You can use the "long" name of the CRS, or either of the two "short" names.  Spaces, case, and dashes are ignored, but to make the codes more memorable, they are shown as having them.
 #' 		\item \code{NULL} (default): This returns a table of projections with their "long" and "short" names (nearly the same as \code{data(crss)}).
 #'		\item An object of class \code{SpatVector}, \code{SpatRaster}, or \code{sf}. If this is a "\code{Spat}" object, then a character vector with the CRS in WKT form is returned. If a \code{sf} is supplied, then a \code{crs} object is returned in WKT format.
 #' }
@@ -15,18 +15,18 @@
 #' @examples
 #'
 #' # NB Using cat() make the CRS display nicely for human eyes.
-#' cat(getCRS('WGS 84'))
-#' cat(getCRS('Mollweide'))
-#' cat(getCRS('WorldClim'))
+#' cat(crsGet('WGS 84'))
+#' cat(crsGet('Mollweide'))
+#' cat(crsGet('WorldClim'))
 #'
-#' getCRS()
+#' crsGet()
 #' 
 #' data(mad0)
-#' getCRS(mad0)
+#' crsGet(mad0)
 #'
 #' @export
 
-getCRS <- function(
+crsGet <- function(
 	x = NULL,
 	warn = TRUE
 ) {

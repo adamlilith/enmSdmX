@@ -5,21 +5,43 @@
 #' @param x 	Either an object of class \code{SpatRaster}, \code{SpatVector}, or \code{sf}, \emph{or} a numeric string with two values (longitude and latitude of the center of the projection), \emph{or} a two-column matrix/data frame with the centroid of the projection.
 #' @param alt	Altitude in meters of the viewpoint in km. The default (35800 km) is geosynchronous orbit.
 #'
-#' @seealso \link{getCRS}
+#' @seealso \code{\link{crsGet}}
 #' @examples
 #'
 #' library(sf)
 #' data(mad0)
-#' wkt2 <- makeCRSVertical(mad0)
+#' wkt2 <- crsVertical(mad0)
 #' mad0vert <- st_transform(mad0, wkt2)
 #'
 #' par(mfrow=c(1, 2))
-#' plot(mad0, main='Unprojected (WGS84)')
-#' plot(mad0vert, main='Vertical')
+#' plot(st_geometry(mad0), main='Unprojected (WGS84)')
+#' plot(st_geometry(mad0vert), main='Vertical')
+#'
+#' # The effect is more noticable when plotting large areas,
+#' # especially near the poles.
+#' if (FALSE) {
+#' 
+#' library(geodata)
+#' library(terra)
+#'
+#' can <- gadm('CAN', level=0, path=getwd()) # outline of Canada
+#'
+#' wktVert <- crsVertical(can)
+#' wktLamb <- crsLambert(can)
+#'
+#' canVert <- project(can, wktVert)
+#' canLamb <- project(can, wktLamb)
+#'
+#' par(mfrow=c(1, 3))
+#' plot(can, main='WGS84')
+#' plot(canVert, main='Vertical')
+#' plot(canLamb, main='Lambert')
+#'
+#' }
 #'
 #' @export
 
-makeCRSVertical <- function(x, alt = 35800) {
+crsVertical <- function(x, alt = 35800) {
 
 	alt <- 1000 * alt
 

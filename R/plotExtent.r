@@ -14,7 +14,7 @@
 #'
 #' data(mad0)
 #' plot(st_geometry(mad0))
-#' outline <- makePlotPoly(mad0)
+#' outline <- plotExtent(mad0)
 #' plot(outline, col='cornflowerblue', lty='dotted')
 #' plot(st_geometry(mad0), add=TRUE)
 #' 
@@ -22,7 +22,7 @@
 #'
 #' @export
 
-makePlotPoly <- function(x = NULL) {
+plotExtent <- function(x = NULL) {
 
 	corners <- graphics::par('usr')
 	xCoords <- c(corners[1], corners[2], corners[2], corners[1])

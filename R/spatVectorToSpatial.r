@@ -9,12 +9,12 @@
 #' library(terra)
 #' f <- system.file('ex/lux.shp', package='terra')
 #' v <- vect(f)
-#' spat <- svToSpatial(v)
+#' spat <- spatVectorToSpatial(v)
 #' class(spat)
 #'
 #' @export
 
-svToSpatial <- function(x) {
+spatVectorToSpatial <- function(x) {
 
 	x <- sf::st_as_sf(x)
 	x <- methods::as(x, 'Spatial')

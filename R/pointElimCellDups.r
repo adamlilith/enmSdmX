@@ -14,11 +14,11 @@
 #'     lat=c(38, 38, 38, 38), point=letters[1:4]
 #' )
 #' rast <- terra::rast() # empty raster covering entire world with 1-degree resolution
-#' elimCellDups(x, rast, longLat=c(1, 2))
-#' elimCellDups(x, rast, longLat=c(1, 2), priority=c(3, 2, 1, 0))
+#' pointElimCellDups(x, rast, longLat=c(1, 2))
+#' pointElimCellDups(x, rast, longLat=c(1, 2), priority=c(3, 2, 1, 0))
 #'
 #' @export
-elimCellDups <- function(
+pointElimCellDups <- function(
 	x,
 	rast,
 	longLat = NULL,

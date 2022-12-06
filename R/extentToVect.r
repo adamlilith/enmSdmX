@@ -6,7 +6,7 @@
 #' @param ... Arguments to supply to \code{vect}.
 #'
 #' @return A \code{SpatVector} (usual) or, if the input is an \code{sf} object, an \code{sf} polygon object.
-#' @seealso \link{makePlotPoly}
+#' @seealso \link{plotExtent}
 #' @examples
 #'
 #' data(mad0)

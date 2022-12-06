@@ -19,10 +19,10 @@
 #' r <- rast()
 #' nc <- ncell(r)
 #' r[] <- 1:nc
-#' rands1 <- sampleRast(r, 10000)
-#' rands2 <- sampleRast(r, 10000, adjArea=FALSE)
-#' rands3 <- sampleRast(r, 10000, prob=FALSE)
-#' rands4 <- sampleRast(r, 10000, adjArea=FALSE, prob=FALSE)
+#' rands1 <- rastSample(r, 10000)
+#' rands2 <- rastSample(r, 10000, adjArea=FALSE)
+#' rands3 <- rastSample(r, 10000, prob=FALSE)
+#' rands4 <- rastSample(r, 10000, adjArea=FALSE, prob=FALSE)
 #' par(mfrow=c(2, 2))
 #' plot(r, main='adjArea = TRUE & prob = TRUE')
 #' points(rands1, pch='.')
@@ -35,7 +35,7 @@
 #'
 #' @export
 
-sampleRast <- function(x, n, adjArea = TRUE, replace = TRUE, prob = TRUE) {
+rastSample <- function(x, n, adjArea = TRUE, replace = TRUE, prob = TRUE) {
 
 	if (!inherits(x, 'SpatRaster')) x <- terra::rast(x)
 	val <- as.vector(x)
