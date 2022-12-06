@@ -50,8 +50,8 @@ Suggests:
 	knitr
 LazyData: true
 LazyLoad: yes
-URL: http://github.com/adamlilith/enmSdm
-BugReports: https://github.com/adamlilith/enmSdm
+URL: http://github.com/adamlilith/enmSdmX
+BugReports: https://github.com/adamlilith/enmSdmX
 Encoding: UTF-8
 License: file LICENSE
 RoxygenNote: 7.2.1
