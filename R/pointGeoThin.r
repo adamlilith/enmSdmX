@@ -1,8 +1,9 @@
 #' Thin geographic points (mostly) deterministically
 #'
-#' This function thins geographic points such that none have nearest neighbors closer than some user-specified distance. The results are almost deterministic (see Details).
+#' This function thins geographic points such that none have nearest neighbors closer than some user-specified distance. The results are deterministic. \cr \cr
+#' Thinning is conducted by first calculating all pairwise distances between points. Then, clusters of points are found based on proximity using the "single-linkage" method (i.e., based on minimum distance between groups). For eqach cluster, the distance between each point in the cluster and outside of the cluster is calculated.  The point retained in each cluster is the one with the largest pairwise distance to any points in any other cluster.
 #'
-#' @param x A "points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
+#' @param x A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
 #' @param minDist Minimum distance (in meters) needed between points to retain them. Points falling closer than this distance will be candidates for being discarded.
 #' @param longLat This is ignored if \code{x} is a \code{Spaytvector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifiying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
 #' @param verbose Logical. If \code{TRUE} then display progress.
