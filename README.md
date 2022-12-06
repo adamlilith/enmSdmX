@@ -1,7 +1,7 @@
 # enmSdmX
 Tools for modeling niches and distributions of species
 
-<img align="right" src="enmSdmX.png"/>
+<img align="right" src="enmSdmX.png" height="223"/>
 
 This package contains a suite of efficiency functions for species distribution modeling and ecological niche modeling. You can install this package from CRAN using:
 
