@@ -324,8 +324,9 @@
 #' rbind(bv1, bv2)
 #' }
 #'
-#' \dontrun{
 #' ### multi-core
+#' ##############
+#' if (FALSE) {
 #' mats <- array(runif(100 * 100 * 1000), dim=c(100, 100, 500))
 #' mats <- brick(mats)
 #' projection(mats) <- getCRS('wgs84')
@@ -435,7 +436,7 @@ rastVelocity <- function(
 
 			if (is.null(longitude) | is.null(latitude)) {
 		
-				ll <- enmSdmX::longLatRasters(x)
+				ll <- enmSdmX::longLatRasts(x)
 				longitude <- ll[['longitude']]
 				latitude <- ll[['latitude']]
 				

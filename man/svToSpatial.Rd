@@ -17,8 +17,9 @@ This function converts a \code{SpatVector} object from the \pkg{terra} package t
 }
 \examples{
 
+library(terra)
 f <- system.file('ex/lux.shp', package='terra')
-v <- terra::vect(f)
+v <- vect(f)
 spat <- svToSpatial(v)
 class(spat)
 

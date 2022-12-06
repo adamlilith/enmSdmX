@@ -14,6 +14,8 @@
 #' @return Object of class \code{SpatRaster}.
 #' @examples
 #' 
+#' library(terra)
+#'
 #' # generate long/lat rasters for the world
 #' x <- rast() # raster with 1 deg resolution and extent equal to entire world
 #' x[] <- 1:ncell(x)

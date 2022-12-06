@@ -66,7 +66,7 @@ modelSize <- function(
 		if (binary) { (as.integer(x$y) == 2) } else { x$y }
 		
 	# random conditional forest in party package
-	} else if (inherots(x, 'RandomForest')) {
+	} else if (inherits(x, 'RandomForest')) {
 	
 		if (binary) { (as.integer(x@responses@variables$y) == 2) } else { x@responses@variables$y }
 		

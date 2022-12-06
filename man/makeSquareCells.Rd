@@ -23,9 +23,12 @@ This function creates a raster from an object with an extent (i.e., another rast
 }
 \examples{
 
+library(sf)
+library(terra)
+
 # project outline of Madagascar to equal-area:
 data(mad0)
-mad0Ea <- project(mad0, getCRS('madAlbers'))
+mad0Ea <- st_transform(mad0, getCRS('madAlbers'))
 
 n <- 101
 cellSize_meters <- 10E4

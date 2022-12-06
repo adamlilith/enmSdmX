@@ -12,7 +12,6 @@ evalThreshold(
   at = c("msss", "mdss", "minPres", "prevalence", "sensitivity"),
   sensitivity = 0.9,
   thresholds = seq(0, 1, by = 0.001),
-  delta = 0.001,
   na.rm = FALSE,
   bg = NULL,
   bgWeight = NULL,

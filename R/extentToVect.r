@@ -1,4 +1,4 @@
-#' Convert extent to polygon
+#' Convert extent to a spatial polygon
 #'
 #' This function returns a \code{SpatVector} or \code{sf} polygon representing an extent. The input can be a \code{SpatExtent} or \code{sf} object, or an object from which a \code{SpatExtent} (extent) can be obtained.
 #'
@@ -6,7 +6,7 @@
 #' @param ... Arguments to supply to \code{vect}.
 #'
 #' @return A \code{SpatVector} (usual) or, if the input is an \code{sf} object, an \code{sf} polygon object.
-#' @seealso \link{createPlotPoly}
+#' @seealso \link{makePlotPoly}
 #' @examples
 #'
 #' data(mad0)

@@ -6,7 +6,7 @@
 #'
 #' @details
 #' @section Data preparation:
-#' 		\code{\link{elimCellDuplicates}}: Eliminate duplicate points in each cell of a raster \cr
+#' 		\code{\link{elimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
 #'
 #' @section Bias correction:
 #'		\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
@@ -16,53 +16,51 @@
 #' 		\code{\link{nearestEnvs}}: Extract "most conservative" environments from points and/or polygons \cr
 #'
 #' @section Model calibration:
-#' 		\code{\link{trainByCrossValid}} Wrapper for implementing some \code{trainXYZ} function across cross-validation folds (see also \code{\link{summaryByCrossValid}}). \cr
-#' 		\code{\link{trainBrt}} Boosted regression trees (BRTs) \cr
-#' 		\code{\link{trainCrf}} Conditional regression trees (CRFs) \cr
-#' 		\code{\link{trainGam}} Generalized additive models (GAMs) \cr
-#' 		\code{\link{trainGlm}} Generalized linear models (GLMs) \cr
-#' 		\code{\link{trainMaxEnt}} and \code{\link{trainMaxNet}} Maxent models \cr
-#' 		\code{\link{trainNs}} Natural splines (NSs) \cr
-#' 		\code{\link{trainRf}} Random forests (RFs) \cr
+#' 		\code{\link{trainByCrossValid}}: and \code{\link{summaryByCrossValid}}: Implement a \code{trainXYZ} function across calibration folds (which are distinct from evaluation folds). \cr
+#' 		\code{\link{trainBRT}}: Boosted regression trees (BRTs) \cr
+#' 		\code{\link{trainGAM}}: Generalized additive models (GAMs) \cr
+#' 		\code{\link{trainGLM}}: Generalized linear models (GLMs) \cr
+#' 		\code{\link{trainMaxEnt}}: MaxEnt models \cr
+#'		\code{\link{trainMaxNet}}: MaxNet models
+#' 		\code{\link{trainNS}}: Natural spline (NS) models \cr
+#' 		\code{\link{trainRF}}: Random forest (RF) models \cr
 #'
 #' @section Model prediction:
-#' 		\code{\link{predictEnmSdm}} Predict most model types using default settings \cr
-#' 		\code{\link{predictMaxNet}} Predict MaxNet (MaxEnt) model \cr
+#' 		\code{\link{predictEnmSdm}}: Predict most model types using default settings \cr
+#' 		\code{\link{predictMaxEnt}}: Predict MaxEnt model \cr
+#' 		\code{\link{predictMaxNet}}: Predict MaxNet model \cr
 #'
 #' @section Model evaluation:
-#' 		\code{\link{evalAUC}} AUC (with/out site weights) \cr
-#' 		\code{\link{aucMultiWeighted}} Multivariate version of AUC (with/out site weight) \cr
-#' 		\code{\link{evalContBoyce}} Continuous Boyce Index (with/out site weights) \cr
-#' 		\code{\link{evalThreshold}} Thresholds to convert continuous predictions to binary predictions (with/out site weights) \cr
-#' 		\code{\link{evalThresholdStats}} Model performance statistics based on thresholded predictions (with/out site weights) \cr
-#' 		\code{\link{evalTjursR2}} Tjur's R2 (with/out site weights) \cr
-#' 		\code{\link{evalTSS}} True Skill Statistic (TSS) (with/out site weights) \cr
-#' 		\code{\link{modelSize}} Number of response values in a model object \cr
+#' 		\code{\link{evalAUC}}: AUC (with/out site weights) \cr
+#' 		\code{\link{evalMultiAUC}}: Multivariate version of AUC (with/out site weight) \cr
+#' 		\code{\link{evalContBoyce}}: Continuous Boyce Index (with/out site weights) \cr
+#' 		\code{\link{evalThreshold}}: Thresholds to convert continuous predictions to binary predictions (with/out site weights) \cr
+#' 		\code{\link{evalThresholdStats}}: Model performance statistics based on thresholded predictions (with/out site weights) \cr
+#' 		\code{\link{evalTjursR2}}: Tjur's R2 (with/out site weights) \cr
+#' 		\code{\link{evalTSS}}: True Skill Statistic (TSS) (with/out site weights) \cr
+#' 		\code{\link{modelSize}}: Number of response values in a model object \cr
 #'
 #' @section Functions for rasters:
-#'		\code{\link{getValueByCell}} Get value(s) in raster cell(s) by cell number \cr
-#' 		\code{\link{interpolateRasters}} Interpolate a stack of rasters \cr
-#' 		\code{\link{longLatRasts}} Generate rasters with values of longitude/latitude for cell values \cr
-#' 		\code{\link{makeSquareCells}} Create a raster with square cells \cr
-#' 		\code{\link{rastVelocity}} Velocity of movement across a series of rasters \cr
-#' 		\code{\link{sampleRast}} and \code{\link{sampleRastStrat}} Sample raster with/out replacement and possibly in a stratified manner \cr
-#'		\code{\link{setValueByCell}} Set value(s) in raster cell(s) by cell number \cr
+#'		\code{\link{getValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
+#' 		\code{\link{interpolateRasts}}: Interpolate a stack of rasters \cr
+#' 		\code{\link{longLatRasts}}: Generate rasters with values of longitude/latitude for cell values \cr
+#' 		\code{\link{makeSquareCells}}: Create a raster with square cells \cr
+#' 		\code{\link{rastVelocity}}: Velocity of movement across a series of rasters \cr
+#' 		\code{\link{sampleRast}}: Sample raster with/out replacement \cr
+#'		\code{\link{setValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
 #'
 #' @section Niche overlap and similarity:
-#' 		\code{\link{compareNiches}} Niche overlap metrics \cr
-#' 		\code{\link{compareResponse}} Compare niche model responses to a single variable \cr
+#' 		\code{\link{compareNiches}}: Niche overlap metrics \cr
+#' 		\code{\link{compareResponse}}: Compare niche model responses to a single variable \cr
 
-#' @section Extent of occurrence:
-#' 		\code{\link{mcpFromPolys}} Minimum convex polygon from a set of polygons \emph{and/or} points \cr
-#'
 #' @section Geographic utility functions:
-#' 		\code{\link{coordImprecision}} Coordinate imprecision \cr
-#' 		\code{\link{decimalToDms}} Convert decimal coordinate to degrees-minutes-seconds \cr
-#' 		\code{\link{dmsToDecimal}} Convert degrees-minutes-seconds coordinate to decimal \cr
-#' 		\code{\link{extentToVect}} Convert extent to polygon \cr
-#' 		\code{\link{getCRS}} Return a proj4string (coordinate reference system string) using a nickname \cr
-#'		\code{\link{makePlotPoly}} Create a `SpatialPolygon` the same size as a plot region \cr
-#'		\code{\link{svToSpatial}} Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
+#' 		\code{\link{coordImprecision}}: Coordinate imprecision \cr
+#' 		\code{\link{decimalToDms}}: Convert decimal coordinate to degrees-minutes-seconds \cr
+#' 		\code{\link{dmsToDecimal}}: Convert degrees-minutes-seconds coordinate to decimal \cr
+#' 		\code{\link{extentToVect}}: Convert extent to polygon \cr
+#' 		\code{\link{getCRS}}: Return a WKT2 string (coordinate reference system string) using a nickname \cr
+#'		\code{\link{makePlotPoly}}: Create a `SpatialPolygon` the same size as a plot region \cr
+#'		\code{\link{svToSpatial}}: Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
 #'
 #' @section Data:
 #' 		\code{\link{lemurs}}: Lemur occurrences \cr

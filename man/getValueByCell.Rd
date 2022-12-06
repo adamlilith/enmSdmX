@@ -26,6 +26,7 @@ These functions get values from a raster at specific cells, or values to specifi
 }
 \examples{
 
+library(terra)
 x <- rast(nrow=10, ncol=10)
 x[] <- round(10 * runif(100))
 

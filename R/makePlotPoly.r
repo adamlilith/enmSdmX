@@ -1,4 +1,4 @@
-#' Create SpatialPolygon same size as a plot
+#' Create spatial polygon same size as a plot
 #'
 #' This function creates a "rectangular" \code{SpatVector} object with the same dimensions as a plot window. It is especially useful for cropping subsequent rasters or vector objects to the plot window. A plot must be made before calling this function.
 #'
@@ -8,18 +8,23 @@
 #' @seealso \link{extentToVect}
 #' @examples
 #'
+#' if (FALSE) {
+#'
+#' library(sf)
+#'
 #' data(mad0)
-#' poly <- makePlotPoly(mad0)
-#' plot(poly, border='blue', lty='dotted')
-#' plot(mad0, add=TRUE)
+#' plot(st_geometry(mad0))
+#' outline <- makePlotPoly(mad0)
+#' plot(outline, col='cornflowerblue', lty='dotted')
+#' plot(st_geometry(mad0), add=TRUE)
+#' 
+#' }
 #'
 #' @export
 
 makePlotPoly <- function(x = NULL) {
 
-	usr <- par('usr')
-	extent <- terra::ext(usr)
-	corners <- extent@ptr$vector
+	corners <- graphics::par('usr')
 	xCoords <- c(corners[1], corners[2], corners[2], corners[1])
 	yCoords <- c(corners[3], corners[3], corners[4], corners[4])
 	xy <- matrix(c(xCoords, yCoords), ncol=2)
@@ -29,13 +34,16 @@ makePlotPoly <- function(x = NULL) {
 		if (inherits(x, 'sf')) {
 			proj <- sf::st_crs(x)
 			proj <- as.character(proj$wkt)
+
+			out <- sf::st_as_sf(out)
+			out <- sf::st_set_crs(out, proj)
 		} else if (inherits(x, c('SpatVector', 'SpatRaster'))) {
 			proj <- terra::crs(x)
+			out <- terra::crs(out) <- proj
 		} else if (inherits(x, c('crs', 'character'))) {
 			proj <- x
 		}
 		
-		out <- terra::crs(out) <- proj
 		
 	}
 	

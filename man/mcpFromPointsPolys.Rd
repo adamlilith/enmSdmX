@@ -51,9 +51,8 @@ The function can alternatively return the points on the vertices of the MCP, or 
 }
 \examples{
 
-# This is a contrived example based on red-bellied lemurs in Madagascar
-# represented by points data and (pretend) Faritras-level occurrences.
-# The "polygon" (imprecise) occurrences are simulated (not necessarily real).
+library(sf)
+library(terra)
 
 ### example using SpatVector inputs (terra package)
 ###################################################
@@ -107,6 +106,7 @@ border=c(NA, 'black', 'black', 'black', 'black'))
 
 # Tananarive (Paris) / Laborde Grid - EPSG:29701
 madProj <- sf::st_crs(getCRS('Madagascar Albers'))
+wgs84 <- getCRS('WGS84')
 
 data(mad1)
 mad1 <- sf::st_transform(mad1, madProj)
@@ -114,7 +114,7 @@ mad1 <- sf::st_transform(mad1, madProj)
 data(lemurs)
 redBelly <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
-redBelly <- sf::st_as_sf(redBelly[ , ll], crs=4326, coords=ll)
+redBelly <- sf::st_as_sf(redBelly[ , ll], crs=wgs84, coords=ll)
 redBelly <- sf::st_transform(redBelly, madProj)
 
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
@@ -154,7 +154,6 @@ border=c(NA, 'black', 'black', 'black', 'black'))
 # larger than using Spatial* (sp) or sf (sf) objects (by about 0.03-0.07\%
 # in this example). The difference arises because terra::expanse() yields a
 # different value than sf::st_area.
-
 }
 \references{
 Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} In press. Open access pre-print: \doi{10.1101/2021.06.10.447988}

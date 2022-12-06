@@ -1,9 +1,9 @@
 #' Calibrate a generalized linear model (GLM)
 #'
-#' This function constructs a GLM piece-by-piece by first calculating AICc for all models with univariate, quadratic, and 2-way-interaction terms. It then creates a "full" model with the highest-ranked uni/bivariate terms. Finally, it implements an all-subsets model selection routine using AICc. Its output is any or all of: a table with AICc for all possible models, all possible models (after model construction), and/or the model with the lowest AICc.
+#' This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model). Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 #'
 #' @param data Data frame.
-#' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.
+#' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
 #' @param family Name of family for data error structure (see \code{\link[stats]{family}}). Default is to use the 'binomial' family.
 #' @param construct Logical. If \code{TRUE} (default) then construct model from individual terms entered in order from lowest to highest AICc up to limits set by \code{presPerTermInitial} or \code{maxTerms} is met. If \code{FALSE} then the "full" model consists of all terms allowed by \code{quadratic} and \code{interaction}.
@@ -26,7 +26,7 @@
 #' \itemize{
 #' 	\item	\code{'model'}: Model with the lowest AICc.
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
-#' 	\item	\code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
+#' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
 #' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
@@ -37,186 +37,14 @@
 #'
 #' @seealso \code{\link[stats]{glm}}
 #'
-#' @examples
-#'
-#' # The examples below show a very basic modeling workflow. They have been 
-#' # designed to work fast, not produce accurate, defensible models.
-#' set.seed(123)
-#' 
-#' ### setup data
-#' 
-#' # environmental rasters
-#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
-#' madEnv <- rast(rastFile)
-#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
-#' 
-#' crs <- sf::st_crs(madEnv)
-#' 
-#' # lemur occurrence data
-#' data(lemurs)
-#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-#' occEnv <- extract(madEnv, occs, ID=FALSE)
-#' occEnv <- occEnv[complete.cases(occEnv), ]
-#' 	
-#' # create 10000 background sites (or as many as raster can support)
-#' bgEnv <- terra::spatSample(madEnv, 20000)
-#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
-#' bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
-#' 
-#' # collate occurrences and background sites
-#' presBg <- data.frame(
-#' 	presBg = c(
-#'    rep(1, nrow(occEnv)),
-#'    rep(0, nrow(bgEnv))
-#'    )
-#' )
-#' 
-#' env <- rbind(occEnv, bgEnv)
-#' env <- cbind(presBg, env)
-#' 
-#' predictors <- c('bio1', 'bio12')
-#' 
-#' ## MaxEnt
-#' mx <- trainMaxEnt(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	regMult = 1, # too few values for reliable model, but fast
-#' 	verbose = TRUE
-#' )
-#' 
-#' ## generalized linear model (GLM)
-#' # Normally, we'd center and standardize variables before modeling.
-#' gl <- trainGlm(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	verbose = TRUE
-#' )
-#' 
-#' ## generalized additive model (GAM)
-#' ga <- trainGam(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	verbose = TRUE
-#' )
-#' 
-#' ## natural splines
-#' nat <- trainNs(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	verbose = TRUE
-#' )
-#' 
-#' ## boosted regression trees
-#' envSub <- env[1:2000, ] # subsetting data to run faster
-#' brt <- trainBrt(
-#' 	data = envSub,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	learningRate = 0.001, # too few values for reliable model(?)
-#' 	treeComplexity = 2, # too few values for reliable model, but fast
-#' 	minTrees = 1200, # minimum trees for reliable model(?), but fast
-#' 	maxTrees = 1200, # too small for reliable model(?), but fast
-#' 	tryBy = 'treeComplexity',
-#' 	anyway = TRUE, # return models that did not converge
-#' 	verbose = TRUE
-#' )
-#' 
-#' ## random forests
-#' rf <- trainRf(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = predictors,
-#' 	verbose = TRUE
-#' )
-#' 
-#' ## make maps of models
-#' 
-#' mxMap <- predictEnmSdm(mx, madEnv)
-#' glMap <- predictEnmSdm(gl, madEnv)
-#' gaMap <- predictEnmSdm(ga, madEnv)
-#' natMap <- predictEnmSdm(nat, madEnv)
-#' brtMap <- predictEnmSdm(brt, madEnv)
-#' rfMap <- predictEnmSdm(rf, madEnv)
-#' 
-#' maps <- c(
-#' 	mxMap,
-#' 	glMap,
-#' 	gaMap,
-#' 	natMap,
-#' 	brtMap,
-#' 	rfMap
-#' )
-#' 
-#' names(maps) <- c('MaxEnt', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
-#' fun <- function() plot(occs[1], col='black', add=TRUE)
-#' plot(maps, fun=fun)
-#' 
-#' ## compare model responses to BIO12 (mean annual precipitation)
-#' 
-#' # make a data frame holding all other variables at mean across occurrences,
-#' # varying only BIO12
-#' occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
-#' occEnvMeans <- rbind(occEnvMeans)
-#' occEnvMeans <- as.data.frame(occEnvMeans)
-#' climFrame <- occEnvMeans[rep(1, 100), ]
-#' rownames(climFrame) <- NULL
-#' 
-#' minBio12 <- min(env$bio12)
-#' maxBio12 <- max(env$bio12)
-#' climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
-#' 
-#' predMx <- predictEnmSdm(mx, climFrame)
-#' predGl <- predictEnmSdm(gl, climFrame)
-#' predGa <- predictEnmSdm(ga, climFrame)
-#' predNat <- predictEnmSdm(nat, climFrame)
-#' predBrt <- predictEnmSdm(brt, climFrame)
-#' predRf <- predictEnmSdm(rf, climFrame)
-#' 
-#' 
-#' plot(climFrame$bio12, predMx,
-#' xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
-#' 
-#' lines(climFrame$bio12, predGl, lty='dotted', col='blue')
-#' lines(climFrame$bio12, predGa, lty='dashed', col='green')
-#' lines(climFrame$bio12, predNat, lty=4, col='purple')
-#' lines(climFrame$bio12, predBrt, lty=5, col='orange')
-#' lines(climFrame$bio12, predRf, lty=6, col='cyan')
-#' 
-#' legend(
-#'    'topleft',
-#'    inset = 0.01,
-#'    legend = c(
-#' 	'MaxEnt',
-#' 	'GLM',
-#' 	'GAM',
-#' 	'NS',
-#' 	'BRT',
-#' 	'RF'
-#'    ),
-#'    lty = 1:6,
-#'    col = c(
-#' 	'black',
-#' 	'blue',
-#' 	'green',
-#' 	'purple',
-#' 	'orange',
-#' 	'cyan'
-#'    ),
-#'    bg = 'white'
-#' )
-#' 
+#' @example man/examples/trainXYZ_examples.R
 #' 
 #' @export
-trainGlm <- function(
+
+trainGLM <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
-	family = 'binomial',
 	construct = TRUE,
 	select = TRUE,
 	quadratic = TRUE,
@@ -227,9 +55,10 @@ trainGlm <- function(
 	presPerTermFinal = 10,
 	maxTerms = 8,
 	w = TRUE,
+	family = 'binomial',
+	out = 'model',
 	cores = 1,
 	parallelType = 'doParallel',
-	out = 'model',
 	verbose = FALSE,
 	...
 ) {

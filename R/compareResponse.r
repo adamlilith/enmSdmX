@@ -8,11 +8,11 @@
 #' @param predictor Character list. Name(s) of predictor(s) for which to calculate comparisons. These must appear as column names in \code{data}.
 #' @param adjust Logical. If \code{TRUE} then subtract the mean of \code{pred1} from \code{pred1} and the mean of \code{pred2} from \code{pred2} before analysis. Useful for comparing the shapes of curves while controlling for different elevations (intercepts).
 #' @param gap Numeric >0. Proportion of range of predictor variable across which to assume a gap exists. Calculation of \code{areaAbsDiff} will  ignore gaps wide than this. To ensure the entire range of the data is included set this equal to \code{Inf} (default).
-#' @param smooth Logical. If TRUE then the responses are first smoothed using loess() then compared at \code{smoothN} values along each predictor. If \code{FALSE}, then comparisons are conducted at the raw values \code{pred1} and \code{pred2}.
+#' @param smooth Logical. If \code{TRUE} then the responses are first smoothed using loess() then compared at \code{smoothN} values along each predictor. If \code{FALSE}, then comparisons are conducted at the raw values \code{pred1} and \code{pred2}.
 #' @param smoothN \code{NULL} or positive integer. Number of values along "pred" at which to calculate comparisons. Only used if \code{smooth} is \code{TRUE}. If \code{NULL}, then comparisons are calculated at each value in data. If a number, then comparisons are calculated at \code{smoothN} values of \code{data[ , pred]} that cover the range of \code{data[ , pred]}.
-#' @param smoothRange 2-element numeric list or \code{NULL}. If \code{smooth} is TRUE, then force loess'ed predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.
+#' @param smoothRange 2-element numeric list or \code{NULL}. If \code{smooth} is \code{TRUE}, then force loess predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.
 #' @param graph Logical. If \code{TRUE} then plot predictions.
-#' @param ... Arguments to pass to functions like \code{sum()} (for example, \code{na.rm=TRUE}) and to \code{overlap()} (for example, \code{w} for weights). Note that if \code{smooth} = TRUE then passing an argument called \code{w} will likely cause a warning and make results circumspect \emph{unless} weights are pre-calculated for each of the \code{smoothN} points along a particular predictor.
+#' @param ... Arguments to pass to functions like \code{sum()} (for example, \code{na.rm=TRUE}) and to \code{overlap()} (for example, \code{w} for weights). Note that if \code{smooth = TRUE}, then passing an argument called \code{w} will likely cause a warning and make results circumspect \emph{unless} weights are pre-calculated for each of the \code{smoothN} points along a particular predictor.
 #' @return Either a data frame (if \code{smooth = FALSE} or a list object with the smooth model plus a data frame (if \code{smooth = TRUE}) . The data frame represents metrics comparing response curves of \code{pred1} and \code{pred2}:
 #' \itemize{
 #' \item \code{predictor} Predictor for which comparison was made
@@ -30,7 +30,7 @@
 #' }
 #' @references Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Environmental niche equivalency versus conservatism: Quantitative approaches to niche evolution.  Evolution 62:2868-2883.
 #' @references Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Erratum.  Evolution 62:2868-2883.
-#' @references Godsoe, W.  2014.  Inferring the similarity of species distributions using Species’ Distribution Models.  Ecography 37:130-136.
+#' @references Godsoe, W.  2014.  Inferring the similarity of species distributions using Species Distribution Models.  Ecography 37:130-136.
 #'
 #' @seealso \code{\link[enmSdmX]{compareNiches}}
 #'

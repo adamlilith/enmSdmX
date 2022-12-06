@@ -9,29 +9,237 @@ predictEnmSdm(
   newdata,
   maxentFun = "terra",
   cores = 1,
+  parallelType = "doParallel",
   nrows = nrow(newdata),
+  paths = .libPaths(),
   ...
 )
 }
 \arguments{
-\item{model}{Object of class \code{lm}, \code{glm}, \code{gam}, \code{randomForest}, \code{MaxEnt}, \code{MaxNet}, \code{prcomp}, \code{kde}, \code{gbm}, and possibly others (worth a try!).}
+\item{model}{Object of class \code{lm}, \code{glm}, \code{gam}, \code{randomForest}, \code{MaxEnt}, \code{maxnet}, \code{prcomp}, \code{kde}, \code{gbm}, and possibly others (worth a try!).}
 
-\item{newdata}{Data frame or matrix with data to which to predict}
+\item{newdata}{Data frame or matrix, or \code{SpatRaster} with data to which to predict.}
 
 \item{maxentFun}{This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used.}
 
-\item{cores}{Number of cores to use. The default is 1. If >1 and \code{newdata} is a raster, only 1 core is used (i.e., basically, \code{cores} is ignored if you're writing to a raster... sorry!)}
+\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!)}
 
-\item{nrows}{Number of rows of \code{newdata} to predict at a time (assuming \code{newdata} is a \code{data.frame} or \code{matrix}). The default value is to predict all rows at once, but for very large data frames/matrices this can lead to memory issues in some cases. By setting the number of rows, \code{newdata} can be divided into chunks, and predictions made to each chunk, which may ease memory limitations. This can be combined with multi-coring (which will increase memory requirements). In this case, all cores combined will get \code{nrows} of data. How many rows are too many? You will have to decide depending on your data and the output. For example, predicting the outcome of a GLM on data with 10E6 rows ma be fine, but predicting a PCA (with multiple axes) to the data data may require too much memory. You can use \code{\link[omnibus]{memUse}} to see to help figure this out.}
+\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
+
+\item{nrows}{Number of rows of \code{newdata} to predict at a time. This ignored is only used if \code{newdata} is a \code{data.frame} or \code{matrix}. The default is to predict all rows at once, but for very large data frames/matrices this can lead to memory issues in some cases. By setting the number of rows, \code{newdata} is divided into chunks, and predictions made to each chunk, which may ease memory limitations. This can be combined with multi-coring (which will increase memory requirements). In this case, all cores combined will get \code{nrows} of data. How many rows are too many? You will have to decide depending on the capabilities of your system. For example, predicting the outcome of a GLM on data with 10E6 rows may be fine, but predicting a PCA (with multiple axes) to the data data may require too much memory.}
+
+\item{paths}{Locations where packages are stored. This is typically not useful to the general user, and is only supplied for when the function is called as a functional.}
 
 \item{...}{Arguments to pass to the algorithm-specific \code{predict} function.}
 }
 \value{
-Numeric.
+Numeric or \code{SpatRaster}.
 }
 \description{
 This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, Maxent, and more.
 }
+\examples{
+# The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models.
+
+\donttest{
+
+library(sf)
+library(terra)
+set.seed(123)
+
+### setup data
+##############
+
+# environmental rasters
+rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+madEnv <- rast(rastFile)
+madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+
+crs <- sf::st_crs(madEnv)
+
+# lemur occurrence data
+data(lemurs)
+occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
+occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+occEnv <- extract(madEnv, occs, ID=FALSE)
+occEnv <- occEnv[complete.cases(occEnv), ]
+	
+# create 10000 background sites (or as many as raster can support)
+bgEnv <- terra::spatSample(madEnv, 20000)
+bgEnv <- bgEnv[complete.cases(bgEnv), ]
+bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
+
+# collate occurrences and background sites
+presBg <- data.frame(
+  presBg = c(
+    rep(1, nrow(occEnv)),
+    rep(0, nrow(bgEnv))
+  )
+)
+
+env <- rbind(occEnv, bgEnv)
+env <- cbind(presBg, env)
+
+predictors <- c('bio1', 'bio12')
+
+### calibrate models
+####################
+
+# MaxEnt
+mx <- trainMaxEnt(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	regMult = 1, # too few values for reliable model, but fast
+	verbose = TRUE
+)
+
+# MaxNet
+mn <- trainMaxNet(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	regMult = 1, # too few values for reliable model, but fast
+	verbose = TRUE
+)
+
+# generalized linear model (GLM)
+# Normally, we'd center and standardize variables before modeling.
+gl <- trainGLM(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
+
+# generalized additive model (GAM)
+ga <- trainGAM(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	verbose = TRUE
+)
+
+# natural splines
+ns <- trainNS(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	df = 1:2, # too few values for reliable model(?)
+	verbose = TRUE
+)
+
+# boosted regression trees
+envSub <- env[1:1049, ] # subsetting data to run faster
+brt <- trainBRT(
+	data = envSub,
+	resp = 'presBg',
+	preds = predictors,
+	learningRate = 0.001, # too few values for reliable model(?)
+	treeComplexity = 2, # too few values for reliable model, but fast
+	minTrees = 1200, # minimum trees for reliable model(?), but fast
+	maxTrees = 1200, # too small for reliable model(?), but fast
+	tryBy = 'treeComplexity',
+	anyway = TRUE, # return models that did not converge
+	verbose = TRUE
+)
+
+# random forests
+rf <- trainRF(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	numTrees = c(100, 500), # using at least 500 recommended, but fast!
+	verbose = TRUE
+)
+
+### make maps of models
+#######################
+
+mxMap <- predictEnmSdm(mx, madEnv)
+mnMap <- predictEnmSdm(mn, madEnv)
+glMap <- predictEnmSdm(gl, madEnv)
+gaMap <- predictEnmSdm(ga, madEnv)
+nsMap <- predictEnmSdm(ns, madEnv)
+brtMap <- predictEnmSdm(brt, madEnv)
+rfMap <- predictEnmSdm(rf, madEnv)
+
+maps <- c(
+	mxMap,
+	mnMap,
+	glMap,
+	gaMap,
+	nsMap,
+	brtMap,
+	rfMap
+)
+
+names(maps) <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
+fun <- function() plot(occs[1], col='black', add=TRUE)
+plot(maps, fun = fun, nc = 4)
+
+### compare model responses to BIO12 (mean annual precipitation)
+################################################################
+
+# make a data frame holding all other variables at mean across occurrences,
+# varying only BIO12
+occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
+occEnvMeans <- rbind(occEnvMeans)
+occEnvMeans <- as.data.frame(occEnvMeans)
+climFrame <- occEnvMeans[rep(1, 100), ]
+rownames(climFrame) <- NULL
+
+minBio12 <- min(env$bio12)
+maxBio12 <- max(env$bio12)
+climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
+
+predMx <- predictEnmSdm(mx, climFrame)
+predMn <- predictEnmSdm(mn, climFrame)
+predGl <- predictEnmSdm(gl, climFrame)
+predGa <- predictEnmSdm(ga, climFrame)
+predNat <- predictEnmSdm(ns, climFrame)
+predBrt <- predictEnmSdm(brt, climFrame)
+predRf <- predictEnmSdm(rf, climFrame)
+
+
+plot(climFrame$bio12, predMx,
+xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
+
+lines(climFrame$bio12, predMn, lty='solid', col='red')
+lines(climFrame$bio12, predGl, lty='dotted', col='blue')
+lines(climFrame$bio12, predGa, lty='dashed', col='green')
+lines(climFrame$bio12, predNat, lty=4, col='purple')
+lines(climFrame$bio12, predBrt, lty=5, col='orange')
+lines(climFrame$bio12, predRf, lty=6, col='cyan')
+
+legend(
+   'topleft',
+   inset = 0.01,
+   legend = c(
+	'MaxEnt',
+	'MaxNet',
+	'GLM',
+	'GAM',
+	'NS',
+	'BRT',
+	'RF'
+   ),
+   lty = c(1, 1:6),
+   col = c(
+	'black',
+	'red',
+	'blue',
+	'green',
+	'purple',
+	'orange',
+	'cyan'
+   ),
+   bg = 'white'
+)
+
+}
+}
 \seealso{
-\code{\link[stats]{predict}} from the \pkg{stats} package, \code{\link[terra]{predict}} from the \pkg{terra} package, \code{\link[raster]{predict}} from the \pkg{raster} package
+\code{\link[stats]{predict}} from the \pkg{stats} package, \code{\link[terra]{predict}} from the \pkg{terra} package, \code{\link[raster]{predict}} from the \pkg{raster} package, \code{\link[enmSdmX]{predictMaxEnt}}, \code{\link[enmSdmX]{predictMaxNet}}
 }

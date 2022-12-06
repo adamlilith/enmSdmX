@@ -13,6 +13,7 @@
 #'
 #' @examples
 #'
+#' library(terra)
 #' x <- rast(nrow=10, ncol=10)
 #' x[] <- round(10 * runif(100))
 #' 
@@ -30,7 +31,7 @@
 
 getValueByCell <- function(x, cell, format = 'raster') {
 
-	if (any(cell) > terra::ncell(x)) stop('At least one cell index is greater than the total number of cells in the raster.')
+	if (any(cell > terra::ncell(x))) stop('At least one cell index is greater than the total number of cells in the raster.')
 
 	# convert to row cells
 	if (format == 'matrix') {
@@ -52,9 +53,8 @@ setValueByCell <- function(x, val, cell, format = 'raster') {
 
 	# errors
 	if (terra::nlyr(x) > 1L) stop('"x" can contain only one raster.')
-	if (any(cell) > terra::ncell(x)) stop('At least one cell index is greater than the total number of cells in the raster.')
+	if (any(cell > terra::ncell(x))) stop('At least one cell index is greater than the total number of cells in the raster.')
 	
-
 	lv <- length(val)
 	lc <- length(cell)
 	if (lv > lc) stop('The length of "val" must be as long as or shorter than the length of "cell".')

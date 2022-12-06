@@ -14,12 +14,11 @@
 #'     lat=c(38, 38, 38, 38), point=letters[1:4]
 #' )
 #' rast <- terra::rast() # empty raster covering entire world with 1-degree resolution
-#' elimCellDuplicates(x, rast, longLat=c(1, 2))
-#' elimCellDuplicates(x, rast, longLat=c(1, 2), priority=c(3, 2, 1, 0))
+#' elimCellDups(x, rast, longLat=c(1, 2))
+#' elimCellDups(x, rast, longLat=c(1, 2), priority=c(3, 2, 1, 0))
 #'
 #' @export
-
-elimCellDuplicates <- function(
+elimCellDups <- function(
 	x,
 	rast,
 	longLat = NULL,

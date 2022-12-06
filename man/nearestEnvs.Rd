@@ -13,8 +13,9 @@ nearestEnvs(
   numPcs = terra::nlyr(rasts),
   center = TRUE,
   scale = TRUE,
+  rule = "nearest",
   na.rm = TRUE,
-  return = "allPoints"
+  out = "both"
 )
 }
 \arguments{
@@ -37,12 +38,19 @@ nearestEnvs(
 
 \item{center, scale}{Settings for \code{\link[stats]{prcomp}}. These indicate if, when calculating the PCA, variables should first be centered and scaled (both \code{TRUE} by default). If the values in \code{rasts} are not of the same units, this should almost always be \code{TRUE}. They are ignored if \code{pca} is \code{FALSE}.}
 
+\item{rule}{Determines how to identify the single environmental point to associate with each polygon. Options include:
+\itemize{
+\item    \code{'nearest'} (default): Returns the environmental point \emph{closest} to the centroid (i.e., the "nearest environmental point").
+\item    \code{'farthest'}: Returns the environmental point \emph{farthest} from the centroid (i.e., opposite of the "nearest" point)
+}}
+
 \item{na.rm}{If \code{TRUE} (default), ignore \code{NA}s when extracting from rasters (e.g., if a point or polygon falls onto an \code{NA} cell). If \code{FALSE}, then any \code{NA}s that overlap a point or polygon will result in an error.}
 
-\item{return}{Determines what is returned:
+\item{out}{Determines what is returned. Only used if both \code{pts} and \code{polys} are provided.
 \itemize{
-        \item \code{'allPoints'} (default): Returns all environmental points. If \emph{n} is the number of points in \code{pts} and \emph{m} the number of polygons in \code{polys}, then the first \code{n} rows in the returned data frame refer to the environments of the \code{pts} and the subsequent \emph{m} to each \code{poly}.
-    \item \code{'polyPoints'}: Returns the environmental values on each \code{poly} polygon closest to the given center.
+        \item \code{'both'} (default): Returns all environmental points. If \emph{n} is the number of points in \code{pts} and \emph{m} the number of polygons in \code{polys}, then the first \code{n} rows in the returned data frame refer to the environments of the \code{pts} and the subsequent \emph{m} to each \code{poly}.
+    \item \code{'pts'}: Returns the environmental values associated with each point.
+    \item \code{'polys'}: Returns the environmental values on each \code{poly} polygon closest to the given center.
 }}
 }
 \value{
@@ -62,64 +70,112 @@ This function locates a set of points from the environments covered by each poly
 The function can alternatively return the points on the vertices of the MCP, or points on the input polygons closest to the reference centroid.
 }
 \examples{
+# This is a contrived example based on red-bellied lemurs in Madagascar.
+# Point locations (which are real data) will be assumed to be "precise"
+# records. We will designate a set of Faritas ("counties") to represent
+# "imprecise" occurrences that can only be georeferenced to a geopolitical
+# unit.
 
-# This is a contrived example based on red-bellied lemurs in Madagascar
-# represented by points data and (pretend) Faritras-level occurrences.
-
-wgs84 <- getCRS('WGS84')
+library(sf)
+library(terra)
 
 data(lemurs)
-redBelly <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
+precise <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
-redBelly <- sf::st_as_sf(redBelly[ , ll], coords=ll, crs=wgs84)
+wgs84 <- getCRS('WGS84')
+precise <- sf::st_as_sf(precise[ , ll], coords=ll, crs=wgs84)
 
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
 'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
 'Analamanga', 'Itasy')
 data(mad1)
-polys <- mad1[mad1$NAME_2 \%in\% faritras, ]
+imprecise <- mad1[mad1$NAME_2 \%in\% faritras, ]
 
-rasts <- system.file('ex/madEnv.tif', package='enmSdmX')
-rasts <- rasts / 100 # values in rasters were rounded to nearest 100th
+rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+rasts <- rast(rastFile)
 
-# plot environment of points and environments of each polygon closest to
-# centroid of environments of points
+### Plot environment of points and environments of each polygon closest to
+### centroid of environments of points. In this example, we use the first two
+### principal component axes to characterize the niche.
 
-envAll <- nearestEnvs(rasts, pts = redBelly, polys = polys, pca = TRUE, numPcs = 2)
-envPolys <- nearestEnvs(rasts, pts = redBelly, polys = polys, numPcs = 2,
-	return = 'polyPoints')
-allPolyEnvs <- extract(rasts, polys)
-plot(envAll$bio1, envAll$bio12, pch=16, col='orange',
-	xlab='bio1', ylab='bio12')
-points(envPolys$bio1, envPolys$bio12, pch=21, bg='orange')
-legend(
-	'topright',
-	inset = 0.01,
-	legend = c('point', 'polygon'),
-	pch = c(16, 21),
-	pt.bg = c(NA, 'orange')
-)
-
-# compare to all environments across all polygons
-allPolyEnvs <- extract(rasts, polys)
-plot(allPolyEnvs$bio1, allPolyEnvs$bio12, pch=16, col='orange',
-	xlab='bio1', ylab='bio12')
-points(envAll$bio1, envAll$bio12, pch=16)
-points(envPolys$bio1, envPolys$bio12, pch=21, bg='orange')
+envPtsPolys <- nearestEnvs(rasts, pts = precise, polys = imprecise,
+	pca = TRUE,	numPcs = 2)
+envPolys <- nearestEnvs(rasts, pts = precise, polys = imprecise, numPcs = 2,
+	out = 'polys')
+envPts <- nearestEnvs(rasts, pts = precise, polys = imprecise, numPcs = 2,
+	out = 'pts')
+allPolyEnvs <- extract(rasts, imprecise)
+plot(envPtsPolys$PC1, envPtsPolys$PC2, pch=16, col='black',
+	xlab='PC1', ylab='PC2')
+points(envPolys$PC1, envPolys$PC2, pch=21, bg='orange')
 legend(
 	'bottomleft',
 	inset = 0.01,
-	legend = c('point', 'polygon (closest)', 'polygon (all)'),
+	legend = c('precise', 'imprecise (closest)'),
+	pch = c(16, 21),
+	col = c('black', 'black'),
+	pt.bg = c('orange', 'orange')
+)
+
+### compare identified environments to all environments across all polygons
+###########################################################################
+env <- as.data.frame(rasts)
+pca <- stats::prcomp(env, center=TRUE, scale.=TRUE)
+
+allPolyEnvs <- extract(rasts, imprecise, ID = FALSE)
+allPolyEnvsPcs <- predict(pca, allPolyEnvs)
+allPolyEnvs <- cbind(allPolyEnvs, allPolyEnvsPcs)
+
+plot(allPolyEnvs$PC1, allPolyEnvs$PC2, pch=16, col='orange',
+	xlab='PC1', ylab='PC2')
+points(envPts$PC1, envPts$PC2, pch=16)
+points(envPolys$PC1, envPolys$PC2, pch=1)
+legend(
+	'bottomleft',
+	inset = 0.01,
+	legend = c('precise', 'imprecise (closest)', 'imprecise (all)'),
 	pch = c(16, 21, 16),
 	col = c('black', 'black', 'orange'),
 	pt.bg = c(NA, 'orange')
 )
 
+### display niches (minimum convex hulls) estimated
+### using just precise or precise + imprecise records
+#####################################################
+pcs <- c('PC1', 'PC2')
+preciseIndices <- chull(envPts[ , pcs])
+preciseImpreciseIndices <- chull(envPtsPolys[ , pcs])
 
+preciseIndices <- c(preciseIndices, preciseIndices[1])
+preciseImpreciseIndices <- c(preciseImpreciseIndices,
+	preciseImpreciseIndices[1])
+
+preciseOnlyNiche <- envPts[preciseIndices, pcs]
+preciseImpreciseNiche <- envPtsPolys[preciseImpreciseIndices, pcs]
+
+# plot
+plot(allPolyEnvs$PC1, allPolyEnvs$PC2, pch=16, col='orange',
+	xlab='PC1', ylab='PC2')
+points(envPts$PC1, envPts$PC2, pch=16)
+points(envPolys$PC1, envPolys$PC2, pch=1)
+lines(preciseImpreciseNiche, col='coral4', lwd=2)
+lines(preciseOnlyNiche, lty='dotted')
+
+legend(
+	'bottomleft',
+	inset = 0.01,
+	legend = c('precise', 'imprecise (closest)', 'imprecise (all)', 
+		'MCP imprecise-only', 'MCP precise + imprecise'),
+	pch = c(16, 21, 16, NA, NA),
+	col = c('black', 'black', 'orange', 'black', 'coral4'),
+	pt.bg = c(NA, 'orange', NA, NA, NA),
+	lwd = c(NA, NA, NA, 1, 2),
+	lty = c(NA, NA, NA, 'dotted', 'solid')
+)
 }
 \references{
 Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} In press. Open access pre-print: \doi{10.1101/2021.06.10.447988}
 }
 \seealso{
-\code{\link{mcpFromPointsPolys}} for a related application in geographic space.
+\code{\link{mcpFromPointsPolys}} for the "nearest geographic point" method, a related approach for geographic space.
 }

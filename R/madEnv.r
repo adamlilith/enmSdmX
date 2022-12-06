@@ -6,9 +6,6 @@
 #'
 #' @docType data
 #'
-#' @usage rastFile <- system.file('extdata', 'madEnv.tif', package='enmSdmX')
-#' madEnv <- rast(rastFile)
-#'
 #' @format An object of class \code{'SpatRaster'}.
 #'
 #' @keywords datasets, Madagascar
@@ -16,7 +13,10 @@
 #' @source \href{WorldClim}{www.worldclim.org}
 #' 
 #' @examples
+#'
+#' library(terra)
 #' rastFile <- system.file('extdata', 'madEnv.tif', package='enmSdmX')
 #' madEnv <- rast(rastFile)
 #' plot(madEnv)
+#'
 NULL

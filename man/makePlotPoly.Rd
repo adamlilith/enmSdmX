@@ -2,7 +2,7 @@
 % Please edit documentation in R/makePlotPoly.r
 \name{makePlotPoly}
 \alias{makePlotPoly}
-\title{Create SpatialPolygon same size as a plot}
+\title{Create spatial polygon same size as a plot}
 \usage{
 makePlotPoly(x = NULL)
 }
@@ -17,10 +17,17 @@ This function creates a "rectangular" \code{SpatVector} object with the same dim
 }
 \examples{
 
+if (FALSE) {
+
+library(sf)
+
 data(mad0)
-poly <- makePlotPoly(mad0)
-plot(poly, border='blue', lty='dotted')
-plot(mad0, add=TRUE)
+plot(st_geometry(mad0))
+outline <- makePlotPoly(mad0)
+plot(outline, col='cornflowerblue', lty='dotted')
+plot(st_geometry(mad0), add=TRUE)
+
+}
 
 }
 \seealso{

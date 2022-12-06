@@ -4,7 +4,7 @@
 \alias{.calcWeights}
 \title{Calculate weights for a model}
 \usage{
-.calcWeights(w, data, resp)
+.calcWeights(w, data, resp, family)
 }
 \arguments{
 \item{w}{Either logical in which case \code{TRUE} (default) causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'}) \emph{or} a numeric list of weights, one per row in \code{data} \emph{or} the name of the column in \code{data} that contains site weights. If \code{FALSE}, then each datum gets a weight of 1.}
@@ -17,6 +17,6 @@
 A numeric vector.
 }
 \description{
-Calculates weigting for a model. Each record receives a numeric weight.
+Calculates weighting for a model. Each record receives a numeric weight.
 }
 \keyword{internal}

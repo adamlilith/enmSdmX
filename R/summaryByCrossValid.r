@@ -1,8 +1,7 @@
 #' Summarize distribution/niche model cross-validation object
 #'
 #' This function summarizes models calibrated using the \code{\link[enmSdmX]{trainByCrossValid}} function. It returns aspects of the best models across k-folds (the particular aspects depends on the kind of models used).
-#' @param x The output from the \code{\link{trainCrossValid}} function (which is a list). Note that the object \emph{must} include a sublist named \code{tuning}.
-#' @param trainFxName Character, name of function used to train the SDM (examples: \code{'trainGlm'}, \code{'trainMaxEnt'}, \code{'trainBrt'}).
+#' @param x The output from the \code{\link{trainByCrossValid}} function (which is a list). Note that the object \emph{must} include a sublist named \code{tuning}.
 #' @param metric Metric by which to select the best model in each k-fold. This can be any of the columns that appear in the data frames in \code{x$tuning} (or any columns added manually), but typically is one of the following \emph{plus} either \code{Train}, \code{Test}, or \code{Delta} (e.g., \code{'logLossTrain'}, \code{'logLossTest'}, or \code{'logLossDelta'}):
 #' \itemize{
 #' 	\item \code{'logLoss'}: Log loss.
@@ -23,143 +22,18 @@
 #' 	\item NSs (natural splines): Data frame, one row per fold and one column per predictor, with values representing the maximum degrees of freedom used for each variable in the best model of each fold.
 #' 	\item RFs (random forests): Data frame, one row per fold, with values representing the optimal value of \code{mtry} (see \code{\link[randomForest]{randomForest}}).
 #' }
-#' @seealso \code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBrt}}, \code{\link[enmSdmX]{trainGam}}, \code{\link[enmSdmX]{trainGlm}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNs}}, \code{\link[enmSdmX]{trainRf}}
+#' @seealso \code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNS}}, \code{\link[enmSdmX]{trainRF}}
 #'
-#' @examples
-#' 
-#' # The examples below show a very basic modeling workflow. They have been 
-#' # designed to work fast, not produce accurate, defensible models.
-#' set.seed(123)
-#' 
-#' ### setup data
-#' 
-#' # environmental rasters
-#' rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
-#' madEnv <- rast(rastFile)
-#' madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
-#' 
-#' crs <- sf::st_crs(madEnv)
-#' 
-#' # lemur occurrence data
-#' data(lemurs)
-#' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-#' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-#' occEnv <- extract(madEnv, occs, ID=FALSE)
-#' occEnv <- occEnv[complete.cases(occEnv), ]
-#' 	
-#' # create background sites (using just 1000 to speed things up!)
-#' bgEnv <- terra::spatSample(madEnv, 3000)
-#' bgEnv <- bgEnv[complete.cases(bgEnv), ]
-#' bgEnv <- bgEnv[sample(nrow(bgEnv), 1000), ]
-#' 
-#' # collate occurrences and background sites
-#' presBg <- data.frame(
-#'    presBg = c(
-#'       rep(1, nrow(occEnv)),
-#'       rep(0, nrow(bgEnv))
-#'    )
-#' )
-#' 
-#' env <- rbind(occEnv, bgEnv)
-#' env <- cbind(presBg, env)
-#' 
-#' predictors <- c('bio1', 'bio12')
-#' 
-#' # using "vector" form of "folds" argument
-#' folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
-#' 
-#' ## MaxEnt
-#' mxx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainMaxEnt,
-#' 	regMult = 1:2 # too few values for valid model, but fast!
-#' )
-#' 
-#' ## generalized linear models
-#' glx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainGlm
-#' )
-#' 
-#' ## generalized linear models
-#' gax <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainGam
-#' )
-#' 
-#' ## natural splines
-#' natx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainNs
-#' )
-#' 
-#' ## boosted regression trees
-#' brtx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainBrt,
-#' 	learningRate = 0.001, # too few values for reliable model(?)
-#' 	treeComplexity = 2, # too few values for reliable model, but fast
-#' 	minTrees = 1200, # minimum trees for reliable model(?), but fast
-#' 	maxTrees = 1200, # too small for reliable model(?), but fast
-#' 	tryBy = 'treeComplexity',
-#' 	anyway = TRUE # return models that did not converge
-#' )
-#' 
-#' 
-#' ## random forests
-#' rfx <- trainByCrossValid(
-#' 	data = env,
-#' 	resp = 'presBg',
-#' 	preds = c('bio1', 'bio12'),
-#' 	folds = folds,
-#' 	trainFx = trainRf
-#' )
-#' 
-#' # summarize MaxEnt feature sets and regularization across folds
-#' summaryByCrossValid(mxx, trainFxName = 'trainMaxEnt')
-#' 
-#' # summarize GLM terms across folds
-#' summaryByCrossValid(glx, trainFxName = 'trainGlm')
-#' 
-#' # summarize GAM terms across folds
-#' summaryByCrossValid(gax, trainFxName = 'trainGam')
-#' 
-#' # summarize natural splines terms across folds
-#' summaryByCrossValid(natx, trainFxName = 'trainNs')
-#' 
-#' # summarize BRT parameters across folds
-#' # Note that to get BRTs to run fast we allowed no variation
-#' # so the summary in this example is fairly boring.
-#' summaryByCrossValid(brtx, trainFxName = 'trainBrt')
-#' 
-#' # summarize random forests 'mtry' parameter across folds
-#' summaryByCrossValid(natx, trainFxName = 'trainRf')
+#' @example man/examples/trainByCrossValid_examples.r
 #' 
 #' @export
 summaryByCrossValid <- function(
 	x,
-	trainFxName = 'trainGlm',
 	metric = 'cbiTest',
 	decreasing = TRUE
 ) {
 
-	trainFxName <- tolower(trainFxName)
-
+	trainFxName <- tolower(x$meta$trainFxName)
 	tuning <- x$tuning
 
 	### order each tuning attempt by performance
@@ -171,7 +45,7 @@ summaryByCrossValid <- function(
 	}
 
 	### BRT
-	if (trainFxName == tolower('trainBrt')) {
+	if (trainFxName == tolower('trainBRT')) {
 
 		# get list of terms in best models
 		params <- data.frame()
@@ -207,7 +81,7 @@ summaryByCrossValid <- function(
 			)
 
 			out <- as.data.frame(out)
-			out$treeComplexity <- max(1, round(out$treeComplexity))
+			out$treeComplexity <- pmax(1, round(out$treeComplexity))
 			out$nTrees <- round(out$nTrees)
 
 			value <- data.frame(value=c('min', '25th percent quantile', 'mean', 'median', '75th percent quantile', 'max'))
@@ -218,7 +92,7 @@ summaryByCrossValid <- function(
 		}
 
 
-	} else if (trainFxName == tolower('trainGam')) {
+	} else if (trainFxName == tolower('trainGAM')) {
 
 		# get list of terms in best models
 		term <- character()
@@ -266,8 +140,9 @@ summaryByCrossValid <- function(
 
 		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
 		out$proportionOfModels <- out$frequencyInBestModels / length(x$tuning)
+		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
 
-	} else if (trainFxName == tolower('trainGlm')) {
+	} else if (trainFxName == tolower('trainGLM')) {
 
 		# get list of terms in best models
 		term <- character()
@@ -275,14 +150,10 @@ summaryByCrossValid <- function(
 
 			thisTuning <- tuning[[k]]
 
-			thisTerm <- thisTuning$model[1]
-			thisTerm <- strsplit(thisTerm, ' ')[[1]]
-			thisTerm <- thisTerm[3:length(thisTerm)]
-			if (any(thisTerm == 'presBg')) thisTerm <- thisTerm[-which(thisTerm == 'presBg')]
-			if (any(thisTerm == '~')) thisTerm <- thisTerm[-which(thisTerm == '~')]
+			thisTerm <- thisTuning$model[1L]
+			thisTerm <- strsplit(thisTerm, '~')[[1L]]
+			thisTerm <- strsplit(thisTerm, ' \\+ ')[[1L]]
 			if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
-			if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
-			if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
 
 			if (length(thisTerm) == 0) thisTerm <- 1
 
@@ -319,7 +190,7 @@ summaryByCrossValid <- function(
 	### MAXENT
 	##########
 
-	} else if (trainFxName == tolower('trainMaxEnt')) {
+	} else if (trainFxName %in% tolower(c('trainMaxEnt', 'trainMaxNet'))) {
 
 		## tally frequency of feature class combinations across best models and mean regularization associated with each set of features
 
@@ -360,116 +231,139 @@ summaryByCrossValid <- function(
 		}
 
 		featRegMultMeans <- featRegMultSums / featFreqs
-		# featFreqs <- featFreqs / sum(featFreqs)
 
 		out <- data.frame(
 			featureSet = featCombos,
 			frequencyInBestModels = featFreqs,
 			meanRegMult = featRegMultMeans
 		)
+		
+		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
 
-	### NS
-	######
 
-	} else if (trainFxName == tolower('trainNs')) {
+	# ### NS
+	# ######
 
-		# get predictor names
-		strings <- colnames(tuning[[1]])
-		strings <- strings[grepl(strings, pattern='splines::ns')]
-		strings <- strsplit(strings, 'splines::ns')
-		preds <- character()
-		for (i in seq_along(strings)) {
-			string <- strings[[i]][2]
-			pred <- substr(string, 2, regexpr(string, pattern=' df') - 2)
-			preds <- c(preds, pred)
-		}
+	# } else if (trainFxName == tolower('trainNS')) {
 
-		preds <- sort(unique(preds))
+		# # get predictor names
+		# strings <- colnames(tuning[[1]])
+		# strings <- strings[grepl(strings, pattern='splines::ns')]
+		# strings <- strsplit(strings, 'splines::ns')
+		# preds <- character()
+		# for (i in seq_along(strings)) {
+			# string <- strings[[i]][2]
+			# pred <- substr(string, 2, regexpr(string, pattern=' df') - 2)
+			# preds <- c(preds, pred)
+		# }
 
-		# create table to hold information on degrees of freedom for each top model
-		subOut <- data.frame(DUMMY=NA)
-		colnames(subOut) <- preds[1]
-		if (length(preds) > 1) {
-			for (i in 2L:length(preds)) {
-				subOut$DUMMY <- NA
-				colnames(subOut)[ncol(subOut)] <- preds[i]
-			}
-		}
-		subOut <- subOut[rep(1, length(tuning)), , drop=FALSE]
+		# preds <- sort(unique(preds))
 
-		# find df for each predictor
+		# # create table to hold information on degrees of freedom for each top model
+		# subOut <- data.frame(DUMMY=NA)
+		# colnames(subOut) <- preds[1]
+		# if (length(preds) > 1) {
+			# for (i in 2L:length(preds)) {
+				# subOut$DUMMY <- NA
+				# colnames(subOut)[ncol(subOut)] <- preds[i]
+			# }
+		# }
+		# subOut <- subOut[rep(1, length(tuning)), , drop=FALSE]
+
+		# # find df for each predictor
+		# for (k in seq_along(tuning)) {
+
+			# thisTuning <- tuning[[k]]
+
+			# for (pred in preds) {
+
+				# colPattern <- paste0('splines::ns\\(', pred, ', df')
+				# cols <- colnames(thisTuning)[grepl(colnames(thisTuning), pattern=colPattern)]
+
+				# # get degrees of freedom used to evaluate this variable
+				# dfs <- numeric()
+				# for (countCol in seq_along(cols)) {
+					# before <- paste0('splines::ns\\(', pred, ', df')
+					# thisDf <- strsplit(cols[countCol], before)[[1]][2]
+					# thisDf <- strsplit(thisDf, ' ')[[1]][3]
+					# thisDf <- substr(thisDf, 1, nchar(thisDf) - 1)
+					# thisDf <- as.numeric(thisDf)
+					# dfs <- c(dfs, thisDf)
+				# }
+
+				# vals <- thisTuning[1, cols, drop=FALSE]
+				# bestDf <- c(!apply(vals, 1, FUN=is.na))
+				# bestDf <- if (all(!bestDf)) {
+					# NA
+				# } else {
+					# max(dfs[bestDf])
+				# }
+
+				# subOut[k, pred] <- bestDf
+
+			# } # next predictor
+
+		# } # next model
+
+		# out <- data.frame()
+		# for (pred in preds) {
+			# thisPredOut <- data.frame(
+				# term=pred,
+				# frequencyInBestModels=sum(!is.na(subOut[ , pred])),
+				# minDf=min(subOut[ , pred], na.rm=TRUE),
+				# quantile25thDf=stats::quantile(subOut[ , pred], 0.25, na.rm=TRUE),
+				# meanDf=mean(subOut[ , pred], na.rm=TRUE),
+				# medianDf=stats::median(subOut[ , pred], na.rm=TRUE),
+				# quantile75thDf=stats::quantile(subOut[ , pred], 0.75, na.rm=TRUE),
+				# maxDf=max(subOut[ , pred], na.rm=TRUE)
+			# )
+
+			# out <- rbind(out, thisPredOut)
+		
+		# }
+
+	} else if (trainFxName == tolower('trainRF')) {
+	
+		# get list of terms in best models
+		params <- data.frame()
 		for (k in seq_along(tuning)) {
 
 			thisTuning <- tuning[[k]]
 
-			for (pred in preds) {
-
-				colPattern <- paste0('splines::ns\\(', pred, ', df')
-				cols <- colnames(thisTuning)[grepl(colnames(thisTuning), pattern=colPattern)]
-
-				# get degrees of freedom used to evaluate this variable
-				dfs <- numeric()
-				for (countCol in seq_along(cols)) {
-					before <- paste0('splines::ns\\(', pred, ', df')
-					thisDf <- strsplit(cols[countCol], before)[[1]][2]
-					thisDf <- strsplit(thisDf, ' ')[[1]][3]
-					thisDf <- substr(thisDf, 1, nchar(thisDf) - 1)
-					thisDf <- as.numeric(thisDf)
-					dfs <- c(dfs, thisDf)
-				}
-
-				vals <- thisTuning[1, cols, drop=FALSE]
-				bestDf <- c(!apply(vals, 1, FUN=is.na))
-				bestDf <- if (all(!bestDf)) {
-					NA
-				} else {
-					max(dfs[bestDf])
-				}
-
-				subOut[k, pred] <- bestDf
-
-			} # next predictor
-
-		} # next model
-
-		out <- data.frame()
-		for (pred in preds) {
-			thisPredOut <- data.frame(
-				term=pred,
-				frequencyInBestModels=sum(!is.na(subOut[ , pred])),
-				minDf=min(subOut[ , pred], na.rm=TRUE),
-				quantile25thDf=stats::quantile(subOut[ , pred], 0.25, na.rm=TRUE),
-				meanDf=mean(subOut[ , pred], na.rm=TRUE),
-				medianDf=stats::median(subOut[ , pred], na.rm=TRUE),
-				quantile75thDf=stats::quantile(subOut[ , pred], 0.75, na.rm=TRUE),
-				maxDf=max(subOut[ , pred], na.rm=TRUE)
-			)
-
-			out <- rbind(out, thisPredOut)
-		
-		}
-
-	} else if (trainFxName == tolower('trainRf')) {
-	
-		# get predictor names
-		strings <- colnames(tuning[[1]])
-		out <- data.frame()
-		for (k in seq_along(tuning)) {
-		
-			out <- rbind(
-				out,
+			params <- rbind(
+				params,
 				data.frame(
-					mtry = tuning[[k]]$mtry[1L],
-					metric = tuning[[k]][1L, metric]
+					numTrees = thisTuning$numTrees[1L],
+					mtry = thisTuning$mtry[1L],
+					oobError = thisTuning$oobError[1L]
 				)
 			)
-		
+
 		}
-		
-		names(out)[2L] <- metric
-		
-		
-		mtries[k] <- tuning[[k]]$mtry
+
+		# summarize best models
+		if (nrow(params) > 0L) {
+
+			out <- rbind(
+				apply(params, 2, min, na.rm=TRUE),
+				apply(params, 2, stats::quantile, 0.25, na.rm=TRUE),
+				apply(params, 2, mean, na.rm=TRUE),
+				apply(params, 2, stats::median, na.rm=TRUE),
+				apply(params, 2, stats::quantile, 0.75, na.rm=TRUE),
+				apply(params, 2, max, na.rm=TRUE)
+			)
+
+			out <- as.data.frame(out)
+			out$mtry <- pmax(1, round(out$mtry))
+			out$numTrees <- round(out$numTrees)
+
+			value <- data.frame(value=c('min', '25th percent quantile', 'mean', 'median', '75th percent quantile', 'max'))
+			out <- omnibus::insertCol(value, out, 1)
+
+		} else {
+			out <- data.frame()
+		}
+
 		
 	}
 

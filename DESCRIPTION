@@ -2,7 +2,7 @@ Package: enmSdmX
 Type: Package
 Title: Tools for Modeling Niches and Distributions of Species
 Version: 1.0.0
-Date: 2022-11-29
+Date: 2022-12-05
 Authors@R: 
 	c(
 		person(
@@ -22,20 +22,23 @@ Description: Tools for implementing species distribution models (SDMs) and
 	model evaluation, and calculation of biotic velocity (speed and direction
 	at which a species' range moves through time).
 Depends:
-	R (>= 4.0.0)
+	R (>= 4.0.0),
 Imports:
 	boot,
-	compiler,
 	dismo,
 	doParallel,
 	doSNOW,
 	foreach,
 	gbm,
 	graphics,
+	ks,
+	maxnet,
+	methods,
 	mgcv,
 	MuMIn,
 	omnibus,
 	parallel,
+	randomForest,
 	scales,
 	sf,
 	stats,
@@ -49,6 +52,6 @@ LazyLoad: yes
 URL: http://github.com/adamlilith/enmSdm
 BugReports: https://github.com/adamlilith/enmSdm
 Encoding: UTF-8
-License: MIT
+License: file LICENSE
 RoxygenNote: 7.2.1
 VignetteBuilder: knitr

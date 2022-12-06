@@ -11,7 +11,7 @@
 #'
 #' @param warn If \code{TRUE} (default), then print a warning if the name of the CRS cannot be found.
 #'
-#' @return A string representung WKT2 (well-known text) object or a \code{data.frame}.
+#' @return A string representing WKT2 (well-known text) object or a \code{data.frame}.
 #' @examples
 #'
 #' # NB Using cat() make the CRS display nicely for human eyes.
@@ -31,7 +31,8 @@ getCRS <- function(
 	warn = TRUE
 ) {
 
-	data('crss', envir=environment(), package='enmSdmX')
+	crss <- NULL
+	utils::data('crss', envir=environment(), package='enmSdmX')
 	
 	# return table
 	if (is.null(x)) {

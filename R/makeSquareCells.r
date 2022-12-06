@@ -11,9 +11,12 @@
 #'
 #' @examples
 #'
+#' library(sf)
+#' library(terra)
+#'
 #' # project outline of Madagascar to equal-area:
 #' data(mad0)
-#' mad0Ea <- project(mad0, getCRS('madAlbers'))
+#' mad0Ea <- st_transform(mad0, getCRS('madAlbers'))
 #'
 #' n <- 101
 #' cellSize_meters <- 10E4
@@ -43,6 +46,8 @@ makeSquareCells <- function(
 
 	if (is.null(numCells) & is.null(res)) stop('Either "numCells" or "res" must be specified.')
 	if (!is.null(numCells) & !is.null(res)) warning('Both "numCells" and "res" are specified. Ignoring argument "res".')
+	
+	if (inherits(x, 'sf')) x <- terra::vect(x)
 	
 	crs <- terra::crs(x)
 	ext <- terra::ext(x)@ptr$vector

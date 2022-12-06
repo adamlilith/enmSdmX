@@ -8,6 +8,7 @@
 #' @seealso \link{getCRS}
 #' @examples
 #'
+#' library(sf)
 #' data(mad0)
 #' wkt2 <- makeCRSVertical(mad0)
 #' mad0vert <- st_transform(mad0, wkt2)

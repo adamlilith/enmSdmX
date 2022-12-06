@@ -27,7 +27,7 @@ trainMaxEnt(
 \arguments{
 \item{data}{Data frame.}
 
-\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response varoable. The default is to use the first column in \code{data} as the response.}
+\item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.}
 
 \item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
@@ -53,7 +53,7 @@ trainMaxEnt(
 \itemize{
     \item    \code{'model'}: Model with the lowest AICc.
     \item    \code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
-    \item    \code{'tuning'}: Data frame with tuning patrameters, one row per model, sorted by AICc.
+    \item    \code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 }}
 
 \item{cores}{Number of cores to use. Default is 1.}
@@ -68,18 +68,23 @@ trainMaxEnt(
 The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
-This function calculates the "best" Maxent model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better). The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).
+This function calculates the "best" Maxent model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better). The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 }
 \details{
-This function is a wrapper for \code{maxent()}. That function relies on a maxent \code{jar} file being placed into the folder \code{./library/dismo/java}. See \code{\link[dismo]{maxent}} for more details. The \code{maxent()} function creates a series of files on disc for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \code{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion. \cr
+This function is a wrapper for \code{maxent()}. That function relies on a maxent \code{jar} file in the folder \code{./library/dismo/java}. See \code{\link[dismo]{maxent}} for more details. The \code{maxent} function creates a series of files on disk for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \pkg{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion.
 }
 \examples{
-
 # The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models.
+
+\donttest{
+
+library(sf)
+library(terra)
 set.seed(123)
 
 ### setup data
+##############
 
 # environmental rasters
 rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
@@ -102,10 +107,10 @@ bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
 
 # collate occurrences and background sites
 presBg <- data.frame(
-	presBg = c(
-   rep(1, nrow(occEnv)),
-   rep(0, nrow(bgEnv))
-   )
+  presBg = c(
+    rep(1, nrow(occEnv)),
+    rep(0, nrow(bgEnv))
+  )
 )
 
 env <- rbind(occEnv, bgEnv)
@@ -113,7 +118,10 @@ env <- cbind(presBg, env)
 
 predictors <- c('bio1', 'bio12')
 
-## MaxEnt
+### calibrate models
+####################
+
+# MaxEnt
 mx <- trainMaxEnt(
 	data = env,
 	resp = 'presBg',
@@ -122,34 +130,44 @@ mx <- trainMaxEnt(
 	verbose = TRUE
 )
 
-## generalized linear model (GLM)
+# MaxNet
+mn <- trainMaxNet(
+	data = env,
+	resp = 'presBg',
+	preds = predictors,
+	regMult = 1, # too few values for reliable model, but fast
+	verbose = TRUE
+)
+
+# generalized linear model (GLM)
 # Normally, we'd center and standardize variables before modeling.
-gl <- trainGlm(
+gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
 	verbose = TRUE
 )
 
-## generalized additive model (GAM)
-ga <- trainGam(
+# generalized additive model (GAM)
+ga <- trainGAM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
 	verbose = TRUE
 )
 
-## natural splines
-nat <- trainNs(
+# natural splines
+ns <- trainNS(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE
 )
 
-## boosted regression trees
-envSub <- env[1:2000, ] # subsetting data to run faster
-brt <- trainBrt(
+# boosted regression trees
+envSub <- env[1:1049, ] # subsetting data to run faster
+brt <- trainBRT(
 	data = envSub,
 	resp = 'presBg',
 	preds = predictors,
@@ -162,37 +180,42 @@ brt <- trainBrt(
 	verbose = TRUE
 )
 
-## random forests
-rf <- trainRf(
+# random forests
+rf <- trainRF(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	numTrees = c(100, 500), # using at least 500 recommended, but fast!
 	verbose = TRUE
 )
 
-## make maps of models
+### make maps of models
+#######################
 
 mxMap <- predictEnmSdm(mx, madEnv)
+mnMap <- predictEnmSdm(mn, madEnv)
 glMap <- predictEnmSdm(gl, madEnv)
 gaMap <- predictEnmSdm(ga, madEnv)
-natMap <- predictEnmSdm(nat, madEnv)
+nsMap <- predictEnmSdm(ns, madEnv)
 brtMap <- predictEnmSdm(brt, madEnv)
 rfMap <- predictEnmSdm(rf, madEnv)
 
 maps <- c(
 	mxMap,
+	mnMap,
 	glMap,
 	gaMap,
-	natMap,
+	nsMap,
 	brtMap,
 	rfMap
 )
 
-names(maps) <- c('MaxEnt', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
+names(maps) <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'Natural Splines', 'BRTs', 'RFs')
 fun <- function() plot(occs[1], col='black', add=TRUE)
-plot(maps, fun=fun)
+plot(maps, fun = fun, nc = 4)
 
-## compare model responses to BIO12 (mean annual precipitation)
+### compare model responses to BIO12 (mean annual precipitation)
+################################################################
 
 # make a data frame holding all other variables at mean across occurrences,
 # varying only BIO12
@@ -207,9 +230,10 @@ maxBio12 <- max(env$bio12)
 climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
 
 predMx <- predictEnmSdm(mx, climFrame)
+predMn <- predictEnmSdm(mn, climFrame)
 predGl <- predictEnmSdm(gl, climFrame)
 predGa <- predictEnmSdm(ga, climFrame)
-predNat <- predictEnmSdm(nat, climFrame)
+predNat <- predictEnmSdm(ns, climFrame)
 predBrt <- predictEnmSdm(brt, climFrame)
 predRf <- predictEnmSdm(rf, climFrame)
 
@@ -217,6 +241,7 @@ predRf <- predictEnmSdm(rf, climFrame)
 plot(climFrame$bio12, predMx,
 xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
 
+lines(climFrame$bio12, predMn, lty='solid', col='red')
 lines(climFrame$bio12, predGl, lty='dotted', col='blue')
 lines(climFrame$bio12, predGa, lty='dashed', col='green')
 lines(climFrame$bio12, predNat, lty=4, col='purple')
@@ -228,15 +253,17 @@ legend(
    inset = 0.01,
    legend = c(
 	'MaxEnt',
+	'MaxNet',
 	'GLM',
 	'GAM',
 	'NS',
 	'BRT',
 	'RF'
    ),
-   lty = 1:6,
+   lty = c(1, 1:6),
    col = c(
 	'black',
+	'red',
 	'blue',
 	'green',
 	'purple',
@@ -246,7 +273,7 @@ legend(
    bg = 'white'
 )
 
-
+}
 }
 \references{
 Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}
