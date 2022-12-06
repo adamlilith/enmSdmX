@@ -41,12 +41,12 @@
 #' @references
 #' Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} In press. Open access pre-print: \doi{10.1101/2021.06.10.447988}
 #'
-#' @seealso \code{\link{mcpFromPointsPolys}} for the "nearest geographic point" method, a related approach for geographic space.
+#' @seealso \code{\link{nearestGeogPoints}} for the "nearest geographic point" method, a related approach for geographic space.
 #'
-#' @example man/examples/nearestEnvs_example.r
+#' @example man/examples/nearestEnvPoints_example.r
 #'
 #' @export
-nearestEnvs <- function(
+nearestEnvPoints <- function(
 	rasts,
 	pts = NULL,
 	polys = NULL,
@@ -119,7 +119,7 @@ nearestEnvs <- function(
 			output <- rbind(output, nearestPolyEnv)
 
 		}
-		
+
 	} else {
 
 		env <- if (centerFrom == 'pts') {

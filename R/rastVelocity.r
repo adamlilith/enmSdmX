@@ -32,7 +32,7 @@
 #'  \item \code{nsCentroid} or \code{ewCentroid}: Velocity in the north-south or east-west directions of the mass-weighted centroid. For north-south cardinality, positive values represent movement northward and negative southward.
 #'  \item \code{nCentroid}, \code{sCentroid}, \code{eCentroid}, and \code{wCentroid}: Speed of mass-weighted centroid of the portion of the raster north/south/east/west of the landscape-wide weighted centroid of the starting time period.
 #'  \item \code{nsQuants} or \code{ewQuants}: Velocity of the location of the \emph{N}th quantile of mass in the north-south or east-west directions. The quantiles can be specified in \code{quants}. For example, this could be the movement of the 5th, 50th, and 95th quantiles of population size going from south to north. The 0th quantile would measure the velocity of the southernmost or easternmost cell(s) with values >0, and the 100th quantile the northernmost or westernmost cell(s) with non-zero values.
-#'  \item \code{similarity}: Several metrics of similarity between each time period. Some of these make sense only for cases where values in \code{x} are in the range [0, 1], but not if some values are outside this range. See \code{\link{compareNiches}} for more details. The metrics are:
+#'  \item \code{similarity}: Several metrics of similarity between each time period. Some of these make sense only for cases where values in \code{x} are in the range [0, 1], but not if some values are outside this range. See \code{\link{evalNicheOverlap}} for more details. The metrics are:
 #'		\itemize{
 #'			\item Simple mean difference
 #'			\item Mean absolute difference
@@ -329,7 +329,7 @@
 #' if (FALSE) {
 #' mats <- array(runif(100 * 100 * 1000), dim=c(100, 100, 500))
 #' mats <- brick(mats)
-#' projection(mats) <- getCRS('wgs84')
+#' projection(mats) <- crsGet('wgs84')
 #
 #' longs <- matrix(rep(1:100, each=100), nrow=100, ncol=100)
 #' lats <- matrix(rep(100:1, 100), nrow=100, ncol=100)
@@ -337,7 +337,7 @@
 #' # adding elevation increases velocity because it increases average
 #' # distance between cells
 #' elev <- matrix(rnorm(100 * 100, 0, 0.1), nrow=100)
-#' elev <- raster(elev, crs=getCRS('wgs84'))
+#' elev <- raster(elev, crs=crsGet('wgs84'))
 #'
 #' mc1 <- rastVelocity(x=mats, metrics='centroid', cores=4)
 #' mc2 <- rastVelocity(x=mats, elevation=elev, metrics='centroid', cores=4)
@@ -436,7 +436,7 @@ rastVelocity <- function(
 
 			if (is.null(longitude) | is.null(latitude)) {
 		
-				ll <- enmSdmX::longLatRasts(x)
+				ll <- enmSdmX::rastLongLag(x)
 				longitude <- ll[['longitude']]
 				latitude <- ll[['latitude']]
 				
@@ -544,7 +544,7 @@ rastVelocity <- function(
 			paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 			mcOptions <- list(preschedule=TRUE, set.seed=FALSE, silent=FALSE)
 			
-			export <- c('rastVelocity', '.euclid', '.cardinalDistance', '.interpCoordFromQuantile', 'compareNiches')
+			export <- c('rastVelocity', '.euclid', '.cardinalDistance', '.interpCoordFromQuantile', 'evalNicheOverlap')
 			
 			out <- foreach::foreach(
 				i=seq_along(repAtTimes),
@@ -1084,7 +1084,7 @@ rastVelocity <- function(
 						naNonNaCells <- as.vector(x1x2ones)
 					}
 
-					sims <- enmSdmX::compareNiches(x1vect, x2vect, w=naNonNaCells, na.rm=TRUE)
+					sims <- enmSdmX::evalNicheOverlap(x1vect, x2vect, w=naNonNaCells, na.rm=TRUE)
 
 					thisOut <- cbind(
 						thisOut,

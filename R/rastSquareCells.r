@@ -16,12 +16,12 @@
 #'
 #' # project outline of Madagascar to equal-area:
 #' data(mad0)
-#' mad0Ea <- st_transform(mad0, getCRS('madAlbers'))
+#' mad0Ea <- st_transform(mad0, crsGet('madAlbers'))
 #'
 #' n <- 101
 #' cellSize_meters <- 10E4
-#' byNumCells <- makeSquareCells(mad0Ea, numCells=n)
-#' byCellSize <- makeSquareCells(mad0Ea, res=cellSize_meters)
+#' byNumCells <- rastSquareCells(mad0Ea, numCells=n)
+#' byCellSize <- rastSquareCells(mad0Ea, res=cellSize_meters)
 #' 
 #' par(mfrow=c(1, 2))
 #' main1 <- paste0('Cells: ', n, ' desired, ',
@@ -37,7 +37,7 @@
 #'
 #' @export
 
-makeSquareCells <- function(
+rastSquareCells <- function(
 	x,
 	numCells = NULL,
 	res = NULL,

@@ -15,12 +15,12 @@ Authors@R:
 	)
 Maintainer: Adam B. Smith <adam.smith@mobot.org>
 Description: Tools for implementing species distribution models (SDMs) and
-	ecological niche models (ENMs). The heart of the package is a set of
-	"training" functions which automatically tune and parameterize
-	a models based on several popular algorithms (e.g., MaxEnt, GLMs, BRTs,
-	GAMs, etc.). Ancillary tools include estimation of spatial sampling bias,
-	model evaluation, and calculation of biotic velocity (speed and direction
-	at which a species' range moves through time).
+	ecological niche models (ENMs), including: bias correction, spatial
+	cross-validation, model evaluation, raster interpolation, and biotic
+	"velocity" (speed and direction of movement of a "mass" represented by
+	a raster). The heart of the package is a set of "training" functions
+	which automatically tune and parameterize models based on several popular
+	algorithms (e.g., MaxEnt, MaxNet, GLMs, GAMs, BRTs, etc.).
 Depends:
 	R (>= 4.0.0),
 Imports:
@@ -46,6 +46,7 @@ Imports:
 	utils
 Remotes:
 Suggests:
+	geodata,
 	knitr
 LazyData: true
 LazyLoad: yes

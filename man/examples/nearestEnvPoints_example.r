@@ -10,7 +10,7 @@ library(terra)
 data(lemurs)
 precise <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
-wgs84 <- getCRS('WGS84')
+wgs84 <- crsGet('WGS84')
 precise <- sf::st_as_sf(precise[ , ll], coords=ll, crs=wgs84)
 
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
@@ -26,11 +26,11 @@ rasts <- rast(rastFile)
 ### centroid of environments of points. In this example, we use the first two
 ### principal component axes to characterize the niche.
 
-envPtsPolys <- nearestEnvs(rasts, pts = precise, polys = imprecise,
+envPtsPolys <- nearestEnvPoints(rasts, pts = precise, polys = imprecise,
 	pca = TRUE,	numPcs = 2)
-envPolys <- nearestEnvs(rasts, pts = precise, polys = imprecise, numPcs = 2,
+envPolys <- nearestEnvPoints(rasts, pts = precise, polys = imprecise, numPcs = 2,
 	out = 'polys')
-envPts <- nearestEnvs(rasts, pts = precise, polys = imprecise, numPcs = 2,
+envPts <- nearestEnvPoints(rasts, pts = precise, polys = imprecise, numPcs = 2,
 	out = 'pts')
 allPolyEnvs <- extract(rasts, imprecise)
 plot(envPtsPolys$PC1, envPtsPolys$PC2, pch=16, col='black',

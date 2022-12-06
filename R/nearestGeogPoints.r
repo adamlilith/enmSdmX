@@ -32,16 +32,16 @@
 #' The function can alternatively return the points on the vertices of the MCP, or points on the input polygons closest to the reference centroid.
 #'
 #' @return \code{SpatVector}, or \code{sf POLYGON} representing a minimum convex polygon.
-#' 
-#' @seealso \code{\link{nearestEnvs}} for the "nearest environmental point" method, a related application for environmental space.
+#'
+#' @seealso \code{\link{nearestEnvPoints}} for the "nearest environmental point" method, a related application for environmental space.
 #'
 #' @references
 #' Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} In press. Open access pre-print: \doi{10.1101/2021.06.10.447988}
 #'
-#' @example man/examples/mcpFromPointsPolys_example.r
+#' @example man/examples/nearestGeogPoints_example.r
 #'
 #' @export
-mcpFromPointsPolys <- function(
+nearestGeogPoints <- function(
 	pts = NULL,
 	polys = NULL,
 	centerFrom = 'pts',
@@ -58,7 +58,7 @@ mcpFromPointsPolys <- function(
 		if (inherits(pts, c('Spatial', 'SpatVector'))) pts <- sf::st_as_sf(pts)
 		pts <- sf::st_geometry(pts)
 	}
-	
+
 	if (is.null(polys) & is.null(pts)) {
 		stop('Either "polys", "pts", or both must be specified.')
 	} else if (is.null(polys) & !is.null(pts)) {
@@ -83,19 +83,19 @@ mcpFromPointsPolys <- function(
 		disjunct <- sf::st_disjoint(center, nearestPolyPoints)
 		disjunct <- disjunct[[1]]
 		nearestPolyPoints <- nearestPolyPoints[disjunct]
-		
+
 		# add centroid back in (once) if it lands in a poly
 		intersect <- sf::st_intersects(center, polys)
 		intersect <- length(intersect) > 0
 		if (intersect) nearestPolyPoints <- c(nearestPolyPoints, center)
-		
+
 		nearestPolyPoints <- allPoints <- sf::st_union(nearestPolyPoints)
 
 	} else {
 
 		### focal centroid
 		pts <- sf::st_union(pts)
-		
+
 		if (centerFrom == 'pts') {
 			center <- sf::st_centroid(pts)
 		} else if (centerFrom == 'polys') {
@@ -113,24 +113,24 @@ mcpFromPointsPolys <- function(
 
 		vectors <- sf::st_nearest_points(polys, center)
 		nearestPolyPoints <- sf::st_cast(vectors, 'POINT')
-		
+
 		# remove centroid
 		disjunct <- sf::st_disjoint(center, nearestPolyPoints)
 		disjunct <- disjunct[[1]]
 		nearestPolyPoints <- nearestPolyPoints[disjunct]
-		
+
 		# add centroid back in (once) if it lands in a poly
 		intersect <- sf::st_intersects(center, polys)
 		intersect <- length(intersect) > 0
 		if (intersect) nearestPolyPoints <- c(nearestPolyPoints, center)
-		
+
 		nearestPolyPoints <- sf::st_union(nearestPolyPoints)
 		allPoints <- sf::st_union(nearestPolyPoints, pts)
 
 	}
 
-	
-	
+
+
 	if (return %in% c('mcp', 'mcpPoints')) {
 		out <- sf::st_union(allPoints)
 		out <- sf::st_geometry(out)

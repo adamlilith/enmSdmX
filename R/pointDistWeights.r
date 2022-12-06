@@ -17,7 +17,7 @@
 #'
 #' # lemur occurrence data
 #' data(lemurs)
-#' wgs84 <- getCRS('WGS84')
+#' wgs84 <- crsGet('WGS84')
 #' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
 #' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=wgs84)
 #' 

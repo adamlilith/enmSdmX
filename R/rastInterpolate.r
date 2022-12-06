@@ -44,13 +44,13 @@
 #' rasts <- c(r1, r3, r4, r8, r10, r11, r15)
 #' names(rasts) <- paste0('rasts', interpFrom)
 #' 
-#' linear <- interpolateRasts(rasts, interpFrom, interpTo)
-#' spline <- interpolateRasts(rasts, interpFrom, interpTo, type='spline')
-#' gam <- interpolateRasts(rasts, interpFrom, interpTo, type='gam', onFail='linear')
-#' ns <- interpolateRasts(rasts, interpFrom, interpTo, type='ns', onFail='linear', verbose=FALSE)
-#' poly <- interpolateRasts(rasts, interpFrom, interpTo, type='poly', onFail='linear')
-#' bs <- interpolateRasts(rasts, interpFrom, interpTo, type='bs', onFail='linear')
-#' ss <- interpolateRasts(rasts, interpFrom, interpTo, type='smooth.spline', onFail='linear',
+#' linear <- rastInterpolate(rasts, interpFrom, interpTo)
+#' spline <- rastInterpolate(rasts, interpFrom, interpTo, type='spline')
+#' gam <- rastInterpolate(rasts, interpFrom, interpTo, type='gam', onFail='linear')
+#' ns <- rastInterpolate(rasts, interpFrom, interpTo, type='ns', onFail='linear', verbose=FALSE)
+#' poly <- rastInterpolate(rasts, interpFrom, interpTo, type='poly', onFail='linear')
+#' bs <- rastInterpolate(rasts, interpFrom, interpTo, type='bs', onFail='linear')
+#' ss <- rastInterpolate(rasts, interpFrom, interpTo, type='smooth.spline', onFail='linear',
 #' verbose=FALSE)
 #' 
 #' # examine trends for a particular point on the landscape
@@ -86,7 +86,7 @@
 #'
 #' @export
 
-interpolateRasts <- function(
+rastInterpolate <- function(
 	rasts,
 	interpFrom,
 	interpTo,

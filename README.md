@@ -12,11 +12,11 @@ You can install the development version of this package using:
 `remotes::install_github('adamlilith/enmSdmX', dependencies=TRUE)`  
 
 ### Data preparation ###
-* `elimCellDups`: Eliminate duplicate points in each cell of a raster
+* `pointElimCellDups`: Eliminate duplicate points in each cell of a raster
 
 ### Using spatially imprecise records
-* `mcpFromPointsPolys`: Minimum convex polygon from a set of spatial polygons and/or points ("nearest geographic point" method)
-* `nearestEnvs`:  Extract "most conservative" environments from points and/or polygons ("nearest environmental point" method)
+* `nearestGeogPoints`: Minimum convex polygon from a set of spatial polygons and/or points ("nearest geographic point" method)
+* `nearestEnvPoints`:  Extract "most conservative" environments from points and/or polygons ("nearest environmental point" method)
 
 ### Bias correction
 * `pointDistWeights`: Proximity-based weighting for occurrences to correct for spatial bias
@@ -47,33 +47,38 @@ You can install the development version of this package using:
 * `modelSize`: Number of response values in a model object
 
 ### Niche overlap ###
-* `compareNiches`: Niche overlap metrics
+* `evalNicheOverlap`: Niche overlap metrics
 * `compareResponse`: Compare niche model responses to a single variable
 
 ### Functions for rasters ###
-* `getValueByCell`: Retrieve raster values(s) by cell number
-* `interpolateRasts`: Interpolate a stack of rasters
-* `longLatRasts`: Generate rasters with values of longitude/latitude for cell values
-* `makeSquareCells`: Create a raster with square cells from an object with an extent
+* `rastGetValueByCell`: Retrieve raster values(s) by cell number
+* `rastInterpolate`: Interpolate a stack of rasters
+* `rastLongLag`: Generate rasters with values of longitude/latitude for cell values
+* `rastSquareCells`: Create a raster with square cells from an object with an extent
 * `rastVelocity`: Velocity of "movement" of mass across a series of rasters
-* `sampleRast` : Sample raster with/out replacement
-* `setValueByCell`: Set raster values(s) by cell number
+* `rastSample` : Sample raster with/out replacement
+* `rastSetValueByCell`: Set raster values(s) by cell number
 * `squareRastCells`: Resample a raster so cells are square
 
 ### Range area based on minimum convex polygons ###
 * `mcpFromPolys`: Minimum convex polygon from a set of polygons *and* points
 
+### Coordinate reference systems ###
+* `crss`: Coordinate reference systems
+* `crsGet`: Return a WKT2 (well-known text) string using a nickname
+* `crsLambert`: Create a custom Lambert azimuthal equal-area projection
+* `crsVertical`: Create a custom "vertical near-side" projection
+
 ### Geographic utility functions ###
 * `coordImprecision`: Calculate maximum possible coordinate precision
-* `makePlotPoly`: Create a spatial polygon the same size as a plot region
+* `crsVertical`: Generate a "Vertical Near-Side" projection WKT2 string
+* `plotExtent`: Create a spatial polygon the same size as a plot region
 * `decimalToDms`: Convert decimal coordinate to degrees-minutes-seconds
 * `dmsToDecimal`: Convert degrees-minutes-seconds coordinate to decimal
 * `extentToVect`: Convert extent to a spatial polygon
-* `getCRS`: Return a proj4string (coordinate reference system string) using a nickname
-* `svToSpatial`: Convert SpatVector object to a Spatial* object
+* `spatVectorToSpatial`: Convert SpatVector object to a Spatial* object
 
 ### Data
-* `crss`: Coordinate reference systems
 * `lemurs`: Lemur occurrences
 * `mad0`: Madagascar spatial object
 * `mad1`: Madagascar spatial object

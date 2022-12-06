@@ -6,14 +6,14 @@
 #'
 #' @details
 #' @section Data preparation:
-#' 		\code{\link{elimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
+#' 		\code{\link{pointElimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
 #'
 #' @section Bias correction:
 #'		\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
 #'
 #' @section Using imprecisely-georeferenced occurrences:
-#' 		\code{\link{mcpFromPointsPolys}}: Minimum convex polygon from a set of spatial polygons and/or points \cr
-#' 		\code{\link{nearestEnvs}}: Extract "most conservative" environments from points and/or polygons \cr
+#' 		\code{\link{nearestEnvPoints}}: Extract "most conservative" environments from points and/or polygons \cr
+#' 		\code{\link{nearestGeogPoints}}: Minimum convex polygon from a set of spatial polygons and/or points \cr
 #'
 #' @section Model calibration:
 #' 		\code{\link{trainByCrossValid}}: and \code{\link{summaryByCrossValid}}: Implement a \code{trainXYZ} function across calibration folds (which are distinct from evaluation folds). \cr
@@ -41,26 +41,31 @@
 #' 		\code{\link{modelSize}}: Number of response values in a model object \cr
 #'
 #' @section Functions for rasters:
-#'		\code{\link{getValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
-#' 		\code{\link{interpolateRasts}}: Interpolate a stack of rasters \cr
-#' 		\code{\link{longLatRasts}}: Generate rasters with values of longitude/latitude for cell values \cr
-#' 		\code{\link{makeSquareCells}}: Create a raster with square cells \cr
+#'		\code{\link{rastGetValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
+#' 		\code{\link{rastInterpolate}}: Interpolate a stack of rasters \cr
+#' 		\code{\link{rastLongLag}}: Generate rasters with values of longitude/latitude for cell values \cr
+#' 		\code{\link{rastSquareCells}}: Create a raster with square cells \cr
 #' 		\code{\link{rastVelocity}}: Velocity of movement across a series of rasters \cr
-#' 		\code{\link{sampleRast}}: Sample raster with/out replacement \cr
-#'		\code{\link{setValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
+#' 		\code{\link{rastSample}}: Sample raster with/out replacement \cr
+#'		\code{\link{rastSetValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
 #'
 #' @section Niche overlap and similarity:
-#' 		\code{\link{compareNiches}}: Niche overlap metrics \cr
+#' 		\code{\link{evalNicheOverlap}}: Niche overlap metrics \cr
 #' 		\code{\link{compareResponse}}: Compare niche model responses to a single variable \cr
-
+#'
+#' @section Coordinate reference systems:
+#' 		\code{\link{crss}}: Table of coordinate reference systems \cr
+#' 		\code{\link{crsGet}}: Return a WKT2 string (coordinate reference system string) using a nickname \cr
+#' 		\code{\link{crsLambert}}: Create a custom Lambert azimuthal equal-area projection \cr
+#' 		\code{\link{crsVertical}}: Create a custom "vertical near-side" projection \cr
+#'
 #' @section Geographic utility functions:
 #' 		\code{\link{coordImprecision}}: Coordinate imprecision \cr
 #' 		\code{\link{decimalToDms}}: Convert decimal coordinate to degrees-minutes-seconds \cr
 #' 		\code{\link{dmsToDecimal}}: Convert degrees-minutes-seconds coordinate to decimal \cr
 #' 		\code{\link{extentToVect}}: Convert extent to polygon \cr
-#' 		\code{\link{getCRS}}: Return a WKT2 string (coordinate reference system string) using a nickname \cr
-#'		\code{\link{makePlotPoly}}: Create a `SpatialPolygon` the same size as a plot region \cr
-#'		\code{\link{svToSpatial}}: Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
+#'		\code{\link{plotExtent}}: Create a `SpatialPolygon` the same size as a plot region \cr
+#'		\code{\link{spatVectorToSpatial}}: Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
 #'
 #' @section Data:
 #' 		\code{\link{lemurs}}: Lemur occurrences \cr

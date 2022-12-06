@@ -42,7 +42,7 @@ This is a generic predict function that automatically uses the model common argu
 # The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models.
 
-\donttest{
+\dontrun{
 
 library(sf)
 library(terra)

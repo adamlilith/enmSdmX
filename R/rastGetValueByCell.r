@@ -7,7 +7,7 @@
 #' @param cell Cell indices. There must be one per value in \code{val}.
 #' @param format The type of cell indexing used. This can be either "raster" for row indexing (default) or "matrix" for column indexing. Row indexing (the default for rasters), starts with cell "1" in the upper left, cell "2" is to its right, and so on. Numbering then wraps around to the next row. Column indexing (the default for matrices) has the cell "1" in the upper left corner of the matrix. The cell "2" is below it, and so on. The numbering then wraps around to the top of the next column.
 #'
-#' @return A data frame (\code{getValueByCell}) with cell numbers (in row format), or a \code{SpatRaster} (\code{setValueByCell}).
+#' @return A data frame (\code{rastGetValueByCell}) with cell numbers (in row format), or a \code{SpatRaster} (\code{rastSetValueByCell}).
 #'
 #' @seealso \code{\link[terra]{setValues}}, \code{\link[terra]{values}}
 #'
@@ -18,18 +18,18 @@
 #' x[] <- round(10 * runif(100))
 #' 
 #' cell <- c(1, 20, 40, 80)
-#' getValueByCell(x, cell = cell)
-#' getValueByCell(x, cell = cell, format = 'matrix')
+#' rastGetValueByCell(x, cell = cell)
+#' rastGetValueByCell(x, cell = cell, format = 'matrix')
 #' 
-#' y <- setValueByCell(x, val = 20, cell = cell)
+#' y <- rastSetValueByCell(x, val = 20, cell = cell)
 #' plot(y)
-#' z <- setValueByCell(x, val = 30, cell = cell, format = 'matrix')
+#' z <- rastSetValueByCell(x, val = 30, cell = cell, format = 'matrix')
 #' 
 #' plot(c(x, y, z))
 #' 
 #' @export
 
-getValueByCell <- function(x, cell, format = 'raster') {
+rastGetValueByCell <- function(x, cell, format = 'raster') {
 
 	if (any(cell > terra::ncell(x))) stop('At least one cell index is greater than the total number of cells in the raster.')
 
@@ -45,11 +45,11 @@ getValueByCell <- function(x, cell, format = 'raster') {
 
 }
 
-#' @name setValueByCell
+#' @name rastSetValueByCell
 #' @title Get or assign values to cells in a raster
-#' @rdname getValueByCell
+#' @rdname rastGetValueByCell
 #' @export
-setValueByCell <- function(x, val, cell, format = 'raster') {
+rastSetValueByCell <- function(x, val, cell, format = 'raster') {
 
 	# errors
 	if (terra::nlyr(x) > 1L) stop('"x" can contain only one raster.')

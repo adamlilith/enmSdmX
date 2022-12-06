@@ -31,7 +31,7 @@ compareResponse(
 
 \item{gap}{Numeric >0. Proportion of range of predictor variable across which to assume a gap exists. Calculation of \code{areaAbsDiff} will  ignore gaps wide than this. To ensure the entire range of the data is included set this equal to \code{Inf} (default).}
 
-\item{smooth}{Logical. If TRUE then the responses are first smoothed using loess() then compared at \code{smoothN} values along each predictor. If \code{FALSE}, then comparisons are conducted at the raw values \code{pred1} and \code{pred2}.}
+\item{smooth}{Logical. If \code{TRUE} then the responses are first smoothed using loess() then compared at \code{smoothN} values along each predictor. If \code{FALSE}, then comparisons are conducted at the raw values \code{pred1} and \code{pred2}.}
 
 \item{smoothN}{\code{NULL} or positive integer. Number of values along "pred" at which to calculate comparisons. Only used if \code{smooth} is \code{TRUE}. If \code{NULL}, then comparisons are calculated at each value in data. If a number, then comparisons are calculated at \code{smoothN} values of \code{data[ , pred]} that cover the range of \code{data[ , pred]}.}
 
@@ -39,7 +39,7 @@ compareResponse(
 
 \item{graph}{Logical. If \code{TRUE} then plot predictions.}
 
-\item{...}{Arguments to pass to functions like \code{sum()} (for example, \code{na.rm=TRUE}) and to \code{overlap()} (for example, \code{w} for weights). Note that if \code{smooth} = TRUE then passing an argument called \code{w} will likely cause a warning and make results circumspect \emph{unless} weights are pre-calculated for each of the \code{smoothN} points along a particular predictor.}
+\item{...}{Arguments to pass to functions like \code{sum()} (for example, \code{na.rm=TRUE}) and to \code{overlap()} (for example, \code{w} for weights). Note that if \code{smooth = TRUE}, then passing an argument called \code{w} will likely cause a warning and make results circumspect \emph{unless} weights are pre-calculated for each of the \code{smoothN} points along a particular predictor.}
 }
 \value{
 Either a data frame (if \code{smooth = FALSE} or a list object with the smooth model plus a data frame (if \code{smooth = TRUE}) . The data frame represents metrics comparing response curves of \code{pred1} and \code{pred2}:
@@ -85,5 +85,5 @@ Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Erratum.  Evolution 62:2868-28
 Godsoe, W.  2014.  Inferring the similarity of species distributions using Species Distribution Models.  Ecography 37:130-136.
 }
 \seealso{
-\code{\link[enmSdmX]{compareNiches}}
+\code{\link[enmSdmX]{evalNicheOverlap}}
 }

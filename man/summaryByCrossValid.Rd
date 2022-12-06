@@ -45,7 +45,7 @@ This function summarizes models calibrated using the \code{\link[enmSdmX]{trainB
 
 # Runing the entire set of commands can take quite a bit of time.
 
-if (FALSE) {
+\dontrun{
 
 library(sf)
 library(terra)
