@@ -53,5 +53,5 @@ LazyLoad: yes
 URL: https://github.com/adamlilith/enmSdmX
 BugReports: https://github.com/adamlilith/enmSdmX
 Encoding: UTF-8
-License: MIT
+License: MIT + file LICENSE
 RoxygenNote: 7.2.1

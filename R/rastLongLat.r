@@ -19,7 +19,7 @@
 #' # generate long/lat rasters for the world
 #' x <- rast() # raster with 1 deg resolution and extent equal to entire world
 #' x[] <- 1:ncell(x)
-#' longLat <- rastLongLag(x)
+#' longLat <- rastLongLat(x)
 #' plot(longLat)
 #'
 #' # demonstrate masking
@@ -28,8 +28,8 @@
 #' n <- 10000
 #' v[sample(v, n)] <- NA
 #' x[] <- v
-#' longLatTRUE <- rastLongLag(x, m = TRUE)
-#' longLatFALSE <- rastLongLag(x, m = FALSE)
+#' longLatTRUE <- rastLongLat(x, m = TRUE)
+#' longLatFALSE <- rastLongLat(x, m = FALSE)
 #' rasts <- c(x, longLatTRUE, x, longLatFALSE)
 #' names(rasts) <- c('x', 'long_m_TRUE', 'lat_m_TRUE',
 #' 	'x', 'long_m_FALSE', 'lat_m_FALSE')
@@ -37,7 +37,7 @@
 #'
 #' @export
 
-rastLongLag <- function(
+rastLongLat <- function(
 	x,
 	m = TRUE,
 	filePath = NULL,

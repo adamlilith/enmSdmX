@@ -44,7 +44,7 @@
 #' @section Functions for rasters:
 #'		\code{\link{rastGetValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
 #' 		\code{\link{rastInterpolate}}: Interpolate a stack of rasters \cr
-#' 		\code{\link{rastLongLag}}: Generate rasters with values of longitude/latitude for cell values \cr
+#' 		\code{\link{rastLongLat}}: Generate rasters with values of longitude/latitude for cell values \cr
 #' 		\code{\link{rastSquareCells}}: Create a raster with square cells \cr
 #' 		\code{\link{rastVelocity}}: Velocity of movement across a series of rasters \cr
 #' 		\code{\link{rastSample}}: Sample raster with/out replacement \cr

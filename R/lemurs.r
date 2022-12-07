@@ -10,7 +10,7 @@
 #'
 #' @keywords lemurs Madagascar
 #'
-#' @source \href{http://www.gbif.org}{GBIF}
+#' @source \href{http://gbif.org}{GBIF}
 #' 
 #' @examples
 #' data(lemurs)

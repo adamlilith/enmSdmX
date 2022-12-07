@@ -436,7 +436,7 @@ rastVelocity <- function(
 
 			if (is.null(longitude) | is.null(latitude)) {
 		
-				ll <- enmSdmX::rastLongLag(x)
+				ll <- enmSdmX::rastLongLat(x)
 				longitude <- ll[['longitude']]
 				latitude <- ll[['latitude']]
 				

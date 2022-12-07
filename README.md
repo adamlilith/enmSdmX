@@ -54,7 +54,7 @@ You can install the development version of this package using:
 ### Functions for rasters ###
 * `rastGetValueByCell`: Retrieve raster values(s) by cell number
 * `rastInterpolate`: Interpolate a stack of rasters
-* `rastLongLag`: Generate rasters with values of longitude/latitude for cell values
+* `rastLongLat`: Generate rasters with values of longitude/latitude for cell values
 * `rastSquareCells`: Create a raster with square cells from an object with an extent
 * `rastVelocity`: Velocity of "movement" of mass across a series of rasters
 * `rastSample` : Sample raster with/out replacement
