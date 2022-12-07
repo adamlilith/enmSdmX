@@ -97,7 +97,7 @@ Most functions are prefixed with the main data type they create or manipulate:
 * `madEnv`: Madagascar climate rasters
 
 # Citation #
-As of December 2022 there is no package-specific publication for `enmSdmX`, but the package was first used and cited in:
+As of December 2022, there is no package-specific publication for `enmSdmX`, but the package was first used and cited in:
 
 <b>Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  <i>Global Ecology and Biogeography</i> In press. <a href='http://dx.doi.org/10.1101/2021.06.10.447988'>Open access pre-print</a></b>
 
