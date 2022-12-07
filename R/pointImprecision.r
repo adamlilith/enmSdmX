@@ -21,21 +21,21 @@
 #' long <-	c(45, 45.1, 45.1)
 #' lat <-  c(45, 45.1, 45)
 #' ll <- cbind(long, lat)
-#' precision_m <- coordImprecision(ll)
+#' precision_m <- pointImprecision(ll)
 #' cbind(ll, precision_m)
 #'
 #' # fine-precision cases
 #' long <-	rep(45, 8)
 #' lat <-  c(45, 45.1, 45.11, 45.111, 45.1111, 45.11111, 45.111111, 45.1111111)
 #' ll <- cbind(long, lat)
-#' precision_m <- coordImprecision(ll)
+#' precision_m <- pointImprecision(ll)
 #' cbind(ll, precision_m)
 #'
 #' # precision varies with latitude
 #' long <- rep(45, 181)
 #' lat <- seq(-90, 90)
 #' ll <- cbind(long, lat)
-#' precision_m <- coordImprecision(ll)
+#' precision_m <- pointImprecision(ll)
 #' cbind(ll, precision_m)
 #' plot(lat, precision_m / 1000, xlab='Latitude', ylab='Precision (km)')
 #' 
@@ -43,7 +43,7 @@
 #' long <-	c(0, 180, 45, 45)
 #' lat <-  c(45, 45, 90, -90)
 #' ll <- cbind(long, lat)
-#' precision_m <- coordImprecision(ll)
+#' precision_m <- pointImprecision(ll)
 #' cbind(ll, precision_m)
 #'
 #' # original coordinates in degrees-minutes-seconds format
@@ -58,8 +58,8 @@
 #' longDec <- dmsToDecimal(longDD, longMM, longSS, longHemis)
 #' latDec <- dmsToDecimal(latDD, latMM, latSS, latHemis)
 #' decimal <- cbind(longDec, latDec)
-#' (decImp <- coordImprecision(decimal))
-#' (dmsImp <- coordImprecision(decimal, dms=TRUE))
+#' (decImp <- pointImprecision(decimal))
+#' (dmsImp <- pointImprecision(decimal, dms=TRUE))
 #'
 #' # What if we do not know if coordinates were originally reported in
 #' # decimal or degrees-minutes-seconds format? Most conservative option
@@ -71,11 +71,11 @@
 #'   long <- -45
 #'   lat <- -90
 #'   ll <- cbind(long, lat)
-#'   coordImprecision(ll)
+#'   pointImprecision(ll)
 #' }
 #'
 #' @export
-coordImprecision <- function(
+pointImprecision <- function(
 	x,
 	dms = FALSE,
 	epsilon = 2

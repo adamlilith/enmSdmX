@@ -1,10 +1,14 @@
-#' Thin geographic points (mostly) deterministically
+#' Thin geographic points deterministically or randomly
 #'
-#' This function thins geographic points such that none have nearest neighbors closer than some user-specified distance. The results are deterministic. \cr \cr
-#' Thinning is conducted by first calculating all pairwise distances between points. Then, clusters of points are found based on proximity using the "single-linkage" method (i.e., based on minimum distance between groups). For eqach cluster, the distance between each point in the cluster and outside of the cluster is calculated.  The point retained in each cluster is the one with the largest pairwise distance to any points in any other cluster.
+#' This function thins geographic points such that none have nearest neighbors closer than some user-specified distance. For a given set of points that fall within this distance, thinning can be conducted in two ways.  Both begin by first calculating all pairwise distances between points. Then, clusters of points are found based on proximity using the "single-linkage" method (i.e., based on minimum distance between groups). Then, either a deterministic or random method is used to select the retained points:
+#' \itemize{
+#'	\item Deterministic: For each cluster, distances between each point in the cluster and all points outside of the cluster are calculated. The point retained in each cluster is the one with the greatet minimum pairwise distance to any points in any other cluster. This point will this be maximally isolated from any other point.
+#'  \item Random: For each cluster, a random point is chosen.
+#' }
 #'
 #' @param x A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
 #' @param minDist Minimum distance (in meters) needed between points to retain them. Points falling closer than this distance will be candidates for being discarded.
+#' @param random If \code{FALSE} (default), then use the deterministic method for thinning. If \code{TRUE}, then use the random method.
 #' @param longLat This is ignored if \code{x} is a \code{Spaytvector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifiying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
 #' @param ... Additional arguments. Not used.
 #'
@@ -22,18 +26,28 @@
 #' ll <- c('longitude', 'latitude')
 #' occs <- st_as_sf(occs, coords = ll, crs = crsGet('WGS84'))
 #' 
-#' # thin
-#' thinned <- pointGeoThin(x = occs, minDist = 50000)
+#' # deterministically thin
+#' det <- pointGeoThin(x = occs, minDist = 30000)
+#' 
+#' # randomly thin
+#' set.seed(123)
+#' rand <- pointGeoThin(x = occs, minDist = 30000, random = TRUE)
 #' 
 #' # map
-#' plot(st_geometry(occs), cex = 2, main = 'Selected Points')
-#' plot(st_geometry(thinned), pch = 21, cex = 2, bg = 1:nrow(out), add = TRUE)
+#' par(mfrow = c(1, 2))
+#' plot(st_geometry(occs), cex = 1.4, main = 'Deterministic')
+#' plot(st_geometry(det), pch = 21, cex = 1.4, bg = 1:nrow(det), add = TRUE)
+#' plot(st_geometry(mad0), add = TRUE)
+#' 
+#' plot(st_geometry(occs), cex = 1.4, main = 'Random')
+#' plot(st_geometry(rand), pch = 21, cex = 1.4, bg = 1:nrow(rand), add = TRUE)
 #' plot(st_geometry(mad0), add = TRUE)
 #' 
 #' @export
 pointGeoThin <- function(
 	x,
 	minDist,
+	random = FALSE,
 	longLat = 1:2,
 	...
 ) {
@@ -45,7 +59,7 @@ pointGeoThin <- function(
 		x <- sf::st_as_sf(x)
 		input <- 'SpatVector'
 	} else if (inherits(x, 'sf')) {
-		x <- sf::st_cast(x, 'POINTS')
+		x <- sf::st_cast(x, 'POINT')
 		input <- 'sf'
 	} else {
 		x <- sf::st_as_sf(x)
@@ -77,16 +91,25 @@ pointGeoThin <- function(
 		for (i in seq_along(uniqueGroups)) {
 
 			group <- uniqueGroups[i]
-
 			inPoints <- x[groups == group, , drop=FALSE]
-			outPoints <- x[groups != group, , drop=FALSE]
 
-			distsToOtherPoints <- sf::st_distance(inPoints, outPoints)
-			minDistToOtherPoints <- apply(distsToOtherPoints, 1, min)
-			whichMaxDistToOtherPoints <- which.max(minDistToOtherPoints)
+			if (random) {
 			
-			keep <- inPoints[whichMaxDistToOtherPoints, ]
+				keep <- sample(1L:nrow(inPoints), 1)
+				keep <- inPoints[keep, ]
 			
+			} else {
+
+				outPoints <- x[groups != group, , drop=FALSE]
+
+				distsToOtherPoints <- sf::st_distance(inPoints, outPoints)
+				minDistToOtherPoints <- apply(distsToOtherPoints, 1, min)
+				whichMaxDistToOtherPoints <- which.max(minDistToOtherPoints)
+				
+				keep <- inPoints[whichMaxDistToOtherPoints, ]
+				
+			}
+				
 			out <- if (exists('out', inherits = FALSE)) {
 				rbind(out, keep)
 			} else {

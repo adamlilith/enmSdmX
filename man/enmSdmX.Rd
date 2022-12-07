@@ -6,26 +6,37 @@
 \alias{enmSdmX-package}
 \title{enmSdmX: Species distribution modeling and ecological niche modeling}
 \description{
-This package contains tools for modeling the distributions and niches of species or species-like entities. Its main features are a set of functions for training and evaluating SDMs/ENMs, and calculating "velocity" of entities represented by a time series of rasters.
+This package contains tools for modeling the distributions and niches of species or species-like entities. Its main features are a set of functions for using imprecisely georeferenced occurrences, reducing sampling bias, defining geographic cross-validation folds, training and evaluating SDMs/ENMs, interpolating raster time series, and calculating "velocity" of entities represented by a time series of rasters. \cr \cr
+Most functions are prefixed with the main data type they create or manipulate:
+\itemize{
+\item \code{crs*}: Create or lookup coordinate reference systems
+\item \code{eval*}: Evaluate a SDM/ENM, or compare niches or response functions
+\item \code{rast*}: Create or manipulate rasters
+\item \code{points*}: Create or manipulate spatial points
+\item \code{predict*}: Predict from a model object
+\item \code{train*}: Train a SDM/ENM
+}
 }
 \details{
 Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 }
 \section{Data preparation}{
 
+		\code{\link{pointGeoFold}}: Assign geographically-distinct k-folds \cr
 		\code{\link{pointElimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
 }
 
 \section{Using imprecisely-georeferenced occurrences}{
 
 		\code{\link{nearestEnvPoints}}: Extract "most conservative" environments from points and/or polygons \cr
-		\code{\link{nearestGeogPoints}}: Minimum convex polygon from a set of spatial polygons and/or points \cr
+		\code{\link{nearestGeogPoints}}: Create a minimum convex polygon from a set of spatial polygons and/or points \cr
+		\code{\link{pointImprecision}}: Coordinate imprecision \cr
 }
 
 \section{Bias correction}{
 
 	\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
-	\code{\link{pointGeoThin}}: Deterministic geographic thinning of points \cr
+	\code{\link{pointGeoThin}}: Thin geographic points deterministically or randomly \cr
 }
 
 \section{Model calibration}{
@@ -63,7 +74,7 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 
 	\code{\link{rastGetValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
 		\code{\link{rastInterpolate}}: Interpolate a stack of rasters \cr
-		\code{\link{rastLongLag}}: Generate rasters with values of longitude/latitude for cell values \cr
+		\code{\link{rastLongLat}}: Generate rasters with values of longitude/latitude for cell values \cr
 		\code{\link{rastSquareCells}}: Create a raster with square cells \cr
 		\code{\link{rastVelocity}}: Velocity of movement across a series of rasters \cr
 		\code{\link{rastSample}}: Sample raster with/out replacement \cr
@@ -86,7 +97,6 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 
 \section{Geographic utility functions}{
 
-		\code{\link{coordImprecision}}: Coordinate imprecision \cr
 		\code{\link{decimalToDms}}: Convert decimal coordinate to degrees-minutes-seconds \cr
 		\code{\link{dmsToDecimal}}: Convert degrees-minutes-seconds coordinate to decimal \cr
 		\code{\link{extentToVect}}: Convert extent to polygon \cr

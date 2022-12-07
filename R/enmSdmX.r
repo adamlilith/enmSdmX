@@ -1,20 +1,31 @@
 #' enmSdmX: Species distribution modeling and ecological niche modeling
 #'
-#' This package contains tools for modeling the distributions and niches of species or species-like entities. Its main features are a set of functions for training and evaluating SDMs/ENMs, and calculating "velocity" of entities represented by a time series of rasters.
+#' This package contains tools for modeling the distributions and niches of species or species-like entities. Its main features are a set of functions for using imprecisely georeferenced occurrences, reducing sampling bias, defining geographic cross-validation folds, training and evaluating SDMs/ENMs, interpolating raster time series, and calculating "velocity" of entities represented by a time series of rasters. \cr \cr
+#' Most functions are prefixed with the main data type they create or manipulate:
+#' \itemize{
+#'	\item \code{crs*}: Create or lookup coordinate reference systems
+#'	\item \code{eval*}: Evaluate a SDM/ENM, or compare niches or response functions
+#'	\item \code{rast*}: Create or manipulate rasters
+#'	\item \code{points*}: Create or manipulate spatial points
+#'	\item \code{predict*}: Predict from a model object
+#'	\item \code{train*}: Train a SDM/ENM
+#' }
 #'
 #' Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 #'
 #' @details
 #' @section Data preparation:
+#' 		\code{\link{pointGeoFold}}: Assign geographically-distinct k-folds \cr
 #' 		\code{\link{pointElimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
 #'
 #' @section Using imprecisely-georeferenced occurrences:
 #' 		\code{\link{nearestEnvPoints}}: Extract "most conservative" environments from points and/or polygons \cr
-#' 		\code{\link{nearestGeogPoints}}: Minimum convex polygon from a set of spatial polygons and/or points \cr
+#' 		\code{\link{nearestGeogPoints}}: Create a minimum convex polygon from a set of spatial polygons and/or points \cr
+#' 		\code{\link{pointImprecision}}: Coordinate imprecision \cr
 #'
 #' @section Bias correction:
 #'		\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
-#'		\code{\link{pointGeoThin}}: Deterministic geographic thinning of points \cr
+#'		\code{\link{pointGeoThin}}: Thin geographic points deterministically or randomly \cr
 #'
 #' @section Model calibration:
 #' 		\code{\link{trainByCrossValid}}: and \code{\link{summaryByCrossValid}}: Implement a \code{trainXYZ} function across calibration folds (which are distinct from evaluation folds). \cr
@@ -61,7 +72,6 @@
 #' 		\code{\link{crsVertical}}: Create a custom "vertical near-side" projection \cr
 #'
 #' @section Geographic utility functions:
-#' 		\code{\link{coordImprecision}}: Coordinate imprecision \cr
 #' 		\code{\link{decimalToDms}}: Convert decimal coordinate to degrees-minutes-seconds \cr
 #' 		\code{\link{dmsToDecimal}}: Convert degrees-minutes-seconds coordinate to decimal \cr
 #' 		\code{\link{extentToVect}}: Convert extent to polygon \cr
