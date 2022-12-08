@@ -10,6 +10,7 @@
 #' }
 #'
 #' @param warn If \code{TRUE} (default), then print a warning if the name of the CRS cannot be found.
+#' @param nice If \code{TRUE}, then print the CRS in a formatted manner and return it invisible. Default is \code{FALSE}.
 #'
 #' @return A string representing WKT2 (well-known text) object or a \code{data.frame}.
 #' @examples
@@ -28,6 +29,7 @@
 
 crsGet <- function(
 	x = NULL,
+	nice = FALSE,
 	warn = TRUE
 ) {
 
@@ -76,6 +78,12 @@ crsGet <- function(
 		
 	}
 
-	out
+	if (nice) {
+		cat(out)
+		utils::flush.console()
+		invisible(out)
+	} else {
+		out
+	}
 
 }

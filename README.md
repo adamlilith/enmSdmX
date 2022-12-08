@@ -3,7 +3,10 @@ Tools for modeling niches and distributions of species
 
 <img align="right" src="enmSdmX.png" height="223"/>
 
-This package for R contains a suite of efficiency functions for species distribution modeling and ecological niche modeling. You can install this package from CRAN using:
+Tools for implementing species distribution models and ecological niche models, including: bias correction, spatial cross-validation, model evaluation, raster interpolation, biotic "velocity" (speed and direction of movement of a "mass" represented by a raster), and tools for using spatially imprecise records. The heart of the package is a set of "training" functions which automatically optimize model complexity based number of available occurrences. These algorithms include MaxEnt, MaxNet, boosted regression trees/gradient boosting machines, generalized additive models, generalized linear models,	natural splines, and random forests. To enhance interoperability to and from other packages, the package does not create any new classes. The package works with PROJ6 geodetic objects and coordinate reference systems.
+
+## Installation ##
+You can install this package from CRAN using:
 
 `install.packages('enmSdmX', dependencies = TRUE)`
 
@@ -25,8 +28,8 @@ Most functions are prefixed with the main data type they create or manipulate:
 
 
 ### Data preparation ###
-* `pointGeoFold`: Assign geographically-distinct k-folds
 * `pointElimCellDups`: Eliminate duplicate points in each cell of a raster
+* `pointGeoFold`: Assign geographically-distinct k-folds
 
 ### Using spatially imprecise records
 * `nearestGeogPoints`: Minimum convex polygon from a set of spatial polygons and/or points ("nearest geographic point" method)
@@ -63,7 +66,7 @@ Most functions are prefixed with the main data type they create or manipulate:
 * `modelSize`: Number of response values in a model object
 
 ### Niche overlap ###
-* `evalNicheOverlap`: Niche overlap metrics
+* `evalNicheOverlapMetrics`: Niche overlap metrics
 * `compareResponse`: Compare niche model responses to a single variable
 
 ### Functions for rasters ###
@@ -77,17 +80,18 @@ Most functions are prefixed with the main data type they create or manipulate:
 * `squareRastCells`: Resample a raster so cells are square
 
 ### Coordinate reference systems ###
-* `crss`: Coordinate reference systems
+* `crss`: Coordinate reference systems and their nicknames
 * `crsGet`: Return a WKT2 (well-known text) string using a nickname
+* `crsAlbers`: Create a custom Albers conic equal-area projection
 * `crsLambert`: Create a custom Lambert azimuthal equal-area projection
-* `crsVertical`: Create a custom "vertical near-side" projection
+* `crsVNS`: Create a custom vertical near-side projection
 
 ### Geographic utility functions ###
-* `crsVertical`: Generate a "Vertical Near-Side" projection WKT2 string
-* `plotExtent`: Create a spatial polygon the same size as a plot region
 * `decimalToDms`: Convert decimal coordinate to degrees-minutes-seconds
 * `dmsToDecimal`: Convert degrees-minutes-seconds coordinate to decimal
 * `extentToVect`: Convert extent to a spatial polygon
+* `pointCount`: Number of points in a "spatial points" object
+* `plotExtent`: Create a spatial polygon the same size as a plot region
 * `spatVectorToSpatial`: Convert SpatVector object to a Spatial* object
 
 ### Data

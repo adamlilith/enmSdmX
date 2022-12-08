@@ -1,6 +1,7 @@
 #' enmSdmX: Species distribution modeling and ecological niche modeling
 #'
-#' This package contains tools for modeling the distributions and niches of species or species-like entities. Its main features are a set of functions for using imprecisely georeferenced occurrences, reducing sampling bias, defining geographic cross-validation folds, training and evaluating SDMs/ENMs, interpolating raster time series, and calculating "velocity" of entities represented by a time series of rasters. \cr \cr
+#' Tools for implementing species distribution models and ecological niche models, including: bias correction, spatial cross-validation, model evaluation, raster interpolation, biotic "velocity" (speed and direction of movement of a "mass" represented by a raster), and tools for using spatially imprecise records. The heart of the package is a set of "training" functions which automatically optimize model complexity based number of available occurrences. These algorithms include MaxEnt, MaxNet, boosted regression trees/gradient boosting machines, generalized additive models, generalized linear models,	natural splines, and random forests. To enhance interoperability to and from other packages, the package does not create any new classes. The package works with PROJ6 geodetic objects and coordinate reference systems.\cr \cr
+#'
 #' Most functions are prefixed with the main data type they create or manipulate:
 #' \itemize{
 #'	\item \code{crs*}: Create or lookup coordinate reference systems
@@ -62,19 +63,21 @@
 #'		\code{\link{rastSetValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
 #'
 #' @section Niche overlap and similarity:
-#' 		\code{\link{evalNicheOverlap}}: Niche overlap metrics \cr
+#' 		\code{\link{evalNicheOverlapMetrics}}: Niche overlap metrics \cr
 #' 		\code{\link{compareResponse}}: Compare niche model responses to a single variable \cr
 #'
 #' @section Coordinate reference systems:
 #' 		\code{\link{crss}}: Table of coordinate reference systems \cr
 #' 		\code{\link{crsGet}}: Return a WKT2 string (coordinate reference system string) using a nickname \cr
+#' 		\code{\link{crsAlbers}}: Create a custom Albers conic equal-area projection \cr
 #' 		\code{\link{crsLambert}}: Create a custom Lambert azimuthal equal-area projection \cr
-#' 		\code{\link{crsVertical}}: Create a custom "vertical near-side" projection \cr
+#' 		\code{\link{crsVNS}}: Create a custom "vertical near-side" projection \cr
 #'
 #' @section Geographic utility functions:
 #' 		\code{\link{decimalToDms}}: Convert decimal coordinate to degrees-minutes-seconds \cr
 #' 		\code{\link{dmsToDecimal}}: Convert degrees-minutes-seconds coordinate to decimal \cr
 #' 		\code{\link{extentToVect}}: Convert extent to polygon \cr
+#'		\code{\link{pointCount}}: Number of points in a "spatial points" object \cr
 #'		\code{\link{plotExtent}}: Create a `SpatialPolygon` the same size as a plot region \cr
 #'		\code{\link{spatVectorToSpatial}}: Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
 #'

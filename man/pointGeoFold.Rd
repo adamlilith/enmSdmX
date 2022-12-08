@@ -4,46 +4,36 @@
 \alias{pointGeoFold}
 \title{Assign geographically-distinct k-folds}
 \usage{
-pointGeoFold(
-  x,
-  k,
-  kMin = 1,
-  minIn = 1,
-  collapseFolds = FALSE,
-  longLat = 1:2,
-  ...
-)
+pointGeoFold(x, k, minIn = floor(nrow(x)/k), longLat = 1:2, ...)
 }
 \arguments{
 \item{x}{A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).}
 
 \item{k}{Number of folds to create.}
 
-\item{kMin}{Minimum number of folds desired. This is used only if \code{collapseFolds} is \code{FALSE}. If >1, then the routine will collapse folds into one another to achieve the desired number of points per fold, but then switch to the swapping routine once there are \code{kMin} folds remaining.  The default is 1, meaning that the function would return a single fold if this was the only way to create a fold with sufficient number of points.}
-
-\item{minIn}{Positive integer or \code{NULL}. Minimum number of sites required to be in a fold. If left \code{NULL} (default), it is possible to have just one site in a fold.}
-
-\item{collapseFolds}{Either:
-\itemize{
-    \item If \code{TRUE} and there are fewer than \code{minIn} points in any fold, collapse folds with fewer than \code{minIn} points into neighboring folds to create larger (but fewer folds). This can sometimes create a single fold.  If this is undesirable, then try setting \code{kMin} to a number >1 but < \code{k}. This will turn the swapping routine on once there are \code{kMin} folds left.
-    \item if \code{FALSE} (default) and there are fewer than \code{minIn} points in any fold, then force a swapping routine so that there will be at least \code{minIn} points in each fold. This can sometimes create folds that are "squished" between others.
-}}
+\item{minIn}{Minimum number of points required to be in a fold.}
 
 \item{longLat}{This is ignored if \code{x} is a \code{Spaytvector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifiying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.}
 
-\item{...}{Additional arguments. Not used.}
+\item{...}{Additional arguments set to \code{\link[stats]{hclust}}. Of particular interest is the \code{methods} argument, which determines how clusters are grown.}
 }
 \value{
-A vector of integers the same length as the dimension of \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
+A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
 }
 \description{
-This function assigns geographically-divided k-folds ("g-folds") to a set of points based on clustering by proximity. Folds are created by grouping nearby points together. Users can force folds to have at least a minimum number of points by:
+This function generates geographically-distinct cross-validation folds, or "geo-folds" ("g-folds" for short). Points are grouped by proximity to one another. Folds can be forced to have at least a minimum number of points in them. Results are deterministic (i.e., the same every time for the same data). \cr \cr
+More specificially, g-folds are created using this process:
 \itemize{
-\item Swapping points between folds. This ensures the desired number of folds is produced, but can sometimes result in folds that are "squashed" between others.
-	\item Collapsing smaller folds into nearby larger ones. This reduces the total number of folds, sometimes even down to a single fold.
-	\item A hybrid approach in which folds can be collapsed until a threshold number of folds is reached, then the swapping rountine takes over. This helps ensure at least a given number of folds is produced, but is less likely to yield "squashed" folds.
+\item To start, all pairwise distances between points are calculated. These are used in a clustering algorithm to create a dendrogram of relationships by distance. The dendrogram is then "cut" so it has \code{k} groups (folds). If each fold has at least the minimum desired number of points (\code{minIn}), then the process stops and fold assignments are returned.
+\item However, if at least one fold has fewer than the desired number of points, a series of steps is executed.
+\itemize{
+	\item First, the fold with a centroid that is farthest from all others is selected. If it has sufficient points, then the next-most distant fold is selected, and so on.
+	\item Once a fold is identified that has fewer than the desired number of points, it is grown by adding to it the points closest to its centroid, one at a time. Each time a point is added, the fold centroid is calculated again. The fold is grown until it has the desired number of points. Call this "fold #1". From hereafter, these points are considered "assigned" and not eligibel for re-assignment.
+	\item The remaining "unassigned" points are then clustered again, but this time into \code{k - 1} folds. And again, the most-distant group found that has fewer than the desired number of points is found. This fold is then grown as before, using only unassigned points. This fold then becomes "fold #2."
+	\item The process repeats iteratively until there are \code{k} folds assigned, each with at least the desired number of points. 
+	}
 }
-Regardless of which method is used, the results are deterministic.
+The potential downside of this apporoach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
 }
 \examples{
 library(sf)
@@ -52,32 +42,23 @@ library(sf)
 data(mad0)
 data(lemurs)
 crs <- crsGet('WGS84')
-occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
 ll <- c('longitude', 'latitude')
-occs <- st_as_sf(occs, coords = ll, crs = crsGet('WGS84'))
 
-folds1 <- pointGeoFold(occs, k = 3)
-folds2 <- pointGeoFold(occs, k = 3, minIn = 10)
-folds3 <- pointGeoFold(occs, k = 3, minIn = 10, collapseFolds = TRUE)
-folds4 <- pointGeoFold(occs, k = 3, minIn = 10, collapseFolds = TRUE, kMin = 2)
+# use occurrences of all species... easier to see on map
+occs <- st_as_sf(lemurs, coords = ll, crs = crsGet('WGS84'))
 
-# map
-par(mfrow=c(2, 2))
-plot(st_geometry(occs), cex = 1.4, col = folds1, main = 'Swapping')
-plot(st_geometry(mad0), add = TRUE)
+folds2 <- pointGeoFold(occs, k = 2, minIn = 51)
+folds4 <- pointGeoFold(occs, k = 4, minIn = 25)
 
-plot(st_geometry(occs), cex = 1.4, col = folds2, main = 'Swapping, minIn = 10')
-plot(st_geometry(mad0), add = TRUE)
+# map folds
+par(mfrow = c(1, 2))
+plot(st_geometry(occs), pch=folds2, col=folds2, main = '2 g-folds')
+plot(st_geometry(mad0), border = 'gray', add = TRUE)
 
-plot(st_geometry(occs), cex = 1.4, col = folds3, main = 'Collapse, minIn = 10')
-plot(st_geometry(mad0), add = TRUE)
+plot(st_geometry(occs), pch=folds4, col=folds4, main = '4 g-folds')
+plot(st_geometry(mad0), border = 'gray', add = TRUE)
 
-plot(st_geometry(occs), cex = 1.4, col = folds4, main = 'Collapse --> swapping, minIn = 10')
-plot(st_geometry(mad0), add = TRUE)
-
-# number of points per fold
-table(folds1) # default
-table(folds2) # each fold has >= 10 (minIn)
-table(folds3) # can yield just one fold when collapseFolds = TRUE
-table(folds4) # collapsing then switch to swapping when k = 2
+# inspect number of sites per fold
+table(folds2) # 2 folds
+table(folds4) # 4 folds
 }

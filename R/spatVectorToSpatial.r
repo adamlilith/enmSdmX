@@ -13,11 +13,10 @@
 #' class(spat)
 #'
 #' @export
-
 spatVectorToSpatial <- function(x) {
 
 	x <- sf::st_as_sf(x)
-	x <- methods::as(x, 'Spatial')
+	x <- sf::as_Spatial(x)
 	x
 
 }

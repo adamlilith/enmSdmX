@@ -29,11 +29,11 @@
 #'
 #' x1 <- seq(0, 1, length.out=100)
 #' x2 <- x1^2
-#' evalNicheOverlap(x1, x2)
+#' evalNicheOverlapMetrics(x1, x2)
 #'
 #' @export
 
-evalNicheOverlap <- function(
+evalNicheOverlapMetrics <- function(
 	x1,
 	x2,
 	method = c('meanDiff', 'meanAbsDiff', 'rmsd', 'd', 'i', 'esp', 'cor', 'rankCor'),

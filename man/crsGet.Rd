@@ -4,7 +4,7 @@
 \alias{crsGet}
 \title{WKT string for a named coordinate reference system or a spatial object}
 \usage{
-crsGet(x = NULL, warn = TRUE)
+crsGet(x = NULL, nice = FALSE, warn = TRUE)
 }
 \arguments{
 \item{x}{This can be any of:
@@ -13,6 +13,8 @@ crsGet(x = NULL, warn = TRUE)
         \item \code{NULL} (default): This returns a table of projections with their "long" and "short" names (nearly the same as \code{data(crss)}).
     \item An object of class \code{SpatVector}, \code{SpatRaster}, or \code{sf}. If this is a "\code{Spat}" object, then a character vector with the CRS in WKT form is returned. If a \code{sf} is supplied, then a \code{crs} object is returned in WKT format.
 }}
+
+\item{nice}{If \code{TRUE}, then print the CRS in a formatted manner and return it invisible. Default is \code{FALSE}.}
 
 \item{warn}{If \code{TRUE} (default), then print a warning if the name of the CRS cannot be found.}
 }

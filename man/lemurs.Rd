@@ -8,7 +8,7 @@
 An object of class \code{'data.frame'}.
 }
 \source{
-\href{http://gbif.org}{GBIF}
+\href{https://gbif.org}{GBIF}
 }
 \usage{
 data(lemurs)

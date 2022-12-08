@@ -1,2 +1,8 @@
+^CONDUCT\.md$
+^\.travis\.yml$
+^README-.*\.png$
+^cran-comments\.md$
+^LICENSE.md
+^enmSdmX.png
 ^.*\.Rproj$
 ^\.Rproj\.user$

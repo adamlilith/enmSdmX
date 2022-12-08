@@ -27,8 +27,6 @@ modelSize <- function(
 	graceful = TRUE
 ) {
 
-	modelClass <- class(x)
-
 	# LM/GAM/GLM
 	samples <- if (inherits(x, c('gam', 'glm', 'lm'))) {
 	
@@ -87,7 +85,7 @@ modelSize <- function(
 	} else if (binary) {
 		out <- c(sum(samples == 1), sum(samples == 0))
 		names(out) <- c('num1s', 'num0s')
-		if (out[1] == 0 & out[2] == 0) warning('Model does not seem to be using a binary response.', .immediate=TRUE)
+		if (out[1L] == 0 & out[2L] == 0) warning('Model does not seem to be using a binary response.', .immediate=TRUE)
 	} else {
 		out <- length(samples)
 		names(out) <- 'sampleSize'

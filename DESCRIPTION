@@ -17,13 +17,16 @@ Maintainer: Adam B. Smith <adam.smith@mobot.org>
 Description: Tools for implementing species distribution models and ecological
 	niche models, including: bias correction, spatial cross-validation, model
 	evaluation, raster interpolation, biotic "velocity" (speed and
-	direction of movement of a "mass" represented by a raster), and functions
-	for using spatially imprecise records. The heart of the package is a set
-	of "training" functions which automatically tune and parameterize models
-	based on several popular algorithms (e.g., MaxEnt, MaxNet, boosted
-	regression trees, generalized additive models, etc.). To enhance
-	transportability to and from other packages, the package uses base-R
-	classes as much as possible.
+	direction of movement of a "mass" represented by a raster), interpolating
+	across a time series of rasters, and tools for using spatially imprecise
+	records. The heart of the package is a set of "training" functions which
+	automatically optimize model complexity	based number of available
+	occurrences. These algorithms include MaxEnt, MaxNet, boosted regression
+	trees/gradient boosting machines, generalized additive models,
+	generalized linear models, natural splines, and random forests. To enhance
+	interoperability to and from other packages, the package does not create
+	any new classes. The package works with PROJ6 geodetic objects and
+	coordinate reference systems.
 Depends:
 	R (>= 4.0.0),
 Imports:

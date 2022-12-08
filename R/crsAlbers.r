@@ -1,16 +1,21 @@
-#' Generate a custom Lambert azimuthal equal-area projection WKT2 string
+#' Generate a custom coordinate reference system WKT2 strings
 #'
-#' This function generates a WKT2 (well-known text) coordinate reference string for a Lambert equal-area azimuthal projection of a geographic object or coordinate pair.
+#' These functions take as inpit either a spatial object or coordinate pair and generate centered on it a custom WKT2 (well-known text) coordinate reference system string. Projections include:
+#' \itemize{
+#'	\item Albers conic equal-area
+#'	\item Lambert azimuthal equal-area
+#'	\item Vertical near-side (i.e., as the world appears from geosynchronous orbit)
+#' }
 #'
-#' @param x 	Either an object of class \code{SpatRaster}, \code{SpatVector}, or \code{sf}, \emph{or} a numeric string with two values (longitude and latitude of the center of the projection), \emph{or} a two-column matrix/data frame with the centroid of the projection.
+#' @param x 	Either an object of class \code{SpatRaster}, \code{SpatVector}, or \code{sf}, \emph{or} a numeric vector with two values (longitude and latitude of the center of the projection), \emph{or} a two-column matrix/data frame with the centroid of the projection.
 #'
-#' @seealso \code{\link{crsGet}}, \code{\link{crsAlbers}}, \code{\link{crsVNS}}
+#' @seealso \code{\link{crsGet}}, \code{\link{crsLambert}}, \code{\link{crsVNS}}
 #'
 #' @example man/examples/crsCreate_exampes.r
 #'
 #' @export
 
-crsLambert <- function(x) {
+crsAlbers <- function(x) {
 
 	if (inherits(x, c('SpatRaster', 'SpatVector', 'sf'))) {
 	
@@ -35,12 +40,19 @@ crsLambert <- function(x) {
 		long <- x[1L, 1L]
 		lat <- x[1L, 2L]
 	
+	} else if (inherits(x, 'numeric')) {
+		if (length(x) != 2L) {
+			stop('Argument "x" must be a coordinate pair or a spatial object of class "SpatRaster", "SpatVector", or "sf".')
+		} else {
+			long <- x[1L]
+			lat <- x[2L]
+		}
 	} else {
 		stop('Argument "x" must be a coordinate pair or a spatial object of class "SpatRaster", "SpatVector", or "sf".')
 	}
 
 	out <- paste0(
-		'PROJCRS["Lambert_Conformal_Conic",
+		'PROJCRS["Albers_Equal_Area_Conic",
     BASEGEOGCRS["NAD83",
         DATUM["North American Datum 1983",
             ELLIPSOID["GRS 1980",6378137,298.257222101,
@@ -48,9 +60,9 @@ crsLambert <- function(x) {
         PRIMEM["Greenwich",0,
             ANGLEUNIT["degree",0.0174532925199433]],
         ID["EPSG",4269]],
-    CONVERSION["Lambert_Conformal_Conic",
-        METHOD["Lambert Conic Conformal (2SP)",
-            ID["EPSG",9802]],
+    CONVERSION["North_America_Albers_Equal_Area_Conic",
+        METHOD["Albers Equal Area",
+            ID["EPSG",9822]],
         PARAMETER["Latitude of false origin",', lat, ',
             ANGLEUNIT["degree",0.0174532925199433],
             ID["EPSG",8821]],

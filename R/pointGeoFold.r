@@ -1,177 +1,160 @@
 #' Assign geographically-distinct k-folds
 #'
-#' This function assigns geographically-divided k-folds ("g-folds") to a set of points based on clustering by proximity. Folds are created by grouping nearby points together. Users can force folds to have at least a minimum number of points by:
+#' This function generates geographically-distinct cross-validation folds, or "geo-folds" ("g-folds" for short). Points are grouped by proximity to one another. Folds can be forced to have at least a minimum number of points in them. Results are deterministic (i.e., the same every time for the same data). \cr \cr
+#' More specificially, g-folds are created using this process:
 #' \itemize{
-#'	\item Swapping points between folds. This ensures the desired number of folds is produced, but can sometimes result in folds that are "squashed" between others.
-#' 	\item Collapsing smaller folds into nearby larger ones. This reduces the total number of folds, sometimes even down to a single fold.
-#' 	\item A hybrid approach in which folds can be collapsed until a threshold number of folds is reached, then the swapping rountine takes over. This helps ensure at least a given number of folds is produced, but is less likely to yield "squashed" folds.
+#'	\item To start, all pairwise distances between points are calculated. These are used in a clustering algorithm to create a dendrogram of relationships by distance. The dendrogram is then "cut" so it has \code{k} groups (folds). If each fold has at least the minimum desired number of points (\code{minIn}), then the process stops and fold assignments are returned.
+#'	\item However, if at least one fold has fewer than the desired number of points, a series of steps is executed.
+#'	\itemize{
+#'		\item First, the fold with a centroid that is farthest from all others is selected. If it has sufficient points, then the next-most distant fold is selected, and so on.
+#'		\item Once a fold is identified that has fewer than the desired number of points, it is grown by adding to it the points closest to its centroid, one at a time. Each time a point is added, the fold centroid is calculated again. The fold is grown until it has the desired number of points. Call this "fold #1". From hereafter, these points are considered "assigned" and not eligibel for re-assignment.
+#'		\item The remaining "unassigned" points are then clustered again, but this time into \code{k - 1} folds. And again, the most-distant group found that has fewer than the desired number of points is found. This fold is then grown as before, using only unassigned points. This fold then becomes "fold #2."
+#'		\item The process repeats iteratively until there are \code{k} folds assigned, each with at least the desired number of points. 
+#' 	}
 #' }
-#' Regardless of which method is used, the results are deterministic.
+#' The potential downside of this apporoach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
 #'
 #' @param x 		A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
 #' @param k 		Number of folds to create.
-#' @param minIn 	Positive integer or \code{NULL}. Minimum number of sites required to be in a fold. If left \code{NULL} (default), it is possible to have just one site in a fold.
-#' @param collapseFolds		Either:
-#' \itemize{
-#' 	\item If \code{TRUE} and there are fewer than \code{minIn} points in any fold, collapse folds with fewer than \code{minIn} points into neighboring folds to create larger (but fewer folds). This can sometimes create a single fold.  If this is undesirable, then try setting \code{kMin} to a number >1 but < \code{k}. This will turn the swapping routine on once there are \code{kMin} folds left.
-#' 	\item if \code{FALSE} (default) and there are fewer than \code{minIn} points in any fold, then force a swapping routine so that there will be at least \code{minIn} points in each fold. This can sometimes create folds that are "squished" between others.
-#' }
-#' @param kMin		Minimum number of folds desired. This is used only if \code{collapseFolds} is \code{FALSE}. If >1, then the routine will collapse folds into one another to achieve the desired number of points per fold, but then switch to the swapping routine once there are \code{kMin} folds remaining.  The default is 1, meaning that the function would return a single fold if this was the only way to create a fold with sufficient number of points.
+#' @param minIn 	Minimum number of points required to be in a fold.
 #' @param longLat 	This is ignored if \code{x} is a \code{Spaytvector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifiying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
-#' @param ... Additional arguments. Not used.
+#' @param ... Additional arguments set to \code{\link[stats]{hclust}}. Of particular interest is the \code{methods} argument, which determines how clusters are grown.
 #'
-#' @return A vector of integers the same length as the dimension of \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
+#' @return A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
 #'
-#' @example man/examples/geoFold_examples.r
+#' @example man/examples/pointGeoFold_examples.r
 #' 
 #' @export
 pointGeoFold <- function(
 	x,
 	k,
-	kMin = 1,
-	minIn = 1,
-	collapseFolds = FALSE,
+	minIn = floor(nrow(x) / k),
 	longLat = 1:2,
 	...
 ) {
 
-	if (!inherits(x, c('SpatVector', 'sf'))) {
-		x <- sf::st_as_sf(x, coords = longLat, crs = crsGet('WGS84'))
-		input <- 'data.frame'
-	} else if (inherits(x, 'SpatVector')) {
-		x <- sf::st_as_sf(x)
-		input <- 'SpatVector'
-	} else if (inherits(x, 'sf')) {
-		x <- sf::st_cast(x, 'POINT')
-		input <- 'sf'
-	} else {
-		x <- sf::st_as_sf(x)
-		input <- 'unknown'
-	}
-
-	n <- nrow(x)
+	### initialize folds
+	n <- pointCount(x)
 	if (n < k * minIn) stop(paste('Not possible to divide points into', k, 'folds each with at least', minIn, 'points each. Reduce the value of minIn or increase k.'))
-
-	par(mfrow=c(2, 3))
 
 	# cluster based on distances
 	allDists <- sf::st_distance(x)
 	allDists <- as(allDists, 'matrix')
 	diag(allDists) <- NA
 	dists <- stats::as.dist(allDists)
-	clust <- stats::hclust(dists, method = 'single')
+	# clust <- stats::hclust(dists, method = 'single')
+	clust <- stats::hclust(dists)
 
-	# define groups
+	# define folds
 	folds <- stats::cutree(clust, k = k)
+
+	folds <- .renumFolds(folds, decreasing = FALSE)
 	nPerFold <- table(folds)
-	
-	plot(st_geometry(occs), col=folds, pch=16)
-	
-	if (any(nPerFold < minIn)) {
-	
-		if (!collapseFolds) okToSwap <- rep(TRUE, n)
+	nAssigned <- sum(nPerFold)
 
-		# if at least one group too small
-		while (any(nPerFold < minIn)) {
+	focalFold <- 1
+	while (any(nPerFold < minIn) | nAssigned < n) {
 
-			### combine folds
-			#################
-			if (collapseFolds & k > kMin) {
+		# for (focalFold in 1L:(k - 1)) {
+
+			### calculate centroids of folds
+			if (exists('cents', inherits = FALSE)) rm(cents)
+			for (kk in 1L:k) {
 			
-				k <- k - 1
-				folds <- stats::cutree(clust, k = k)
-				if (k == kMin) collapseFolds <- FALSE
-
-			### swap points between folds
-			#############################
-			} else {
-
-				# define ingroup (group to grow)
-				smallestIngroup <- which.min(nPerFold)
-				ingroupIndices <- which(folds == smallestIngroup)
-
-				okToSwap[ingroupIndices] <- FALSE
-				
-				ingroupFold <- unique(folds[ingroupIndices])
-
-				# agglomerate ingroup with closest points in outgroups
-
-				nIngroup <- length(ingroupIndices)
-				nNeeded <- minIn - nIngroup
-				
-				distsToIngroup <- allDists[ , ingroupIndices, drop = FALSE]
-				distsToIngroup[!okToSwap, ] <- NA
-
-				distToIngroup <- apply(distsToIngroup, 1, min)
-				closestToIngroup <- rank(distToIngroup)
-			
-				assignToIngroup <- which(closestToIngroup <= nNeeded)
-				folds[assignToIngroup] <- ingroupFold
-				okToSwap[assignToIngroup] <- FALSE
-
-				folds <- .renumSeq(folds)
-				
-				nPerFold <- table(folds)
-				nFolds <- length(unique(folds))
-				
-				# if we lost folds, recreate them from unassigned points
-				if (nFolds < k) {
-				
-					outgroupDists <- allDists[okToSwap, okToSwap]
-					outgroupDists <- stats::as.dist(outgroupDists)
-					clust <- stats::hclust(outgroupDists, method = 'single')
-					newFolds <- stats::cutree(clust, k = k - nFolds + 1)
-					newFolds <- newFolds + 1E6
-					
-					newFolds <- .insert(x = folds[!okToSwap], into = newFolds, at = which(!okToSwap), warn = FALSE)
-					folds <- .renumSeq(newFolds)
-				
+				xInFold <- x[folds == kk, ]
+				xInFold <- sf::st_union(xInFold)
+				cent <- sf::st_centroid(xInFold)
+				cents <- if (exists('cents', inherits = FALSE)) {
+					c(cents, cent)
+				} else {
+					cent
 				}
+			
+			}
+			
+			# find centroid with LARGEST distance to any other centroid
+			centToCentDists <- sf::st_distance(cents)
+			centToCentDists <- as(centToCentDists, 'matrix')
+			
+			diag(centToCentDists) <- NA
+			maxCentToCentDists <- apply(centToCentDists, 1, max, na.rm = TRUE)
+			maxDist <- max(maxCentToCentDists)
+			
+			# find centroid with SECOND-LARGEST distance to any other centroid
+			centToCentDists <- sweep(centToCentDists, 2L, maxCentToCentDists)
+			centToCentDists[centToCentDists == 0] <- NA
+			maxCentToCentDists <- apply(centToCentDists, 1, max, na.rm = TRUE)
+			maxDist <- max(maxCentToCentDists)
+			maxDistIndex <- which(maxCentToCentDists == maxDist)
+			
+			# assign points closest to this centroid to this fold
+			cent <- cents[maxDistIndex]
+			
+			newFolds <- folds
+			newFolds[newFolds != focalFold] <- NA
+			# newFolds[folds == maxDistIndex] <- focalFold
+
+			nThisFold <- sum(newFolds == focalFold, na.rm = TRUE)
+
+			while (nThisFold < minIn) {
+			
+				# assign next-closest point to centroid
+				xOutFold <- x[which(is.na(newFolds)), ]
+				distToCent <- sf::st_distance(xOutFold, cent)[ , 1L]
+				closest <- which.min(distToCent)
+				newFolds[which(is.na(newFolds))[closest]] <- focalFold
 				
-			} # if swapping
+				# re-calculate group centroid
+				xInFold <- x[which(newFolds == focalFold), ]
+				xInFold <- sf::st_union(xInFold)
+				cent <- sf::st_centroid(xInFold)
+				
+				nThisFold <- nThisFold + 1
+				
+			} # if focal fold has too few points
+			
+			xOutFold <- x[which(is.na(newFolds)), ]
+			subFolds <- pointGeoFold(x = xOutFold, k = k - focalFold, minIn = minIn, longLat = longLat)
+			# subFolds <- subFolds + max(folds, na.rm = TRUE) + 1
+			subFolds <- subFolds + focalFold
+			newFolds[is.na(newFolds)] <- subFolds
+			
+			newFolds <<- newFolds
+			folds <<- folds
+			
+			folds <- newFolds
+			folds <- .renumFolds(folds)
 			
 			nPerFold <- table(folds)
-			plot(st_geometry(occs), col=folds, pch=16)
-			
-		} # while too few points in at least one fold
+			nAssigned <- sum(nPerFold)
+
+		# } # next fold
 		
-	} # if too few points in a fold
-
+		focalFold <- focalFold + 1
+		
+	} # if any fold has too few points
+	
 	folds
-
+	
 }
 
-# insert values into a vector
-.insert <- function(x, into, at, warn = TRUE) {
+### renumber folds from smallest to largest or vice versa
+.renumFolds <- function(folds, decreasing = FALSE) {
 
-	if (length(x) > length(at)) stop('Length of x is longer than the number of indices.')
-	if (any(at > length(at) + length(into))) stop(paste('At least one index is too high. The new vector will be', length(x) + length(into), 'elements long.'))
+	# folds			vector of fold assignments
+	# decreasing	if \code{FALSE} (default), renumber so smallest fold is 1, most abundant last; if \code{TRUE}, vice versa
 
-	out <- rep(NA, length(into) + length(at))
-	if (length(x) < length(at)) {
-	
-		if (warn) warning('Length of x is shorter than the length of at. Recycling x.')
-		x <- rep(x, length.out = length(at))
-	
-	}
-	
-	out[at] <- x
-	out[is.na(out)] <- into
-	
-	out
+	nPerFold <- table(folds)
+	foldOrder <- order(nPerFold, decreasing = decreasing)
 
-}
-
-### renumber folds sequentially
-.renumFolds <- function(folds) {
-
-	folds <- folds - min(folds) + 1
 	uniqueFolds <- sort(unique(folds))
+	uniqueFoldsSorted <- uniqueFolds[foldOrder]
 	nFolds <- length(uniqueFolds)
-	if (!all(uniqueFolds == 1:nFolds)) {
+
+	if (!all(foldOrder == 1:nFolds)) {
 
 		newFolds <- folds
-		for (i in seq_along(uniqueFolds)) newFolds[folds == uniqueFolds[i]] <- i
+		for (i in seq_along(uniqueFoldsSorted)) newFolds[folds == uniqueFoldsSorted[i]] <- i
 		folds <- newFolds
 	
 	}
@@ -180,19 +163,3 @@ pointGeoFold <- function(
 
 }
 
-.renumSeq <- function(x) {
-
-	# x <- x - min(x, na.rm = TRUE) + 1
-	xUnique <- sort(unique(x))
-	n <- length(xUnique)
-	if (!all(xUnique == 1:n)) {
-
-		xNew <- rep(NA, length(x))
-		for (i in seq_along(xUnique)) xNew[x == xUnique[i]] <- i
-		x <- xNew
-	
-	}
-	
-	x
-
-}

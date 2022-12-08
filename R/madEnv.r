@@ -10,7 +10,7 @@
 #'
 #' @keywords climate Madagascar
 #'
-#' @source \href{http://worldclim.org}{WorldClim}
+#' @source \href{https://worldclim.org}{WorldClim}
 #' 
 #' @examples
 #'

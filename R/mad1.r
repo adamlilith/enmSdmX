@@ -12,7 +12,7 @@
 #'
 #' @keywords Madagascar
 #'
-#' @source \href{http://gadm.org}{GADM}
+#' @source \href{https://gadm.org}{GADM}
 #' 
 #' @examples
 #' data(mad1)
