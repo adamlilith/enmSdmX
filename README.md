@@ -3,16 +3,16 @@ Tools for modeling niches and distributions of species
 
 <img align="right" src="enmSdmX.png" height="223"/>
 
-Tools for implementing species distribution models and ecological niche models, including: bias correction, spatial cross-validation, model evaluation, raster interpolation, biotic "velocity" (speed and direction of movement of a "mass" represented by a raster), and tools for using spatially imprecise records. The heart of the package is a set of "training" functions which automatically optimize model complexity based number of available occurrences. These algorithms include MaxEnt, MaxNet, boosted regression trees/gradient boosting machines, generalized additive models, generalized linear models,	natural splines, and random forests. To enhance interoperability to and from other packages, the package does not create any new classes. The package works with PROJ6 geodetic objects and coordinate reference systems.
+`enmSdmX` is a set of tools in <b>R</b> for implementing species distribution models (SDMs) and ecological niche models (ENMs), including: bias correction, spatial cross-validation, model evaluation, raster interpolation, biotic "velocity" (speed and direction of movement of a "mass" represented by a raster), and tools for using spatially imprecise records. The heart of the package is a set of "training" functions which automatically optimize model complexity based number of available occurrences. These algorithms include MaxEnt, MaxNet, boosted regression trees/gradient boosting machines (BRT), generalized additive models (GAM), generalized linear models (GLM),	natural splines (NS), and random forests (RF). To enhance interoperability with other packages, the package does not create any new classes. The package works with PROJ6 geodetic objects and coordinate reference systems.
 
 ## Installation ##
 You can install this package from CRAN using:
 
 `install.packages('enmSdmX', dependencies = TRUE)`
 
-You can install the development version of this package using:
+Alternatively, you can install the development version of this package using:
 
-`remotes::install_github('adamlilith/enmSdmX', dependencies=TRUE)`  
+`remotes::install_github('adamlilith/enmSdmX', dependencies = TRUE)`  
 
 You may need to install the `remotes` package first.
 
@@ -20,7 +20,7 @@ You may need to install the `remotes` package first.
 
 Most functions are prefixed with the main data type they create or manipulate:
 * `crs*`: Create or lookup coordinate reference systems
-* `eval*`: Evaluate a SDM/ENM, calculate niche overlap, or compare response functions
+* `eval*`: Evaluate an SDM/ENM, calculate niche overlap, or compare response functions
 * `rast*`: Create or manipulate rasters
 * `points*`: Create or manipulate spatial points
 * `predict*`: Predict from a model object
@@ -34,10 +34,10 @@ Most functions are prefixed with the main data type they create or manipulate:
 ### Using spatially imprecise records
 * `nearestGeogPoints`: Minimum convex polygon from a set of spatial polygons and/or points ("nearest geographic point" method)
 * `nearestEnvPoints`:  Extract "most conservative" environments from points and/or polygons ("nearest environmental point" method)
-* `pointImprecision`: Calculate maximum possible coordinate precision
+* `pointImprecision`: Coordinate imprecision
 
 ### Bias correction
-* `pointDistWeights`: Proximity-based weighting for occurrences to correct for spatial bias
+* `pointDistWeights`: Proximity-based weighting for occurrences for correcting spatial bias
 * `pointGeoThin`: Thin geographic points deterministically or randomly
 
 ### Model training ###
@@ -51,40 +51,38 @@ Most functions are prefixed with the main data type they create or manipulate:
 * `trainRF`: Random forests (RFs)  
 
 ### Model prediction ###
-* `predictEnmSdm` Predict most model types using default settings; parallelized
-* `predictMaxEnt` Predict MaxEnt model
-* `predictMaxNet` Predict MaxNet model
+* `predictEnmSdm`: Predict most model types using default settings; parallelized
+* `predictMaxEnt`: Predict MaxEnt model
+* `predictMaxNet`: Predict MaxNet model
 
 ### Model evaluation ###
 * `evalAUC`: AUC (with/out site weights)
 * `evalMultiAUC`: Multivariate version of AUC (with/out site weight)
 * `evalContBoyce`: Continuous Boyce Index (with/out site weights)
 * `evalThreshold`: Thresholds to convert continuous predictions to binary predictions (with/out site weights)
-* `evalThresholdStats`: Model performance statistics based on thresholded predictions (with/out site weights)
+* `evalThresholdStats`: Model accuracy based on thresholded predictions (with/out site weights)
 * `evalTjursR2`: Tjur's R2 (with/out site weights)
 * `evalTSS`: True Skill Statistic (TSS) (with/out site weights)
 * `modelSize`: Number of response values in a model object
 
 ### Niche overlap ###
 * `evalNicheOverlapMetrics`: Niche overlap metrics
-* `compareResponse`: Compare niche model responses to a single variable
+* `compareResponse`: Compare different niche model responses along an environmental variable
 
 ### Functions for rasters ###
-* `rastGetValueByCell`: Retrieve raster values(s) by cell number
+* `rastGetValueByCell` and `rastSetValueByCell`: Retrieve or get raster values(s) by cell number
 * `rastInterpolate`: Interpolate a stack of rasters
 * `rastLongLat`: Generate rasters with values of longitude/latitude for cell values
 * `rastSquareCells`: Create a raster with square cells from an object with an extent
 * `rastVelocity`: Velocity of "movement" of mass across a series of rasters
 * `rastSample` : Sample raster with/out replacement
-* `rastSetValueByCell`: Set raster values(s) by cell number
-* `squareRastCells`: Resample a raster so cells are square
 
 ### Coordinate reference systems ###
-* `crss`: Coordinate reference systems and their nicknames
 * `crsGet`: Return a WKT2 (well-known text) string using a nickname
 * `crsAlbers`: Create a custom Albers conic equal-area projection
 * `crsLambert`: Create a custom Lambert azimuthal equal-area projection
 * `crsVNS`: Create a custom vertical near-side projection
+* `crss`: Coordinate reference systems and their nicknames
 
 ### Geographic utility functions ###
 * `decimalToDms`: Convert decimal coordinate to degrees-minutes-seconds

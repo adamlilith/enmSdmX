@@ -24,9 +24,9 @@ Description: Tools for implementing species distribution models and ecological
 	occurrences. These algorithms include MaxEnt, MaxNet, boosted regression
 	trees/gradient boosting machines, generalized additive models,
 	generalized linear models, natural splines, and random forests. To enhance
-	interoperability to and from other packages, the package does not create
-	any new classes. The package works with PROJ6 geodetic objects and
-	coordinate reference systems.
+	interoperability with other modeling packages, no new classes are created.
+	The package works with PROJ6 geodetic objects and coordinate reference
+	systems.
 Depends:
 	R (>= 4.0.0),
 Imports:
