@@ -1,6 +1,6 @@
 Package: enmSdmX
 Type: Package
-Title: Species Distributuion Modeling and Ecological Niche Modeling
+Title: Species Distribution Modeling and Ecological Niche Modeling
 Version: 1.0.0
 Date: 2022-12-05
 Authors@R: 
@@ -20,7 +20,7 @@ Description: Implements species distribution modeling and ecological niche
 	direction of movement of a "mass" represented by a raster), interpolating
 	across a time series of rasters, and use of spatially imprecise records.
 	The heart of the package is a set of "training" functions which
-	automatically optimize model complexity	based number of available
+	automatically optimize model complexity based number of available
 	occurrences. These algorithms include MaxEnt, MaxNet, boosted regression
 	trees/gradient boosting machines, generalized additive models,
 	generalized linear models, natural splines, and random forests. To enhance
