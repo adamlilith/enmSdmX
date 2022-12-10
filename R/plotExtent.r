@@ -24,6 +24,10 @@
 
 plotExtent <- function(x = NULL) {
 
+	# to revert to previous graphical settings
+	oldPar <- graphics::par(no.readonly = TRUE)
+	on.exit(graphics::par(oldPar))
+	
 	corners <- graphics::par('usr')
 	xCoords <- c(corners[1], corners[2], corners[2], corners[1])
 	yCoords <- c(corners[3], corners[3], corners[4], corners[4])

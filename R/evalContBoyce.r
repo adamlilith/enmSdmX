@@ -14,6 +14,7 @@
 #' @param graph Logical. If \code{TRUE} then plot P vs E and P/E versus bin.
 #' @param na.rm Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.
 #' @param ... Other arguments (not used).
+#'
 #' @return Numeric value.
 #' 
 #' @details CBI is the Spearman rank correlation coefficient between the proportion of sites in each prediction class and the expected proportion of predictions in each prediction class based on the proportion of the landscape that is in that class.  The index ranges from -1 to 1. Values >0 indicate the model's output is positively correlated with the true probability of presence.  Values <0 indicate it is negatively correlated with the true probability of presence.
@@ -33,54 +34,56 @@
 #' presWeight <- c(rep(1, 10), rep(0.5, 90))
 #' evalContBoyce(pres, contrast, presWeight=presWeight)
 #' 
-#' # # compare stability of CBI calculated with ecospat.boyce() in ecospat package
-#' # library(ecospat)
-#' # set.seed(123)
-#' # results <- data.frame()
-#' # for (perform in c(1, 1.5, 2)) {
-#' #  for (i in 1:30) {
+#' \donttest{
+#' # compare stability of CBI calculated with ecospat.boyce() in ecospat package
+#' library(ecospat)
+#' set.seed(123)
+#' results <- data.frame()
+#' for (perform in c(1, 1.5, 2)) {
+#'  for (i in 1:30) {
 #'
-#' #    pres <- runif(100)^(1 / perform)
-#' #    contrast <- runif(1000)
+#'    pres <- runif(100)^(1 / perform)
+#'    contrast <- runif(1000)
 #'
-#' #    cbi_enmSdm <- evalContBoyce(pres, contrast)
-#' #    cbi_ecospat <- ecospat.boyce(contrast, pres, PEplot=FALSE)$Spearman.cor
+#'    cbi_enmSdmX <- evalContBoyce(pres, contrast)
+#'    cbi_ecospat <- ecospat.boyce(contrast, pres, PEplot=FALSE)$Spearman.cor
 #'
-#' #    results <- rbind(
-#' #      results,
-#' #      data.frame(
-#' #        performance = rep(perform, 2),
-#' #        method = c('enmSdmX', 'ecospat'),
-#' #        cbi = c(cbi_enmSdm, cbi_ecospat)
-#' #      )
-#' #    )
+#'    results <- rbind(
+#'      results,
+#'      data.frame(
+#'        performance = rep(perform, 2),
+#'        method = c('enmSdmX', 'ecospat'),
+#'        cbi = c(cbi_enmSdmX, cbi_ecospat)
+#'      )
+#'    )
 #'
-#' # 	}
+#' 	}
 #'
-#' # }
+#' }
 #'
-#' # results$performance[results$performance == 1] <- 'poor'
-#' # results$performance[results$performance == 1.5] <- 'OK'
-#' # results$performance[results$performance == 2] <- 'good'
+#' results$performance[results$performance == 1] <- 'poor'
+#' results$performance[results$performance == 1.5] <- 'OK'
+#' results$performance[results$performance == 2] <- 'good'
 #'
-#' # results$category <- paste0(results$method, '\n', results$performance)
+#' results$category <- paste0(results$method, '\n', results$performance)
 #'
-#' # par(mfrow=c(1, 2))
-#' # boxplot(cbi ~ category,
-#' #	data=results,
-#' #	ylab='CBI',
-#' #	main='CBI of poor, OK, and good models',
-#' #	border=c(rep('darkred', 3),
-#' #	rep('darkblue', 3))
-#' #)
+#' boxplot(cbi ~ category,
+#'  data=results,
+#'  ylab='CBI',
+#'  main='CBI of poor, OK, and good models',
+#'  border=c(rep('darkred', 3),
+#'  rep('darkblue', 3))
+#' )
+#' legend('bottomright', fill=c('darkred', 'cornflowerblue'), legend=c('ecospat', 'enmSdmX'))
 #' 
-#' # plot(results$cbi,
-#' #	pch=rep(c(21, 22, 23, 24), each=2),
-#' #	contrast=ifelse(results$method == 'ecospat', 'darkred', 'cornflowerblue'),
-#' #	main='Pairs of CBIs',
-#' #	ylab='CBI'
-#' #)
-#' # legend('bottomright', fill=c('darkred', 'cornflowerblue'), legend=c('ecospat', 'enmSdmX'))
+#' plot(results$cbi,
+#'  pch=rep(c(21, 22, 23, 24), each=2),
+#'  contrast=ifelse(results$method == 'ecospat', 'darkred', 'cornflowerblue'),
+#'  main='Pairs of CBIs',
+#'  ylab='CBI'
+#' )
+#' legend('bottomright', fill=c('darkred', 'cornflowerblue'), legend=c('ecospat', 'enmSdmX'))
+#' }
 #'
 #' @export
 
@@ -182,6 +185,11 @@ evalContBoyce <- function(
 
 	# plot
 	if (graph) {
+	
+		# to revert to previous graphical settings
+		oldPar <- graphics::par(no.readonly = TRUE)
+		on.exit(graphics::par(oldPar))
+	
 		graphics::par(mfrow=c(1, 2))
 		lims <- c(0, max(P, E, na.rm=TRUE))
 		plot(E, P, col='white', xlab='Expected', ylab='Predicted', main='P/E\nNumbered from lowest to highest class', xlim=lims, ylim=lims)

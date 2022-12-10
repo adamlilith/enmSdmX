@@ -1,12 +1,12 @@
-#' Coordinate reference systems (CRSs)
+#' Coordinate reference systems (CRSs) and nicknames
 #'
-#' A table of commonly-used coordinate reference systems
+#' A table of commonly-used coordinate reference systems, their nicknames, and WKT2 (well-known text) strings
 #'
 #' @docType data
 #'
 #' @usage data(crss)
 #'
-#' @format An object of class \code{data.frame}. This is a table with "named" coordinate referenbce systems and their well-known-text (WKT2) representation. It can be used as-is, or with \code{\link{crsGet}}. The fields are as:
+#' @format An object of class \code{data.frame}. This is a table with "named" coordinate referenbce systems and their well-known-text (WKT2) representation. It can be used as-is, or with \code{\link{getCRS}} to quickly get a WKT for a particular CRS. The fields are as:
 #' \itemize{
 #'	\item \code{long}: "Long" name of the CRS
 #'	\item \code{short1} and \code{short2}: "Short" names of the CRS
@@ -24,5 +24,6 @@
 #' @examples
 #'
 #' data(crss)
+#' getCRS('North America Albers', nice = TRUE)
 #'
 'crss'

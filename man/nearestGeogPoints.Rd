@@ -58,8 +58,8 @@ library(terra)
 ###################################################
 
 # Tananarive (Paris) / Laborde Grid - EPSG:29701
-wgs84 <- crsGet('WGS84')
-madProj <- crsGet('Madagascar Albers')
+wgs84 <- getCRS('WGS84')
+madProj <- getCRS('Madagascar Albers')
 
 data(mad1)
 mad1 <- vect(mad1)
@@ -105,8 +105,8 @@ border=c(NA, 'black', 'black', 'black', 'black'))
 #########################################
 
 # Tananarive (Paris) / Laborde Grid - EPSG:29701
-madProj <- sf::st_crs(crsGet('Madagascar Albers'))
-wgs84 <- crsGet('WGS84')
+madProj <- sf::st_crs(getCRS('Madagascar Albers'))
+wgs84 <- getCRS('WGS84')
 
 data(mad1)
 mad1 <- sf::st_transform(mad1, madProj)

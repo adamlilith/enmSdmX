@@ -9,35 +9,25 @@
 Tools for implementing species distribution models and ecological niche models, including: bias correction, spatial cross-validation, model evaluation, raster interpolation, biotic "velocity" (speed and direction of movement of a "mass" represented by a raster), and tools for using spatially imprecise records. The heart of the package is a set of "training" functions which automatically optimize model complexity based number of available occurrences. These algorithms include MaxEnt, MaxNet, boosted regression trees/gradient boosting machines, generalized additive models, generalized linear models,	natural splines, and random forests. To enhance interoperability to and from other packages, the package does not create any new classes. The package works with PROJ6 geodetic objects and coordinate reference systems.\cr \cr
 }
 \details{
-Most functions are prefixed with the main data type they create or manipulate:
-\itemize{
-\item \code{crs*}: Create or lookup coordinate reference systems
-\item \code{eval*}: Evaluate a SDM/ENM, or compare niches or response functions
-\item \code{rast*}: Create or manipulate rasters
-\item \code{points*}: Create or manipulate spatial points
-\item \code{predict*}: Predict from a model object
-\item \code{train*}: Train a SDM/ENM
-}
-
 Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 }
-\section{Data preparation}{
-
-		\code{\link{pointGeoFold}}: Assign geographically-distinct k-folds \cr
-		\code{\link{pointElimCellDups}}: Eliminate duplicate points in each cell of a raster \cr
-}
-
 \section{Using imprecisely-georeferenced occurrences}{
 
+		\code{\link{coordImprecision}}: Coordinate imprecision \cr
 		\code{\link{nearestEnvPoints}}: Extract "most conservative" environments from points and/or polygons \cr
 		\code{\link{nearestGeogPoints}}: Create a minimum convex polygon from a set of spatial polygons and/or points \cr
-		\code{\link{pointImprecision}}: Coordinate imprecision \cr
+}
+
+\section{Data preparation}{
+
+		\code{\link{geoFold}}: Assign geographically-distinct k-folds \cr
+		\code{\link{elimCellDuplicates}}: Eliminate duplicate points in each cell of a raster \cr
 }
 
 \section{Bias correction}{
 
-	\code{\link{pointDistWeights}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
-	\code{\link{pointGeoThin}}: Thin geographic points deterministically or randomly \cr
+	\code{\link{geoThin}}: Thin geographic points deterministically or randomly \cr
+	\code{\link{weightByDist}}: Proximity-based weighting for occurrences (points) to correct for spatial bias \cr
 }
 
 \section{Model calibration}{
@@ -73,36 +63,37 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 
 \section{Functions for rasters}{
 
-	\code{\link{rastGetValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
-		\code{\link{rastInterpolate}}: Interpolate a stack of rasters \cr
-		\code{\link{rastLongLat}}: Generate rasters with values of longitude/latitude for cell values \cr
-		\code{\link{rastSquareCells}}: Create a raster with square cells \cr
-		\code{\link{rastVelocity}}: Velocity of movement across a series of rasters \cr
-		\code{\link{rastSample}}: Sample raster with/out replacement \cr
-	\code{\link{rastSetValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
+		\code{\link{bioticVelocity}}: Velocity of movement across a series of rasters \cr
+	\code{\link{getValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
+	\code{\link{globalx}}: "Friendly" wrapper for terra::global() for calculatig raster statistics \cr
+		\code{\link{interpolateRasts}}: Interpolate a stack of rasters \cr
+		\code{\link{longLatRasts}}: Generate rasters with values of longitude/latitude for cell values \cr
+		\code{\link{sampleRast}}: Sample raster with/out replacement \cr
+	\code{\link{setValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
+		\code{\link{squareCellRast}}: Create a raster with square cells \cr
 }
 
 \section{Niche overlap and similarity}{
 
-		\code{\link{evalNicheOverlapMetrics}}: Niche overlap metrics \cr
 		\code{\link{compareResponse}}: Compare niche model responses to a single variable \cr
+		\code{\link{nicheOverlapMetrics}}: Niche overlap metrics \cr
 }
 
 \section{Coordinate reference systems}{
 
-		\code{\link{crss}}: Table of coordinate reference systems \cr
-		\code{\link{crsGet}}: Return a WKT2 string (coordinate reference system string) using a nickname \cr
-		\code{\link{crsAlbers}}: Create a custom Albers conic equal-area projection \cr
-		\code{\link{crsLambert}}: Create a custom Lambert azimuthal equal-area projection \cr
-		\code{\link{crsVNS}}: Create a custom "vertical near-side" projection \cr
+		\code{\link{getCRS}}: Return a WKT2 string (coordinate reference system string) using a nickname \cr
+		\code{\link{crss}}: Table of coordinate reference systems and nicknames \cr
+		\code{\link{customAlbers}}: Create a custom Albers conic equal-area projection \cr
+		\code{\link{customLambert}}: Create a custom Lambert azimuthal equal-area projection \cr
+		\code{\link{customVNS}}: Create a custom "vertical near-side" projection \cr
 }
 
 \section{Geographic utility functions}{
 
+	\code{\link{countPoints}}: Number of points in a "spatial points" object \cr
 		\code{\link{decimalToDms}}: Convert decimal coordinate to degrees-minutes-seconds \cr
 		\code{\link{dmsToDecimal}}: Convert degrees-minutes-seconds coordinate to decimal \cr
 		\code{\link{extentToVect}}: Convert extent to polygon \cr
-	\code{\link{pointCount}}: Number of points in a "spatial points" object \cr
 	\code{\link{plotExtent}}: Create a `SpatialPolygon` the same size as a plot region \cr
 	\code{\link{spatVectorToSpatial}}: Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
 }
@@ -112,7 +103,11 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 		\code{\link{lemurs}}: Lemur occurrences \cr
 		\code{\link{mad0}}: Madagascar spatial object \cr
 		\code{\link{mad1}}: Madagascar spatial object \cr
-		\code{\link{madEnv}}: Madagascar climate rasters \cr
+		\code{\link{madClim}}: Madagascar climate rasters for the present \cr
+		\code{\link{madClim2030}}: Madagascar climate rasters for the 2030s \cr
+		\code{\link{madClim2050}}: Madagascar climate rasters for the 2050s \cr
+		\code{\link{madClim2070}}: Madagascar climate rasters for the 2070s \cr
+		\code{\link{madClim2090}}: Madagascar climate rasters for the 2090s \cr
 }
 
 \seealso{

@@ -65,6 +65,7 @@ predictEnmSdm <- function(
 		`%makeWork%` <- foreach::`%dopar%`
 		cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 		doParallel::registerDoParallel(cl)
+		# on.exit(parallel::stopCluster(cl))
 			
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = TRUE)
@@ -138,7 +139,7 @@ predictEnmSdm <- function(
 				nd <- nd[notNas, , drop=FALSE]
 				preds <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
 				out <- newdata[[1L]] * NA
-				out <- rastSetValueByCell(out, preds, cell=notNas, format='raster')
+				out <- setValueByCell(out, preds, cell=notNas, format='raster')
 			} else {
 				out <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
 			}
@@ -179,7 +180,7 @@ predictEnmSdm <- function(
 
 			if (inherits(newdata, 'SpatRaster')) {
 				out <- newdata[[1L]] * NA
-				out <- rastSetValueByCell(out, preds, cell=notNas, format='raster')
+				out <- setValueByCell(out, preds, cell=notNas, format='raster')
 			} else {
 				out <- rep(NA, nrow(newdata))
 				out[notNas] <- preds

@@ -1,6 +1,6 @@
 Package: enmSdmX
 Type: Package
-Title: Tools for Modeling Niches and Distributions of Species
+Title: Species Distributuion Modeling and Ecological Niche Modeling
 Version: 1.0.0
 Date: 2022-12-05
 Authors@R: 
@@ -14,18 +14,18 @@ Authors@R:
 		)
 	)
 Maintainer: Adam B. Smith <adam.smith@mobot.org>
-Description: Tools for implementing species distribution models and ecological
-	niche models, including: bias correction, spatial cross-validation, model
+Description: Implements species distribution modeling and ecological niche
+	modeling, including: bias correction, spatial cross-validation, model
 	evaluation, raster interpolation, biotic "velocity" (speed and
 	direction of movement of a "mass" represented by a raster), interpolating
-	across a time series of rasters, and tools for using spatially imprecise
-	records. The heart of the package is a set of "training" functions which
+	across a time series of rasters, and use of spatially imprecise records.
+	The heart of the package is a set of "training" functions which
 	automatically optimize model complexity	based number of available
 	occurrences. These algorithms include MaxEnt, MaxNet, boosted regression
 	trees/gradient boosting machines, generalized additive models,
 	generalized linear models, natural splines, and random forests. To enhance
 	interoperability with other modeling packages, no new classes are created.
-	The package works with PROJ6 geodetic objects and coordinate reference
+	The package works with 'PROJ6' geodetic objects and coordinate reference
 	systems.
 Depends:
 	R (>= 4.0.0),
@@ -50,6 +50,7 @@ Imports:
 	terra,
 	utils
 Suggests:
+	ecospat,
 	geodata
 LazyData: true
 LazyLoad: yes

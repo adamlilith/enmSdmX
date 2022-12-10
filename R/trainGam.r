@@ -89,6 +89,7 @@ trainGAM <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
+			# on.exit(parallel::stopCluster(cl))
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`

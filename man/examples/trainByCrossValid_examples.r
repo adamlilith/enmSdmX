@@ -4,8 +4,10 @@
 # against a withheld set of data. One can then use the series of models
 # of the top models to better select a "final" model.
 
-# Runing the entire set of commands can take quite a bit of time.
-
+# Runing the entire set of commands can take quite a bit of time. This can
+# be sped up by increasing the number of cores used. The examples below use
+# one core, but you can change that argument according to your machine's
+# capabilities.
 \dontrun{
 
 library(sf)
@@ -16,21 +18,23 @@ set.seed(123)
 ##############
 
 # environmental rasters
-rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
-madEnv <- rast(rastFile)
-madEnv <- madEnv
+rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
+madClim <- rast(rastFile)
 
-crs <- sf::st_crs(madEnv)
+crs <- sf::st_crs(madClim)
 
 # lemur occurrence data
 data(lemurs)
 occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
 occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-occEnv <- extract(madEnv, occs, ID=FALSE)
+
+occs <- elimCellDuplicates(occs, madClim)
+
+occEnv <- extract(madClim, occs, ID=FALSE)
 occEnv <- occEnv[complete.cases(occEnv), ]
 	
 # create background sites (using just 1000 to speed things up!)
-bgEnv <- terra::spatSample(madEnv, 3000)
+bgEnv <- terra::spatSample(madClim, 3000)
 bgEnv <- bgEnv[complete.cases(bgEnv), ]
 bgEnv <- bgEnv[sample(nrow(bgEnv), 1000), ]
 

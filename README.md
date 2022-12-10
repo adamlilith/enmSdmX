@@ -18,27 +18,18 @@ You may need to install the `remotes` package first.
 
 # Functions #
 
-Most functions are prefixed with the main data type they create or manipulate:
-* `crs*`: Create or lookup coordinate reference systems
-* `eval*`: Evaluate an SDM/ENM, calculate niche overlap, or compare response functions
-* `rast*`: Create or manipulate rasters
-* `points*`: Create or manipulate spatial points
-* `predict*`: Predict from a model object
-* `train*`: Train a SDM/ENM
-
-
-### Data preparation ###
-* `pointElimCellDups`: Eliminate duplicate points in each cell of a raster
-* `pointGeoFold`: Assign geographically-distinct k-folds
-
 ### Using spatially imprecise records
+* `coordImprecision`: Coordinate imprecision
 * `nearestGeogPoints`: Minimum convex polygon from a set of spatial polygons and/or points ("nearest geographic point" method)
 * `nearestEnvPoints`:  Extract "most conservative" environments from points and/or polygons ("nearest environmental point" method)
-* `pointImprecision`: Coordinate imprecision
+
+### Data preparation ###
+* `elimCellDuplicates`: Eliminate duplicate points in each cell of a raster
+* `geoFold`: Assign geographically-distinct k-folds
 
 ### Bias correction
-* `pointDistWeights`: Proximity-based weighting for occurrences for correcting spatial bias
-* `pointGeoThin`: Thin geographic points deterministically or randomly
+* `geoThin`: Thin geographic points deterministically or randomly
+* `weightByDist`: Proximity-based weighting for occurrences for correcting spatial bias
 
 ### Model training ###
 * `trainByCrossValid` and `summaryByCrossValid`: Calibrate a distribution/niche model using cross-validation
@@ -65,30 +56,31 @@ Most functions are prefixed with the main data type they create or manipulate:
 * `evalTSS`: True Skill Statistic (TSS) (with/out site weights)
 * `modelSize`: Number of response values in a model object
 
-### Niche overlap ###
-* `evalNicheOverlapMetrics`: Niche overlap metrics
+### Niche overlap and comparison ###
 * `compareResponse`: Compare different niche model responses along an environmental variable
+* `nicheOverlapMetrics`: Niche overlap metrics
 
 ### Functions for rasters ###
-* `rastGetValueByCell` and `rastSetValueByCell`: Retrieve or get raster values(s) by cell number
-* `rastInterpolate`: Interpolate a stack of rasters
-* `rastLongLat`: Generate rasters with values of longitude/latitude for cell values
-* `rastSquareCells`: Create a raster with square cells from an object with an extent
-* `rastVelocity`: Velocity of "movement" of mass across a series of rasters
-* `rastSample` : Sample raster with/out replacement
+* `bioticVelocity`: Velocity of a "mass" across a time series of rasters
+* `getValueByCell` and `setValueByCell`: Retrieve or get raster values(s) by cell number
+* `globalx`: "Friendly" wrapper for terra::global() for calculatig raster statistics
+* `interpolateRasts`: Interpolate a stack of rasters
+* `longLatRasts`: Generate rasters with values of longitude/latitude for cell values
+* `sampleRast` : Sample raster with/out replacement
+* `squareCellRast`: Create a raster with square cells from an object with an extent
 
 ### Coordinate reference systems ###
-* `crsGet`: Return a WKT2 (well-known text) string using a nickname
-* `crsAlbers`: Create a custom Albers conic equal-area projection
-* `crsLambert`: Create a custom Lambert azimuthal equal-area projection
-* `crsVNS`: Create a custom vertical near-side projection
 * `crss`: Coordinate reference systems and their nicknames
+* `customAlbers`: Create a custom Albers conic equal-area projection
+* `customLambert`: Create a custom Lambert azimuthal equal-area projection
+* `customVNS`: Create a custom vertical near-side projection
+* `getCRS`: Return a WKT2 (well-known text) string using a nickname
 
 ### Geographic utility functions ###
+* `countPoints`: Number of points in a "spatial points" object
 * `decimalToDms`: Convert decimal coordinate to degrees-minutes-seconds
 * `dmsToDecimal`: Convert degrees-minutes-seconds coordinate to decimal
 * `extentToVect`: Convert extent to a spatial polygon
-* `pointCount`: Number of points in a "spatial points" object
 * `plotExtent`: Create a spatial polygon the same size as a plot region
 * `spatVectorToSpatial`: Convert SpatVector object to a Spatial* object
 
@@ -96,7 +88,11 @@ Most functions are prefixed with the main data type they create or manipulate:
 * `lemurs`: Lemur occurrences
 * `mad0`: Madagascar spatial object
 * `mad1`: Madagascar spatial object
-* `madEnv`: Madagascar climate rasters
+* `madClim`: Madagascar climate rasters for the present
+* `madClim2030`: Madagascar climate rasters for the 2030s
+* `madClim2050`: Madagascar climate rasters for the 2050s
+* `madClim2070`: Madagascar climate rasters for the 2070s
+* `madClim2090`: Madagascar climate rasters for the 2090s
 
 # Citation #
 As of December 2022, there is no package-specific publication for `enmSdmX`, but the package was first used and cited in:

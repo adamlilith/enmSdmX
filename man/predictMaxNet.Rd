@@ -39,7 +39,7 @@ This function is the same as the \code{predict} function in the \pkg{maxnet} pac
 # The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models.
 
-\dontrun{
+\donttest{
 
 library(sf)
 library(terra)
@@ -49,21 +49,24 @@ set.seed(123)
 ##############
 
 # environmental rasters
-rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
-madEnv <- rast(rastFile)
-madEnv <- madEnv / 100 # values were rounded to nearest 100th then * by 100
+rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
+madClim <- rast(rastFile)
+madClim <- madClim / 100 # values were rounded to nearest 100th then * by 100
 
-crs <- sf::st_crs(madEnv)
+crs <- sf::st_crs(madClim)
 
 # lemur occurrence data
 data(lemurs)
 occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
 occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
-occEnv <- extract(madEnv, occs, ID=FALSE)
+
+occs <- elimCellDuplicates(occs, madClim)
+
+occEnv <- extract(madClim, occs, ID = FALSE)
 occEnv <- occEnv[complete.cases(occEnv), ]
 	
 # create 10000 background sites (or as many as raster can support)
-bgEnv <- terra::spatSample(madEnv, 20000)
+bgEnv <- terra::spatSample(madClim, 20000)
 bgEnv <- bgEnv[complete.cases(bgEnv), ]
 bgEnv <- bgEnv[1:min(10000, nrow(bgEnv)), ]
 
@@ -92,7 +95,8 @@ mx <- trainMaxEnt(
 	resp = 'presBg',
 	preds = predictors,
 	regMult = 1, # too few values for reliable model, but fast
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 # MaxNet
@@ -101,7 +105,8 @@ mn <- trainMaxNet(
 	resp = 'presBg',
 	preds = predictors,
 	regMult = 1, # too few values for reliable model, but fast
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 # generalized linear model (GLM)
@@ -110,7 +115,8 @@ gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 # generalized additive model (GAM)
@@ -118,7 +124,8 @@ ga <- trainGAM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 # natural splines
@@ -127,7 +134,8 @@ ns <- trainNS(
 	resp = 'presBg',
 	preds = predictors,
 	df = 1:2, # too few values for reliable model(?)
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 # boosted regression trees
@@ -142,7 +150,8 @@ brt <- trainBRT(
 	maxTrees = 1200, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',
 	anyway = TRUE, # return models that did not converge
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 # random forests
@@ -151,19 +160,20 @@ rf <- trainRF(
 	resp = 'presBg',
 	preds = predictors,
 	numTrees = c(100, 500), # using at least 500 recommended, but fast!
-	verbose = TRUE
+	verbose = TRUE,
+	cores = 1
 )
 
 ### make maps of models
 #######################
 
-mxMap <- predictEnmSdm(mx, madEnv)
-mnMap <- predictEnmSdm(mn, madEnv)
-glMap <- predictEnmSdm(gl, madEnv)
-gaMap <- predictEnmSdm(ga, madEnv)
-nsMap <- predictEnmSdm(ns, madEnv)
-brtMap <- predictEnmSdm(brt, madEnv)
-rfMap <- predictEnmSdm(rf, madEnv)
+mxMap <- predictEnmSdm(mx, madClim)
+mnMap <- predictEnmSdm(mn, madClim)
+glMap <- predictEnmSdm(gl, madClim)
+gaMap <- predictEnmSdm(ga, madClim)
+nsMap <- predictEnmSdm(ns, madClim)
+brtMap <- predictEnmSdm(brt, madClim)
+rfMap <- predictEnmSdm(rf, madClim)
 
 maps <- c(
 	mxMap,

@@ -10,7 +10,7 @@ library(terra)
 data(lemurs)
 precise <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
-wgs84 <- crsGet('WGS84')
+wgs84 <- getCRS('WGS84')
 precise <- sf::st_as_sf(precise[ , ll], coords=ll, crs=wgs84)
 
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
@@ -19,7 +19,7 @@ faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
 data(mad1)
 imprecise <- mad1[mad1$NAME_2 %in% faritras, ]
 
-rastFile <- system.file('extdata/madEnv.tif', package='enmSdmX')
+rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
 rasts <- rast(rastFile)
 
 ### Plot environment of points and environments of each polygon closest to

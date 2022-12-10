@@ -32,7 +32,7 @@
 #' @references Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Erratum.  Evolution 62:2868-2883.
 #' @references Godsoe, W.  2014.  Inferring the similarity of species distributions using Species Distribution Models.  Ecography 37:130-136.
 #'
-#' @seealso \code{\link[enmSdmX]{evalNicheOverlapMetrics}}
+#' @seealso \code{\link[enmSdmX]{nicheOverlapMetrics}}
 #'
 #' @examples
 #'
@@ -128,7 +128,7 @@ compareResponse <- function(
 		### calculate comparisons
 
 		# basic comparisons
-		sim <- evalNicheOverlapMetrics(x1=pred1, x2=pred2, logit=!adjust, na.rm=TRUE)
+		sim <- nicheOverlapMetrics(x1=pred1, x2=pred2, logit=!adjust, na.rm=TRUE)
 
 		## differences in area under each curve (curve1 - curve2)
 		gapRange <- gap * (max(x, na.rm=TRUE) - min(x, na.rm=TRUE))
@@ -187,6 +187,10 @@ compareResponse <- function(
 		### plot
 		if (graph) {
 
+			# to revert to previous graphical settings
+			oldPar <- graphics::par(no.readonly = TRUE)
+			on.exit(graphics::par(oldPar))
+			
 			graphics::par(mfrow=c(1, 2), ask=TRUE)
 
 			lims <- c(min(pred1, pred2, origPred1, origPred2, na.rm=TRUE), max(pred1, pred2, origPred1, origPred2, na.rm=TRUE))
