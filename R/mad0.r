@@ -15,7 +15,10 @@
 #' @source \href{https://gadm.org}{GADM}
 #' 
 #' @examples
+#'
+#' library(sf)
 #' data(mad0)
 #' mad0
-#' plot(mad0[1], main='Madagascar')
+#' plot(st_geometry(mad0), main='Madagascar')
+#'
 NULL

@@ -15,7 +15,10 @@
 #' @source \href{https://gadm.org}{GADM}
 #' 
 #' @examples
+#'
+#' library(sf)
 #' data(mad1)
 #' mad1
-#' plot(mad1['NAME_2'], main='Malagasy Faritra')
+#' plot(st_geometry(mad1), main='Madagascar')
+#'
 NULL
