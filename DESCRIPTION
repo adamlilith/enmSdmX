@@ -28,7 +28,7 @@ Description: Implements species distribution modeling and ecological niche
 	The package works with 'PROJ6' geodetic objects and coordinate reference
 	systems.
 Depends:
-	R (>= 4.0.0),
+	R (>= 4.0.0)
 Imports:
 	boot,
 	dismo,
