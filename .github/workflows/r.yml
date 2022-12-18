@@ -10,10 +10,10 @@ name: R
 
 on:
   push:
-    branches: [ master ]
+    branches: [main, master]
   pull_request:
-    branches: [ master ]
-
+    branches: [main, master]
+      
 permissions:
   contents: read
 
@@ -21,9 +21,15 @@ jobs:
   build:
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
+          - {os: macos-latest, r: 'release'}
+          - {os: windows-latest, r: 'release'}
+          - {os: ubuntu-latest, r: 'devel'}
+          - {os: ubuntu-latest, r: 'release'}
+          - {os: ubuntu-latest, r: 'oldrel-1'}
         # r-version: ['3.6.3', '4.1.1']
-        r-version: ['4.1.1']
+        # r-version: ['4.1.1']
 
     steps:
       - uses: actions/checkout@v3
