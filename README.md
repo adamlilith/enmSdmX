@@ -1,8 +1,4 @@
 # enmSdmX
-<!-- badges: start -->
-[![R build status](https://github.com/r-lib/rcmdcheck/workflows/R-CMD-check/badge.svg)](https://github.com/r-lib/rcmdcheck/actions)
-[![](https://www.r-pkg.org/badges/version/rcmdcheck)](https://www.r-pkg.org/pkg/rcmdcheck)
-<!-- badges: end -->
 
 Tools for modeling niches and distributions of species
 
