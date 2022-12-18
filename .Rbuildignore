@@ -6,3 +6,4 @@
 ^enmSdmX.png
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.github
