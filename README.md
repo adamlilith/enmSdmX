@@ -7,7 +7,7 @@
 
 <!-- badges: end -->
 
-Tools for modeling niches and distributions of species
+<strong>Tools for modeling niches and distributions of species  </strong>
 
 <img align="right" src="enmSdmX.png" height="223"/>
 
