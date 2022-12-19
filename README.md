@@ -1,7 +1,6 @@
 # enmSdmX
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/adamlilith/enmSdmX/workflows/R-CMD-check/badge.svg)](https://github.com/adamlilith/enmSdmX/actions)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![cran version](https://www.r-pkg.org/badges/version/enmSdmX)](https://cran.r-project.org/package=enmSdmX)
 
