@@ -9,8 +9,8 @@
 #'		\item An object of class \code{SpatVector}, \code{SpatRaster}, or \code{sf}. If this is a "\code{Spat}" object, then a character vector with the CRS in WKT form is returned. If a \code{sf} is supplied, then a \code{crs} object is returned in WKT format.
 #' }
 #'
+#' @param nice If \code{TRUE}, then print the CRS in a formatted manner and return it invisibly. Default is \code{FALSE}.
 #' @param warn If \code{TRUE} (default), then print a warning if the name of the CRS cannot be found.
-#' @param nice If \code{TRUE}, then print the CRS in a formatted manner and return it invisible. Default is \code{FALSE}.
 #'
 #' @return A string representing WKT2 (well-known text) object or a \code{data.frame}.
 #'
@@ -82,6 +82,7 @@ getCRS <- function(
 
 	if (nice & !is.null(x)) {
 		cat(out)
+		cat('\n')
 		utils::flush.console()
 		invisible(out)
 	} else {
