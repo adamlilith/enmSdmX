@@ -103,7 +103,7 @@ You may need to install the `remotes` package first.
 
 # Citation #
 
-<b>Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  <i>Global Ecology and Biogeography</i> In press. [<b><a href='http://dx.doi.org/10.1101/2021.06.10.447988'>Open access pre-print</a></b> | <a href='https://doi.org/10.1111/geb.13628'>published article</a></b>]
+Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  <i>Global Ecology and Biogeography</i> In press. [<b><a href='http://dx.doi.org/10.1101/2021.06.10.447988'>open access pre-print</a></b> | <a href='https://doi.org/10.1111/geb.13628'>published article</a></b>]
 
 <b>Abstract</b>
 
