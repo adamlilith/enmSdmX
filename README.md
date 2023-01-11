@@ -6,7 +6,7 @@
 
 <!-- badges: end -->
 
-<strong>Tools for modeling niches and distributions of species  </strong>
+<strong>Tools for modeling niches and distributions of species </strong>
 
 <img align="right" src="enmSdmX.png" height="223"/>
 
@@ -102,14 +102,13 @@ You may need to install the `remotes` package first.
 * `madClim2090`: Madagascar climate rasters for the 2090s
 
 # Citation #
-As of December 2022, there is no package-specific publication for `enmSdmX`, but the package was first used and cited in:
 
-<b>Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  <i>Global Ecology and Biogeography</i> In press. <a href='http://dx.doi.org/10.1101/2021.06.10.447988'>Open access pre-print</a></b>
+Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  <i>Global Ecology and Biogeography</i> In press. [<b><a href='http://dx.doi.org/10.1101/2021.06.10.447988'>open access pre-print</a></b> | <a href='https://doi.org/10.1111/geb.13628'>published article</a></b>]
 
 <b>Abstract</b>
 
-<b>Aim</b> Museum and herbarium specimen records are frequently used to assess species’ conservation status and responses to climate change. Typically, occurrences with imprecise geolocality information are discarded because they cannot be matched confidently to environmental conditions, and are thus expected to increase uncertainty in downstream analyses. However, using only precisely georeferenced records risks undersampling of species’ environmental and geographic distributions. We present two related methods to allow the use of imprecisely georeferenced occurrences in biogeographic analysis.
+<b>Aim</b> Museum and herbarium specimen records are frequently used to assess the conservation status of species and their responses to climate change. Typically, occurrences with imprecise geolocality information are discarded because they cannot be matched confidently to environmental conditions and are thus expected to increase uncertainty in downstream analyses. However, using only precisely georeferenced records risks undersampling of the environmental and geographical distributions of species. We present two related methods to allow the use of imprecisely georeferenced occurrences in biogeographical analysis.
 
-<b>Innovation</b> Our two procedures assign imprecise records to the 1) locations or 2) climates that are closest to the geographic or environmental centroid of the precise records of a species. For virtual species, including imprecise records alongside precise records improved the accuracy of ecological niche models projected to the present and the future, especially for species with ~20 or fewer precise occurrences. Using only precise records underestimates loss in suitable habitat and overestimates the amount of suitable habitat in both the present and future. Including imprecise records also improves estimates of niche breadth and extent of occurrence. An analysis of 44 species of North American <i>Asclepias</i> (Apocynaceae) yielded similar results.
+<b>Innovation</b> Our two procedures assign imprecise records to the (1) locations or (2) climates that are closest to the geographical or environmental centroid of the precise records of a species. For virtual species, including imprecise records alongside precise records improved the accuracy of ecological niche models projected to the present and the future, especially for species with c. 20 or fewer precise occurrences. Using only precise records underestimated loss of suitable habitat and overestimated the amount of suitable habitat in both the present and the future. Including imprecise records also improves estimates of niche breadth and extent of occurrence. An analysis of 44 species of North American <i>Asclepias</i> (Apocynaceae) yielded similar results.
 
-<b>Main conclusions</b> Existing studies examining the effects of spatial imprecision compare outcomes based on precise records to the same records with spatial error added to them. However, in real-world cases, analysts possess a mix of precise and imprecise records and must decide whether to retain or discard the latter. Discarding imprecise records can undersample species’ geographic and environmental distributions and lead to mis-estimation of responses to past and future climate change. Our method, for which we provide a software implementation in the enmSdmX package for R, is simple to employ and can help leverage the large number of specimen records that are typically deemed “unusable” because of spatial imprecision in their geolocation.
+<b>Main conclusions</b> Existing studies examining the effects of spatial imprecision typically compare outcomes based on precise records against the same records with spatial error added to them. However, in real-world cases, analysts possess a mix of precise and imprecise records and must decide whether to retain or discard the latter. Discarding imprecise records can undersample the geographical and environmental distributions of species and lead to mis-estimation of responses to past and future climate change. Our method, for which we provide a software implementation in the `enmSdmX` package for <b>R</b>, is simple to use and can help leverage the large number of specimen records that are typically deemed "unusable" because of spatial imprecision in their geolocation.
