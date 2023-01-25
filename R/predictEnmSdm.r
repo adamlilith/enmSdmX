@@ -138,7 +138,8 @@ predictEnmSdm <- function(
 				notNas <- which(stats::complete.cases(nd))
 				nd <- nd[notNas, , drop=FALSE]
 				preds <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
-				out <- newdata[[1L]] * NA
+				out <- newdata[[1L]]
+				out[] <- NA
 				out <- setValueByCell(out, preds, cell=notNas, format='raster')
 			} else {
 				out <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
@@ -179,7 +180,8 @@ predictEnmSdm <- function(
 			preds <- preds[ , '1']
 
 			if (inherits(newdata, 'SpatRaster')) {
-				out <- newdata[[1L]] * NA
+				out <- newdata[[1L]]
+				out[] <- NA
 				out <- setValueByCell(out, preds, cell=notNas, format='raster')
 			} else {
 				out <- rep(NA, nrow(newdata))
