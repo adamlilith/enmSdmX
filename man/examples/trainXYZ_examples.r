@@ -3,6 +3,7 @@
 
 \donttest{
 
+library(mgcv)
 library(sf)
 library(terra)
 set.seed(123)
@@ -13,7 +14,6 @@ set.seed(123)
 # environmental rasters
 rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
 madClim <- rast(rastFile)
-madClim <- madClim / 100 # values were rounded to nearest 100th then * by 100
 
 crs <- sf::st_crs(madClim)
 
