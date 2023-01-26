@@ -170,12 +170,24 @@ summaryByCrossValid <- function(
 
 			thisTuning <- tuning[[k]]
 
-			thisTerm <- thisTuning$model[1]
-			thisTerm <- strsplit(thisTerm, ' ')[[1]]
-			thisTerm <- thisTerm[3:length(thisTerm)]
-			if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
-			if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
-			if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+			thisTerm <- thisTuning$model[1L]
+			
+			# natural splines model
+			if (grepl(thisTerm, pattern='splines')) {
+			
+				thisTerm <- strsplit(thisTerm, ' \\+\\ ')[[1L]]
+				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+			
+			# "normal" GLM model
+			} else  {
+				
+				thisTerm <- strsplit(thisTerm, ' ')[[1]]
+				thisTerm <- thisTerm[3:length(thisTerm)]
+				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+				if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
+				if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+				
+			}
 
 			for (countTerm in seq_along(thisTerm)) {
 				whichTerm <- which(out$term == thisTerm[countTerm])

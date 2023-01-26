@@ -5,34 +5,41 @@ library(terra)
 ### example using SpatVector inputs (terra package)
 ###################################################
 
-# Tananarive (Paris) / Laborde Grid - EPSG:29701
+# Get coordinate reference systems:
+# * WGS84
+# * Tananarive (Paris) / Laborde Grid - EPSG:29701
 wgs84 <- getCRS('WGS84')
 madProj <- getCRS('Madagascar Albers')
 
+# outline of Madagascar faritras
 data(mad1)
 mad1 <- vect(mad1)
 mad1 <- project(mad1, madProj)
 
+# lemur point data
 data(lemurs)
 redBelly <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
-redBelly <- vect(redBelly[ , ll], geom=ll, crs=wgs84)
+redBelly <- vect(redBelly, geom=ll, crs=wgs84)
 redBelly <- project(redBelly, madProj)
 
+# *fake* lemur farita-level data
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
 'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
 'Analamanga', 'Itasy')
 polys <- mad1[mad1$NAME_2 %in% faritras, ]
 
+# apply Nearest Geographic Point method
 mcpPolys <- nearestGeogPoints(polys = polys)
 mcpPts <- nearestGeogPoints(pts = redBelly, polys = NULL)
 mcpPolysPoints <- nearestGeogPoints(pts = redBelly, polys = polys)
 
-# extent of occurrence in m2
+# compare extent of occurrence (EOO) in m2
 expanse(mcpPolys)
 expanse(mcpPts)
 expanse(mcpPolysPoints)
 
+# plot minimum convex polygons
 plot(mad1, border='gray')
 plot(polys, col='gray80', add=TRUE)
 plot(mcpPolysPoints, col=scales::alpha('green', 0.4), add=TRUE)
@@ -52,34 +59,42 @@ border=c(NA, 'black', 'black', 'black', 'black'))
 ### example using sf* inputs (sf package)
 #########################################
 
-# Tananarive (Paris) / Laborde Grid - EPSG:29701
+# Get coordinate reference systems:
+# * WGS84
+# * Tananarive (Paris) / Laborde Grid - EPSG:29701
 madProj <- sf::st_crs(getCRS('Madagascar Albers'))
 wgs84 <- getCRS('WGS84')
 
+# outline of Madagascar faritras
 data(mad1)
 mad1 <- sf::st_transform(mad1, madProj)
 
+# lemur point occurrence data
 data(lemurs)
 redBelly <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
 redBelly <- sf::st_as_sf(redBelly[ , ll], crs=wgs84, coords=ll)
 redBelly <- sf::st_transform(redBelly, madProj)
 
+# *fake* farita-level occurrences
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
 'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
 'Analamanga', 'Itasy')
 polys <- mad1[mad1$NAME_2 %in% faritras, ]
 
+
+# apply Nearest Geographic Point method
 mcpPolys <- nearestGeogPoints(polys = polys, terra = FALSE)
 mcpPts <- nearestGeogPoints(pts = redBelly, polys = NULL, terra = FALSE)
 mcpPolysPoints <- nearestGeogPoints(pts = redBelly, polys = polys,
 terra = FALSE)
 
-# extent of occurrence in m2
+# extent of occurrence (EOO) in m2
 sf::st_area(mcpPolys)
 sf::st_area(mcpPts)
 sf::st_area(mcpPolysPoints)
 
+# plot minimum convex polygons
 plot(sf::st_geometry(mad1))
 plot(sf::st_geometry(polys), col='gray80', add=TRUE)
 plot(sf::st_geometry(mcpPolysPoints), col=scales::alpha('green', 0.4),

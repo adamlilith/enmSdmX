@@ -21,16 +21,17 @@ set.seed(123)
 rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
 madClim <- rast(rastFile)
 
-crs <- sf::st_crs(madClim)
+# coordinate reference system
+wgs84 <- getCRS('WGS84')
 
 # lemur occurrence data
 data(lemurs)
 occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+occs <- vect(occs, geom=c('longitude', 'latitude'), crs=wgs84)
 
 occs <- elimCellDuplicates(occs, madClim)
 
-occEnv <- extract(madClim, occs, ID=FALSE)
+occEnv <- extract(madClim, occs, ID = FALSE)
 occEnv <- occEnv[complete.cases(occEnv), ]
 	
 # create background sites (using just 1000 to speed things up!)
@@ -57,7 +58,7 @@ folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
 ### calibrate models
 ####################
 
-cores <- 1 # increase this to go faster, if your computer can handle it
+cores <- 1 # increase this to go faster, if your computer handles it
 
 ## MaxEnt
 mxx <- trainByCrossValid(
@@ -149,7 +150,7 @@ brtx <- trainByCrossValid(
 	cores = cores
 )
 
-# summarize BRT parameters in best models
+# summarize BRT parameters across best models
 summaryByCrossValid(brtx)
 
 ## random forests

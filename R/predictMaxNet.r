@@ -42,7 +42,8 @@ predictMaxNet <- function(
 		preds <- do.call(predictMaxNet, args = list(model = model, newdata = nd, clamp = clamp, type = type, ...))
 
 		if (inherits(newdata, 'SpatRaster')) {
-			out <- newdata[[1L]] * NA
+			out <- newdata[[1L]]
+			out[] <- NA
 			out <- setValueByCell(out, preds, cell=notNas, format='raster')
 		} else {
 			out <- rep(NA, nrow(newdata))

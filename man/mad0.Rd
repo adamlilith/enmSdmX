@@ -17,8 +17,11 @@ data(mad0, package='enmSdmX')
 Outline of Madagascar from GADM.  The geometry has been simplified from the version available in GADM, so pleased do not use this for "official" analyses.
 }
 \examples{
+
+library(sf)
 data(mad0)
 mad0
-plot(mad0[1], main='Madagascar')
+plot(st_geometry(mad0), main='Madagascar')
+
 }
 \keyword{Madagascar}

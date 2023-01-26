@@ -17,8 +17,11 @@ data(mad1, package='enmSdmX')
 Outlines of regions ("Faritra") of Madagascar from GADM. The geometry has been simplified from the version available in GADM, so pleased do not use this for "official" analyses.
 }
 \examples{
+
+library(sf)
 data(mad1)
 mad1
-plot(mad1['NAME_2'], main='Malagasy Faritra')
+plot(st_geometry(mad1), main='Madagascar')
+
 }
 \keyword{Madagascar}
