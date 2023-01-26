@@ -22,7 +22,7 @@
 #'
 #' @return A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
 #'
-#' @example man/examples/pointGeoFold_examples.r
+#' @example man/examples/geoFold_examples.r
 #' 
 #' @export
 geoFold <- function(
