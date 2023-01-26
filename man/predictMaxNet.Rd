@@ -41,6 +41,7 @@ This function is the same as the \code{predict} function in the \pkg{maxnet} pac
 
 \donttest{
 
+library(mgcv)
 library(sf)
 library(terra)
 set.seed(123)
@@ -51,14 +52,14 @@ set.seed(123)
 # environmental rasters
 rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
 madClim <- rast(rastFile)
-madClim <- madClim / 100 # values were rounded to nearest 100th then * by 100
 
-crs <- sf::st_crs(madClim)
+# coordinate reference system
+wgs84 <- getCRS('WGS84')
 
 # lemur occurrence data
 data(lemurs)
 occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=crs)
+occs <- vect(occs, geom=c('longitude', 'latitude'), crs=wgs84)
 
 occs <- elimCellDuplicates(occs, madClim)
 
@@ -87,7 +88,10 @@ predictors <- c('bio1', 'bio12')
 ####################
 
 # Note that all of the trainXYZ functions can made to go faster using the
-# "cores" argument (set to just 1, by default).
+# "cores" argument (set to just 1, by default). The examples below will not
+# go too much faster using more cores because they are simplified, but
+# you can try!
+cores <- 1
 
 # MaxEnt
 mx <- trainMaxEnt(
@@ -96,7 +100,7 @@ mx <- trainMaxEnt(
 	preds = predictors,
 	regMult = 1, # too few values for reliable model, but fast
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 # MaxNet
@@ -106,7 +110,7 @@ mn <- trainMaxNet(
 	preds = predictors,
 	regMult = 1, # too few values for reliable model, but fast
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 # generalized linear model (GLM)
@@ -116,7 +120,7 @@ gl <- trainGLM(
 	resp = 'presBg',
 	preds = predictors,
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 # generalized additive model (GAM)
@@ -125,7 +129,7 @@ ga <- trainGAM(
 	resp = 'presBg',
 	preds = predictors,
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 # natural splines
@@ -135,7 +139,7 @@ ns <- trainNS(
 	preds = predictors,
 	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 # boosted regression trees
@@ -151,7 +155,7 @@ brt <- trainBRT(
 	tryBy = 'treeComplexity',
 	anyway = TRUE, # return models that did not converge
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 # random forests
@@ -161,14 +165,17 @@ rf <- trainRF(
 	preds = predictors,
 	numTrees = c(100, 500), # using at least 500 recommended, but fast!
 	verbose = TRUE,
-	cores = 1
+	cores = cores
 )
 
 ### make maps of models
 #######################
 
+# NB As of January 2023, the terra package sometimes shows apparant errors.
+# This is a known issue with terra, but the functions still work!
+
 mxMap <- predictEnmSdm(mx, madClim)
-mnMap <- predictEnmSdm(mn, madClim)
+mnMap <- predictEnmSdm(mn, madClim) 
 glMap <- predictEnmSdm(gl, madClim)
 gaMap <- predictEnmSdm(ga, madClim)
 nsMap <- predictEnmSdm(ns, madClim)

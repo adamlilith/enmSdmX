@@ -79,18 +79,24 @@ The function can alternatively return the points on the vertices of the MCP, or 
 library(sf)
 library(terra)
 
+# coordinate reference system
+wgs84 <- getCRS('WGS84')
+
+# lemur point data
 data(lemurs)
 precise <- lemurs[lemurs$species == 'Eulemur rubriventer', ]
 ll <- c('longitude', 'latitude')
-wgs84 <- getCRS('WGS84')
 precise <- sf::st_as_sf(precise[ , ll], coords=ll, crs=wgs84)
 
+# *fake* lemur administrative unit-level data
 faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
 'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
 'Analamanga', 'Itasy')
+
 data(mad1)
 imprecise <- mad1[mad1$NAME_2 \%in\% faritras, ]
 
+# climate predictors
 rastFile <- system.file('extdata/madClim.tif', package='enmSdmX')
 rasts <- rast(rastFile)
 
@@ -98,16 +104,22 @@ rasts <- rast(rastFile)
 ### centroid of environments of points. In this example, we use the first two
 ### principal component axes to characterize the niche.
 
+# apply Nearest Environmental Point method
 envPtsPolys <- nearestEnvPoints(rasts, pts = precise, polys = imprecise,
 	pca = TRUE,	numPcs = 2)
 envPolys <- nearestEnvPoints(rasts, pts = precise, polys = imprecise, numPcs = 2,
 	out = 'polys')
 envPts <- nearestEnvPoints(rasts, pts = precise, polys = imprecise, numPcs = 2,
 	out = 'pts')
+	
 allPolyEnvs <- extract(rasts, imprecise)
+
+# plot occurrences in environmental space
 plot(envPtsPolys$PC1, envPtsPolys$PC2, pch=16, col='black',
 	xlab='PC1', ylab='PC2')
+
 points(envPolys$PC1, envPolys$PC2, pch=21, bg='orange')
+
 legend(
 	'bottomleft',
 	inset = 0.01,
@@ -119,6 +131,7 @@ legend(
 
 ### compare identified environments to all environments across all polygons
 ###########################################################################
+
 env <- as.data.frame(rasts)
 pca <- stats::prcomp(env, center=TRUE, scale.=TRUE)
 
@@ -126,6 +139,7 @@ allPolyEnvs <- extract(rasts, imprecise, ID = FALSE)
 allPolyEnvsPcs <- predict(pca, allPolyEnvs)
 allPolyEnvs <- cbind(allPolyEnvs, allPolyEnvsPcs)
 
+# plot in environmental space
 plot(allPolyEnvs$PC1, allPolyEnvs$PC2, pch=16, col='orange',
 	xlab='PC1', ylab='PC2')
 points(envPts$PC1, envPts$PC2, pch=16)
@@ -142,6 +156,7 @@ legend(
 ### display niches (minimum convex hulls) estimated
 ### using just precise or precise + imprecise records
 #####################################################
+
 pcs <- c('PC1', 'PC2')
 preciseIndices <- chull(envPts[ , pcs])
 preciseImpreciseIndices <- chull(envPtsPolys[ , pcs])
@@ -153,7 +168,7 @@ preciseImpreciseIndices <- c(preciseImpreciseIndices,
 preciseOnlyNiche <- envPts[preciseIndices, pcs]
 preciseImpreciseNiche <- envPtsPolys[preciseImpreciseIndices, pcs]
 
-# plot
+# plot in environmental space
 plot(allPolyEnvs$PC1, allPolyEnvs$PC2, pch=16, col='orange',
 	xlab='PC1', ylab='PC2')
 points(envPts$PC1, envPts$PC2, pch=16)

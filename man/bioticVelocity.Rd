@@ -175,15 +175,20 @@ madClim2050 <- project(madClim2050, madAlbers)
 madClim2070 <- project(madClim2070, madAlbers)
 madClim2090 <- project(madClim2090, madAlbers)
 
+# Coordinate reference systems:
+wgs84 <- getCRS('WGS84') # WGS84
+madAlbers <- getCRS('madAlbers') # Madagascar Albers
+
 # lemur occurrence data
 data(lemurs)
-wgs84 <- getCRS('WGS84')
 occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
-occs <- st_as_sf(occs, coords = c('longitude', 'latitude'), crs = wgs84)
-occs <- st_transform(occs, getCRS('madAlbers'))
+occs <- vect(occs, geom=c('longitude', 'latitude'), crs=wgs84)
+occs <- project(occs, madAlbers)
 
+# eliminate cell duplicates
 occs <- elimCellDuplicates(occs, madClim)
 
+# extract environment at occurrences
 occEnv <- extract(madClim, occs, ID = FALSE)
 occEnv <- occEnv[complete.cases(occEnv), ]
 	
