@@ -1,3 +1,7 @@
+enmSdmX 1.0.2
+===========
+o Fixed issue in nearestGeogPoints() when polygon lay under centroid
+
 enmSdmX 1.0.1
 ===========
 o Fixed bug experienced by some users using predictEnmSdm() and predictMaxNet() (Thank you, Nikki!)

@@ -75,7 +75,6 @@ nearestGeogPoints <- function(
 		center <- sf::st_centroid(polyCents)
 
 		### find closest points to center
-
 		vectors <- sf::st_nearest_points(polys, center)
 		nearestPolyPoints <- sf::st_cast(vectors, 'POINT')
 
@@ -86,10 +85,9 @@ nearestGeogPoints <- function(
 
 		# add centroid back in (once) if it lands in a poly
 		intersect <- sf::st_intersects(center, polys)
-		intersect <- length(intersect) > 0
-		if (intersect) nearestPolyPoints <- c(nearestPolyPoints, center)
-
-		nearestPolyPoints <- allPoints <- sf::st_union(nearestPolyPoints)
+		if (length(intersect[[1L]]) > 0L) nearestPolyPoints <- c(nearestPolyPoints, center)
+		allPoints <- nearestPolyPoints
+		# nearestPolyPoints <- allPoints <- sf::st_union(nearestPolyPoints)
 
 	} else {
 
@@ -110,7 +108,6 @@ nearestGeogPoints <- function(
 		}
 
 		### find closest points to center
-
 		vectors <- sf::st_nearest_points(polys, center)
 		nearestPolyPoints <- sf::st_cast(vectors, 'POINT')
 
@@ -121,15 +118,13 @@ nearestGeogPoints <- function(
 
 		# add centroid back in (once) if it lands in a poly
 		intersect <- sf::st_intersects(center, polys)
-		intersect <- length(intersect) > 0
-		if (intersect) nearestPolyPoints <- c(nearestPolyPoints, center)
+		if (length(intersect[[1L]]) > 0L) nearestPolyPoints <- c(nearestPolyPoints, center)
 
-		nearestPolyPoints <- sf::st_union(nearestPolyPoints)
-		allPoints <- sf::st_union(nearestPolyPoints, pts)
+		# nearestPolyPoints <- sf::st_union(nearestPolyPoints)
+		#allPoints <- sf::st_union(nearestPolyPoints, pts)
+		allPoints <- c(nearestPolyPoints, pts)
 
 	}
-
-
 
 	if (return %in% c('mcp', 'mcpPoints')) {
 		out <- sf::st_union(allPoints)
