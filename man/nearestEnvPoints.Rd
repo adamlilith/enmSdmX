@@ -10,7 +10,7 @@ nearestEnvPoints(
   polys = NULL,
   centerFrom = "pts",
   pca = TRUE,
-  numPcs = terra::nlyr(rasts),
+  numPcs = 3,
   center = TRUE,
   scale = TRUE,
   rule = "nearest",
