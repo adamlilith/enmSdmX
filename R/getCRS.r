@@ -1,6 +1,6 @@
 #' WKT string for a named coordinate reference system or a spatial object
 #'
-#' Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getsCRS()}.
+#' Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getCRS()}.
 #'
 #' @param x This can be any of:
 #' \itemize{
@@ -40,7 +40,7 @@ getCRS <- function(
 	
 	# return table
 	if (is.null(x)) {
-		out <- crss[ , c('alias1', 'alias2', 'alias3', 'region', 'projected', 'peojGeometry', 'datum', 'type', 'notes')]
+		out <- crss[ , c('alias1', 'alias2', 'alias3', 'region', 'projected', 'projGeometry', 'datum', 'type', 'notes')]
 	} else if (inherits(x, c('SpatVector', 'SpatRaster'))) {
 		out <- terra::crs(x)
 	} else if (inherits(x, 'sf')) {
