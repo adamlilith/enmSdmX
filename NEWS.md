@@ -1,6 +1,7 @@
 enmSdmX 1.0.2
 ===========
 o Fixed issue in nearestGeogPoints() when polygon lay under centroid
+o Fixed bug with "table" call of getCRS()
 
 enmSdmX 1.0.1
 ===========
