@@ -1,6 +1,6 @@
 #' WKT string for a named coordinate reference system or a spatial object
 #'
-#' Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getsCRS()}.
+#' Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getCRS()}.
 #'
 #' @param x This can be any of:
 #' \itemize{
@@ -16,7 +16,10 @@
 #'
 #' @examples
 #'
-#' # just WKT2 strings
+#' # view table of available CRSs
+#' getCRS()
+#'
+#' # get specific WKT2 strings
 #' getCRS('WGS84')
 #' getCRS('Mollweide')
 #' getCRS('WorldClim')
@@ -40,53 +43,81 @@ getCRS <- function(
 	
 	# return table
 	if (is.null(x)) {
-		out <- crss[ , c('alias1', 'alias2', 'alias3', 'region', 'projected', 'peojGeometry', 'datum', 'type', 'notes')]
-	} else if (inherits(x, c('SpatVector', 'SpatRaster'))) {
-		out <- terra::crs(x)
-	} else if (inherits(x, 'sf')) {
-		out <- sf::st_crs(x)
-	} else {
-	# return WKT2
 
-		x <- tolower(x)
-		x <- gsub(x, pattern=' ', replacement='')
-		x <- gsub(x, pattern='-', replacement='')
-		
-		alias1 <- crss$alias1
-		alias2 <- crss$alias2
-		alias3 <- crss$alias3
-		
-		alias1 <- tolower(alias1)
-		alias2 <- tolower(alias2)
-		alias3 <- tolower(alias3)
-		
-		alias1 <- gsub(alias1, pattern=' ', replacement='')
-		alias2 <- gsub(alias2, pattern=' ', replacement='')
-		alias3 <- gsub(alias3, pattern=' ', replacement='')
-		
-		alias1 <- gsub(alias1, pattern='-', replacement='')
-		alias2 <- gsub(alias2, pattern='-', replacement='')
-		alias3 <- gsub(alias3, pattern='-', replacement='')
-		
-		this <- which(x == alias1)
-		if (length(this) == 0L) this <- which(x == alias2)
-		if (length(this) == 0L) this <- which(x == alias3)
-		if (length(this) != 0L) {
-			out <- crss$wkt2[this]
+		if (interactive()) {
+
+			showableCols <- c('region', 'alias1', 'alias2', 'alias3', 'projected', 'projGeometry', 'datum', 'notes')
+
+			shiny::shinyApp(
+				ui = shiny::fluidPage(DT::DTOutput('tbl')),
+				server = function(input, output) {
+					output$tbl = DT::renderDT(
+						crss[ , showableCols],
+						caption = shiny::HTML('Coordinate reference system strings available with getCRS().<br/>For example, getCRS("Africa Albers") or getCRS("Af Albers") returns the CRS string for the Albers Africa projection.'),
+						options = list(
+							pageLength = nrow(crss),
+							width='100%',
+							scrollX = TRUE
+							
+						)
+						# options = list(lengthChange = FALSE)
+					)
+				}
+			)
+			
 		} else {
-			out <- NA
-			if (warn) warning('CRS name cannot be found. It must match one of "long", "short1", or "short2" in the table retuned by data(crss).')
-		}
-		
-	}
-
-	if (nice & !is.null(x)) {
-		cat(out)
-		cat('\n')
-		utils::flush.console()
-		invisible(out)
+			warning('You must be running R interactively to view the table using getCRS() (no arguments).')
+		}	
+			
+	# if wanting a CRS
 	} else {
-		out
-	}
+		if (inherits(x, c('SpatVector', 'SpatRaster'))) {
+			out <- terra::crs(x)
+		} else if (inherits(x, 'sf')) {
+			out <- sf::st_crs(x)
+		} else {
+			# return WKT2
+			x <- tolower(x)
+			x <- gsub(x, pattern=' ', replacement='')
+			x <- gsub(x, pattern='-', replacement='')
+			
+			alias1 <- crss$alias1
+			alias2 <- crss$alias2
+			alias3 <- crss$alias3
+			
+			alias1 <- tolower(alias1)
+			alias2 <- tolower(alias2)
+			alias3 <- tolower(alias3)
+			
+			alias1 <- gsub(alias1, pattern=' ', replacement='')
+			alias2 <- gsub(alias2, pattern=' ', replacement='')
+			alias3 <- gsub(alias3, pattern=' ', replacement='')
+			
+			alias1 <- gsub(alias1, pattern='-', replacement='')
+			alias2 <- gsub(alias2, pattern='-', replacement='')
+			alias3 <- gsub(alias3, pattern='-', replacement='')
+			
+			this <- which(x == alias1)
+			if (length(this) == 0L) this <- which(x == alias2)
+			if (length(this) == 0L) this <- which(x == alias3)
+			if (length(this) != 0L) {
+				out <- crss$wkt2[this]
+			} else {
+				out <- NA
+				if (warn) warning('CRS name cannot be found. It must match one of "alias1", "alias2", or "alias3" in the table retuned by data(crss).')
+			}
+	
+		}
+	
+		if (nice & !is.null(x)) {
+			cat(out)
+			cat('\n')
+			utils::flush.console()
+			invisible(out)
+		} else {
+			out
+		}
+
+	} # if wanting CRS
 
 }

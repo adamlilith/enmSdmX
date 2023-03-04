@@ -22,11 +22,14 @@ getCRS(x = NULL, nice = FALSE, warn = TRUE)
 A string representing WKT2 (well-known text) object or a \code{data.frame}.
 }
 \description{
-Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getsCRS()}.
+Retrieve the Well-Known text string (WKT2) for a coordinate reference system (CRS) by name or from a spatial object. The most common usage of the function is to return the WKT2 string using an easy-to-remember name. For example, \code{getCRS('wgs84')} returns the WKT2 string for the WGS84 datum. To get a table of strings, just use \code{getCRS()}.
 }
 \examples{
 
-# just WKT2 strings
+# view table of available CRSs
+getCRS()
+
+# get specific WKT2 strings
 getCRS('WGS84')
 getCRS('Mollweide')
 getCRS('WorldClim')

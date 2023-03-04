@@ -2,8 +2,12 @@
 library(sf)
 library(terra)
 
-### example using SpatVector inputs (terra package)
-###################################################
+#######################################################
+### example using SpatVector inputs (terra package) ###
+#######################################################
+
+### prepare data
+################
 
 # Get coordinate reference systems:
 # * WGS84
@@ -24,14 +28,22 @@ redBelly <- vect(redBelly, geom=ll, crs=wgs84)
 redBelly <- project(redBelly, madProj)
 
 # *fake* lemur farita-level data
-faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
-'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
-'Analamanga', 'Itasy')
+faritras <- c('Toamasina', 'Atsimo-Atsinana',
+'Amoron\'i mania', 'Sava', 'Itasy')
 polys <- mad1[mad1$NAME_2 %in% faritras, ]
 
-# apply Nearest Geographic Point method
+### apply Nearest Geographic Point method
+#########################################
+
+# get three kinds of minimum convex polygons (MCPs):
+
+# MCP using just polygons
 mcpPolys <- nearestGeogPoints(polys = polys)
-mcpPts <- nearestGeogPoints(pts = redBelly, polys = NULL)
+
+# MCP using just points
+mcpPts <- nearestGeogPoints(pts = redBelly)
+
+# MCP using points & polys
 mcpPolysPoints <- nearestGeogPoints(pts = redBelly, polys = polys)
 
 # compare extent of occurrence (EOO) in m2
@@ -39,25 +51,54 @@ expanse(mcpPolys)
 expanse(mcpPts)
 expanse(mcpPolysPoints)
 
-# plot minimum convex polygons
-plot(mad1, border='gray')
+### plot minimum convex polygons
+################################
+
+# MCP from precise occurrences only
+plot(mad1, border='gray', main='MCP points only')
 plot(polys, col='gray80', add=TRUE)
-plot(mcpPolysPoints, col=scales::alpha('green', 0.4), add=TRUE)
-plot(mcpPolys, col=scales::alpha('purple', 0.4), add=TRUE)
 plot(mcpPts, col=scales::alpha('red', 0.4), add=TRUE)
-plot(redBelly, pch=16, add=TRUE)
+plot(redBelly, pch=21, bg='red', add=TRUE)
 
 legend('topleft', 
-legend=c('Presences', '"Occupied" Faritras',
-'MCP w/ polygons', 'MCP w/ points', 'MCP w/ polygons & points'),
-fill=c(NA, 'gray', scales::alpha('purple', 0.4),
-scales::alpha('red', 0.4),
-scales::alpha('green', 0.4)),
-pch=c(16, NA, NA, NA, NA),
-border=c(NA, 'black', 'black', 'black', 'black'))
+legend=c('Precise occurrence', 'Imprecise occurrence', 'MCP'),
+fill=c(NA, 'gray', scales::alpha('red', 0.4)),
+pch=c(21, NA, NA),
+pt.bg=c('red', NA, NA),
+border=c(NA, 'black', 'black'))
 
-### example using sf* inputs (sf package)
-#########################################
+# MCP from imprecise occurrences only
+plot(mad1, border='gray', main='MCP polys only')
+plot(polys, col='gray80', add=TRUE)
+plot(mcpPolys, col=scales::alpha('orange', 0.4), add=TRUE)
+plot(redBelly, pch=21, bg='red', add=TRUE)
+
+legend('topleft', 
+legend=c('Precise occurrence', 'Imprecise occurrence', 'MCP'),
+fill=c(NA, 'gray', scales::alpha('orange', 0.4)),
+pch=c(21, NA, NA),
+pt.bg=c('red', NA, NA),
+border=c(NA, 'black', 'black'))
+
+# MCP from precise and imprecise occurrences
+plot(mad1, border='gray', main='MCP polys + points')
+plot(polys, col='gray80', add=TRUE)
+plot(mcpPolysPoints, col=scales::alpha('green', 0.4), add=TRUE)
+plot(redBelly, pch=21, bg='red', add=TRUE)
+
+legend('topleft', 
+legend=c('Precise occurrence', 'Imprecise occurrence', 'MCP'),
+fill=c(NA, 'gray', scales::alpha('green', 0.4)),
+pch=c(21, NA, NA),
+pt.bg=c('red', NA, NA),
+border=c(NA, 'black', 'black'))
+
+############################################
+### example using sf inputs (sf package) ###
+############################################
+
+### prepare data
+################
 
 # Get coordinate reference systems:
 # * WGS84
@@ -77,15 +118,22 @@ redBelly <- sf::st_as_sf(redBelly[ , ll], crs=wgs84, coords=ll)
 redBelly <- sf::st_transform(redBelly, madProj)
 
 # *fake* farita-level occurrences
-faritras <- c('Vakinankaratra', 'Haute matsiatra', 'Ihorombe',
-'Vatovavy Fitovinany', 'Alaotra-Mangoro', 'Analanjirofo', 'Atsinanana',
-'Analamanga', 'Itasy')
+faritras <- c('Toamasina', 'Atsimo-Atsinana',
+'Amoron\'i mania', 'Sava', 'Itasy')
 polys <- mad1[mad1$NAME_2 %in% faritras, ]
 
+### apply Nearest Geographic Point method
+#########################################
 
-# apply Nearest Geographic Point method
+# get three kinds of minimum convex polygons (MCPs):
+
+# MCP using just polygons
 mcpPolys <- nearestGeogPoints(polys = polys, terra = FALSE)
-mcpPts <- nearestGeogPoints(pts = redBelly, polys = NULL, terra = FALSE)
+
+# MCP using just points
+mcpPts <- nearestGeogPoints(pts = redBelly, terra = FALSE)
+
+# MCP using points & polys
 mcpPolysPoints <- nearestGeogPoints(pts = redBelly, polys = polys,
 terra = FALSE)
 
@@ -94,23 +142,47 @@ sf::st_area(mcpPolys)
 sf::st_area(mcpPts)
 sf::st_area(mcpPolysPoints)
 
-# plot minimum convex polygons
-plot(sf::st_geometry(mad1))
-plot(sf::st_geometry(polys), col='gray80', add=TRUE)
-plot(sf::st_geometry(mcpPolysPoints), col=scales::alpha('green', 0.4),
-add=TRUE)
-plot(mcpPts, col=scales::alpha('red', 0.4), add=TRUE)
-plot(mcpPolys, col=scales::alpha('purple', 0.4), add=TRUE)
-plot(redBelly, pch=16, add=TRUE)
+### plot minimum convex polygons
+################################
+
+# MCP from precise occurrences only
+plot(st_geometry(mad1), border='gray', main='MCP points only')
+plot(st_geometry(polys), col='gray80', add=TRUE)
+plot(st_geometry(mcpPts), col=scales::alpha('red', 0.4), add=TRUE)
+plot(st_geometry(redBelly), pch=21, bg='red', add=TRUE)
 
 legend('topleft', 
-legend=c('Presences', '"Occupied" Faritras',
-'MCP w/ polygons', 'MCP w/ points', 'MCP w/ polygons & points'),
-fill=c(NA, 'gray', scales::alpha('purple', 0.4),
-scales::alpha('red', 0.4),
-scales::alpha('green', 0.4)),
-pch=c(16, NA, NA, NA, NA),
-border=c(NA, 'black', 'black', 'black', 'black'))
+legend=c('Precise occurrence', 'Imprecise occurrence', 'MCP'),
+fill=c(NA, 'gray', scales::alpha('red', 0.4)),
+pch=c(21, NA, NA),
+pt.bg=c('red', NA, NA),
+border=c(NA, 'black', 'black'))
+
+# MCP from imprecise occurrences only
+plot(st_geometry(mad1), border='gray', main='MCP points only')
+plot(st_geometry(polys), col='gray80', add=TRUE)
+plot(st_geometry(mcpPolys), col=scales::alpha('orange', 0.4), add=TRUE)
+plot(st_geometry(redBelly), pch=21, bg='red', add=TRUE)
+
+legend('topleft', 
+legend=c('Precise occurrence', 'Imprecise occurrence', 'MCP'),
+fill=c(NA, 'gray', scales::alpha('orange', 0.4)),
+pch=c(21, NA, NA),
+pt.bg=c('red', NA, NA),
+border=c(NA, 'black', 'black'))
+
+# MCP from precise and imprecise occurrences
+plot(st_geometry(mad1), border='gray', main='MCP points only')
+plot(st_geometry(polys), col='gray80', add=TRUE)
+plot(st_geometry(mcpPolysPoints), col=scales::alpha('green', 0.4), add=TRUE)
+plot(st_geometry(redBelly), pch=21, bg='red', add=TRUE)
+
+legend('topleft', 
+legend=c('Precise occurrence', 'Imprecise occurrence', 'MCP'),
+fill=c(NA, 'gray', scales::alpha('green', 0.4)),
+pch=c(21, NA, NA),
+pt.bg=c('red', NA, NA),
+border=c(NA, 'black', 'black'))
 
 ### NOTE
 # Using SpatVector input (terra package) yields EOOs that are slightly

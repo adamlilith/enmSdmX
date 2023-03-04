@@ -52,7 +52,7 @@ nearestEnvPoints <- function(
 	polys = NULL,
 	centerFrom = 'pts',
 	pca = TRUE,
-	numPcs = terra::nlyr(rasts),
+	numPcs = 3,
 	center = TRUE,
 	scale = TRUE,
 	rule = 'nearest',
@@ -67,10 +67,13 @@ nearestEnvPoints <- function(
 
 	# PCA
 	if (pca) {
+		numPcs <- min(numPcs, terra::nlyr(rasts))
+
 		env <- as.data.frame(rasts)
 		pcModel <- stats::prcomp(env, center=center, scale.=scale)
 		rastsPcs <- terra::predict(rasts, pcModel)
 		rasts <- c(rasts, rastsPcs)
+
 		vars <- paste0('PC', 1L:numPcs)
 	} else {
 		vars <- names(rasts)

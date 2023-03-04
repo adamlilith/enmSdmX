@@ -33,10 +33,10 @@
 #'
 #' @return \code{SpatVector}, or \code{sf POLYGON} representing a minimum convex polygon.
 #'
-#' @seealso \code{\link{nearestEnvPoints}} for the "nearest environmental point" method, a related application for environmental space.
+#' @seealso \code{\link{nearestEnvPoints}} for the "nearest environmental point" method, a related application for estimating niche breadth in environmental space.
 #'
 #' @references
-#' Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} In press. Open access pre-print: \doi{10.1101/2021.06.10.447988}
+#' Smith, A.B., Murphy, S.J., Henderson, D., and Erickson, K.D. 2023. Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth.  \emph{Global Ecology and Biogeography} 32:342-355. \doi{https://doi.org/10.1111/geb.13628} Open access pre-print: \doi{10.1101/2021.06.10.447988}.
 #'
 #' @example man/examples/nearestGeogPoints_example.r
 #'
@@ -61,10 +61,13 @@ nearestGeogPoints <- function(
 
 	if (is.null(polys) & is.null(pts)) {
 		stop('Either "polys", "pts", or both must be specified.')
+	# just points
 	} else if (is.null(polys) & !is.null(pts)) {
 
 		allPoints <- pts
 		nearestPolyPoints <- NA
+		
+		if (return == 'polyPoints') stop('If only points are supplied, then points on polygons cannot be located.')
 
 	# just polygons
 	} else if (!is.null(polys) & is.null(pts)) {
@@ -75,7 +78,6 @@ nearestGeogPoints <- function(
 		center <- sf::st_centroid(polyCents)
 
 		### find closest points to center
-
 		vectors <- sf::st_nearest_points(polys, center)
 		nearestPolyPoints <- sf::st_cast(vectors, 'POINT')
 
@@ -86,10 +88,9 @@ nearestGeogPoints <- function(
 
 		# add centroid back in (once) if it lands in a poly
 		intersect <- sf::st_intersects(center, polys)
-		intersect <- length(intersect) > 0
-		if (intersect) nearestPolyPoints <- c(nearestPolyPoints, center)
-
-		nearestPolyPoints <- allPoints <- sf::st_union(nearestPolyPoints)
+		if (length(intersect[[1L]]) > 0L) nearestPolyPoints <- c(nearestPolyPoints, center)
+		allPoints <- nearestPolyPoints
+		# nearestPolyPoints <- allPoints <- sf::st_union(nearestPolyPoints)
 
 	} else {
 
@@ -110,7 +111,6 @@ nearestGeogPoints <- function(
 		}
 
 		### find closest points to center
-
 		vectors <- sf::st_nearest_points(polys, center)
 		nearestPolyPoints <- sf::st_cast(vectors, 'POINT')
 
@@ -121,21 +121,19 @@ nearestGeogPoints <- function(
 
 		# add centroid back in (once) if it lands in a poly
 		intersect <- sf::st_intersects(center, polys)
-		intersect <- length(intersect) > 0
-		if (intersect) nearestPolyPoints <- c(nearestPolyPoints, center)
+		if (length(intersect[[1L]]) > 0L) nearestPolyPoints <- c(nearestPolyPoints, center)
 
-		nearestPolyPoints <- sf::st_union(nearestPolyPoints)
-		allPoints <- sf::st_union(nearestPolyPoints, pts)
+		# nearestPolyPoints <- sf::st_union(nearestPolyPoints)
+		#allPoints <- sf::st_union(nearestPolyPoints, pts)
+		allPoints <- c(nearestPolyPoints, pts)
 
 	}
-
-
 
 	if (return %in% c('mcp', 'mcpPoints')) {
 		out <- sf::st_union(allPoints)
 		out <- sf::st_geometry(out)
 		out <- sf::st_convex_hull(out)
-		if (return == 'mcpPoints') out <- sf::st_cast(out, 'MULTIPOINT')
+		if (return == 'mcpPoints') out <- sf::st_cast(out, 'POINT')
 	} else if (return == 'polyPoints') {
 		out <- nearestPolyPoints
 	}

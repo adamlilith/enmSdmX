@@ -1,8 +1,8 @@
 Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
-Version: 1.0.1
-Date: 2023-01-25
+Version: 1.0.2
+Date: 2023-03-04
 Authors@R: 
 	c(
 		person(
@@ -33,6 +33,7 @@ Imports:
 	boot,
 	dismo,
 	doParallel,
+	DT,
 	foreach,
 	gbm,
 	graphics,
@@ -45,6 +46,7 @@ Imports:
 	parallel,
 	randomForest,
 	scales,
+	shiny,
 	sf,
 	stats,
 	terra,
@@ -58,4 +60,4 @@ URL: https://github.com/adamlilith/enmSdmX
 BugReports: https://github.com/adamlilith/enmSdmX
 Encoding: UTF-8
 License: MIT + file LICENSE
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
