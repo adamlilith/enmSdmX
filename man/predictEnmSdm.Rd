@@ -258,5 +258,5 @@ legend(
 }
 }
 \seealso{
-\code{\link[stats]{predict}} from the \pkg{stats} package, \code{\link[terra]{predict}} from the \pkg{terra} package, \code{\link[raster]{predict}} from the \pkg{raster} package, \code{\link[enmSdmX]{predictMaxEnt}}, \code{\link[enmSdmX]{predictMaxNet}}
+\code{\link[stats]{predict}} from the \pkg{stats} package, \code{\link[terra]{predict}} from the \pkg{terra} package, \code{\link[enmSdmX]{predictMaxEnt}}, \code{\link[enmSdmX]{predictMaxNet}}
 }
