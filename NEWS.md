@@ -1,4 +1,8 @@
-# enmSdmX 1.0.2 2023-03-07
+# enmSdmX 1.0.3 2023-03-07
+
+- Removed Fedora issue with external link to `raster` package
+
+# enmSdmX 1.0.2 2023-03-04
 
 - Fixed issue in `nearestGeogPoints()` when polygon lay under centroid
 - Fixed bug with "table" call of `getCRS()`
