@@ -9,7 +9,7 @@ weightByDist(x, maxDist, alpha = 1)
 \arguments{
 \item{x}{A spatial points object of class \code{SpatVector} or \code{sf}.}
 
-\item{maxDist}{Maximum distance beyond which a two neighboring points are assumed to have no effect on one another for calculaton of weights.}
+\item{maxDist}{Maximum distance beyond which a two neighboring points are assumed to have no effect on one another for calculation of weights.}
 
 \item{alpha}{Scaling parameter (see equations above).}
 }
@@ -18,6 +18,8 @@ A numeric vector of weights.
 }
 \description{
 This function calculates weights for points based on proximity to other points and the distance of spatial autocorrelation.\cr \cr
+}
+\details{
 Weights can be used, for example, to account for spatial bias in the manner in which the points were observed. Weighting is calculated on the assumption that if two points fell exactly on top of one another, they should each have a weight of 1/2. If three points had the exact same coordinates, then their weights should be 1/3, and so on.  Increasing distance between points should increase their weight, up to the distance at which there is no "significant" spatial autocorrelation, beyond which a point should have a weight of 1. This distance needs to be supplied by the user, as it will depend on the intended use of the weights. The distance can be calculated from "standard" metrics of spatial autocorrelation (e.g., a variogram), or on the basis of knowledge of the system (e.g., maximum dispersal distance of an organism). \cr \cr
 For a given point \eqn{i}, the weight is defined as \deqn{w_i = 1 / (1 + \epsilon)} where \deqn{\epsilon = \sum_{n=1}^{N}((1 - d_n)/d_sac)^\alpha} in which \eqn{N} is the total number of points closer than the maximum distance (\eqn{d_sac}) of point \eqn{i}, and \eqn{d_n} the distance between focal point \eqn{i} and point \eqn{n}.  \eqn{\alpha} is a weighting factor. By default, this is set to 1, but can be changed by the user to augment or diminish the effect that neighboring points have on the weight of a focal cell. When \eqn{\alpha} is <1, neighboring points will reduce the weight of the focal point relative to the default, and when \eqn{\alpha} is >1, they will have less effect relative to the default. When all neighboring points are at or beyond the maximum distance of spatial autocorrelation, then the focal point gets a weight \eqn{w_i} of 1. When at least neighboring one point is less than this distance away, the weight of the focal point will be >0 but <1.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/globalx.r
 \name{globalx}
 \alias{globalx}
-\title{"Friendly" wrapper for terra::global() for calculatig raster statistics}
+\title{"Friendly" wrapper for terra::global() for calculating raster statistics}
 \usage{
 globalx(x, fun, na.rm = TRUE, ..., weights = NULL)
 }
@@ -21,7 +21,7 @@ globalx(x, fun, na.rm = TRUE, ..., weights = NULL)
 A numeric vector, one value per layer in \code{x}.
 }
 \description{
-Calculate "global" statistics across all the values in a raster. This function is a wrapper for \code{\link[terra]{global}}.  That function, by defauult, sets \code{na.rm = FALSE}, so any cell that is \code{NA} can cause the summary statistic to also be \code{NA} (usually undesirable). The function also returns a \code{data.frame}, so often needs a further line of code to get the actual value(s). This function sets \code{na.rm = TRUE} by default, and returns a numeric vector (not a \code{data.frame}).
+Calculate "global" statistics across all the values in a raster. This function is a wrapper for \code{\link[terra]{global}}.  That function, by default, sets \code{na.rm = FALSE}, so any cell that is \code{NA} can cause the summary statistic to also be \code{NA} (usually undesirable). The function also returns a \code{data.frame}, so often needs a further line of code to get the actual value(s). This function sets \code{na.rm = TRUE} by default, and returns a numeric vector (not a \code{data.frame}).
 }
 \examples{
 

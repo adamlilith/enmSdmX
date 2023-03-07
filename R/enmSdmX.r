@@ -46,7 +46,7 @@
 #' @section Functions for rasters:
 #' 		\code{\link{bioticVelocity}}: Velocity of movement across a series of rasters \cr
 #'		\code{\link{getValueByCell}}: Get value(s) in raster cell(s) by cell number \cr
-#'		\code{\link{globalx}}: "Friendly" wrapper for terra::global() for calculatig raster statistics \cr
+#'		\code{\link{globalx}}: "Friendly" wrapper for terra::global() for calculating raster statistics \cr
 #' 		\code{\link{interpolateRasts}}: Interpolate a stack of rasters \cr
 #' 		\code{\link{longLatRasts}}: Generate rasters with values of longitude/latitude for cell values \cr
 #' 		\code{\link{sampleRast}}: Sample raster with/out replacement \cr

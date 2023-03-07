@@ -13,7 +13,7 @@ geoThin(x, minDist, random = FALSE, longLat = 1:2, ...)
 
 \item{random}{If \code{FALSE} (default), then use the deterministic method for thinning. If \code{TRUE}, then use the random method.}
 
-\item{longLat}{This is ignored if \code{x} is a \code{Spaytvector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifiying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.}
+\item{longLat}{This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.}
 
 \item{...}{Additional arguments. Not used.}
 }
@@ -23,7 +23,7 @@ Object of class \code{x}.
 \description{
 This function thins geographic points such that none have nearest neighbors closer than some user-specified distance. For a given set of points that fall within this distance, thinning can be conducted in two ways.  Both begin by first calculating all pairwise distances between points. Then, clusters of points are found based on proximity using the "single-linkage" method (i.e., based on minimum distance between groups). Then, either a deterministic or random method is used to select the retained points:
 \itemize{
-\item Deterministic: For each cluster, distances between each point in the cluster and all points outside of the cluster are calculated. The point retained in each cluster is the one with the greatet minimum pairwise distance to any points in any other cluster. This point will this be maximally isolated from any other point.
+\item Deterministic: For each cluster, distances between each point in the cluster and all points outside of the cluster are calculated. The point retained in each cluster is the one with the greatest minimum pairwise distance to any points in any other cluster. This point will this be maximally isolated from any other point.
  \item Random: For each cluster, a random point is chosen.
 }
 }

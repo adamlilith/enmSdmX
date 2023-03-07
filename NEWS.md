@@ -1,16 +1,16 @@
-enmSdmX 1.0.2
-===========
-o Fixed issue in nearestGeogPoints() when polygon lay under centroid
-o Fixed bug with "table" call of getCRS()
-o getCRS() (no arguments) now displays shiny table of all available CRSs
+# enmSdmX 1.0.2 2023-03-07
 
-enmSdmX 1.0.1
-===========
-o Fixed bug experienced by some users using predictEnmSdm() and predictMaxNet() (Thank you, Nikki!)
-o Fixed bug in trainByCrossValid() using improper call to evalContBoyce()
-o Fixed extract() bug in some examples
-o summarizeByCrossValid() now summarizes natural spline (NS) models
+- Fixed issue in `nearestGeogPoints()` when polygon lay under centroid
+- Fixed bug with "table" call of `getCRS()`
+- `getCRS()` (no arguments) now displays `shiny` table of all available CRSs
 
-enmSdmX 1.0.0
-===========
-o First release on CRAN
+# enmSdmX 1.0.1
+
+- Fixed bug experienced by some users using `predictEnmSdm()` and `predictMaxNet()` (Thank you, Nikki!)
+- Fixed bug in `trainByCrossValid()` using improper call to `evalContBoyce()`
+- Fixed `extract()` bug in some examples
+- `summarizeByCrossValid()` now summarizes natural spline (NS) models
+
+# enmSdmX 1.0.0
+
+- First release on CRAN
