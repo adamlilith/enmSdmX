@@ -1,23 +1,23 @@
 #' Assign geographically-distinct k-folds
 #'
 #' This function generates geographically-distinct cross-validation folds, or "geo-folds" ("g-folds" for short). Points are grouped by proximity to one another. Folds can be forced to have at least a minimum number of points in them. Results are deterministic (i.e., the same every time for the same data). \cr \cr
-#' More specificially, g-folds are created using this process:
+#' More specifically, g-folds are created using this process:
 #' \itemize{
 #'	\item To start, all pairwise distances between points are calculated. These are used in a clustering algorithm to create a dendrogram of relationships by distance. The dendrogram is then "cut" so it has \code{k} groups (folds). If each fold has at least the minimum desired number of points (\code{minIn}), then the process stops and fold assignments are returned.
 #'	\item However, if at least one fold has fewer than the desired number of points, a series of steps is executed.
 #'	\itemize{
 #'		\item First, the fold with a centroid that is farthest from all others is selected. If it has sufficient points, then the next-most distant fold is selected, and so on.
-#'		\item Once a fold is identified that has fewer than the desired number of points, it is grown by adding to it the points closest to its centroid, one at a time. Each time a point is added, the fold centroid is calculated again. The fold is grown until it has the desired number of points. Call this "fold #1". From hereafter, these points are considered "assigned" and not eligibel for re-assignment.
+#'		\item Once a fold is identified that has fewer than the desired number of points, it is grown by adding to it the points closest to its centroid, one at a time. Each time a point is added, the fold centroid is calculated again. The fold is grown until it has the desired number of points. Call this "fold #1". From hereafter, these points are considered "assigned" and not eligible for re-assignment.
 #'		\item The remaining "unassigned" points are then clustered again, but this time into \code{k - 1} folds. And again, the most-distant group found that has fewer than the desired number of points is found. This fold is then grown as before, using only unassigned points. This fold then becomes "fold #2."
 #'		\item The process repeats iteratively until there are \code{k} folds assigned, each with at least the desired number of points. 
 #' 	}
 #' }
-#' The potential downside of this apporoach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
+#' The potential downside of this approach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
 #'
 #' @param x 		A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
 #' @param k 		Number of folds to create.
 #' @param minIn 	Minimum number of points required to be in a fold.
-#' @param longLat 	This is ignored if \code{x} is a \code{Spaytvector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifiying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
+#' @param longLat 	This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
 #' @param ... Additional arguments set to \code{\link[stats]{hclust}}. Of particular interest is the \code{methods} argument, which determines how clusters are grown.
 #'
 #' @return A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.

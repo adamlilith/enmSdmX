@@ -1,6 +1,6 @@
 #' Calibrate a boosted regression tree (generalized boosting machine) model
 #'
-#' This function calibrates a boosted regression tree (or gradient boosting machine) model, and is a wrapper for \code{\link[dismo]{gbm.step}}. The function uses a grid search to assess the best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. If a particular combination of paramaters leads to an unconverged model, the script attempts again using slightly different parameters. Its output is any or all of: a table with deviance of evaluated models; all evaluated models; and/or the single model with the lowest deviance.
+#' This function calibrates a boosted regression tree (or gradient boosting machine) model, and is a wrapper for \code{\link[dismo]{gbm.step}}. The function uses a grid search to assess the best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. If a particular combination of parameters leads to an unconverged model, the script attempts again using slightly different parameters. Its output is any or all of: a table with deviance of evaluated models; all evaluated models; and/or the single model with the lowest deviance.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.

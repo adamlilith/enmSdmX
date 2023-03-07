@@ -1,6 +1,6 @@
 #' Calibrate a natural splines model
 #'
-#' This function constructs a natural-spline model by evaluating all possible models given the available predictoes and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model. Its output is any or all of: a table with AICc for all evaluated models; all models evaluated; and/or the single model with the lowest AICc.
+#' This function constructs a natural-spline model by evaluating all possible models given the available predictors and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model. Its output is any or all of: a table with AICc for all evaluated models; all models evaluated; and/or the single model with the lowest AICc.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
