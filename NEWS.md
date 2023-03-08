@@ -1,6 +1,7 @@
 # enmSdmX 1.0.3 2023-03-07
 
 - Removed Fedora issue with external link to `raster` package
+- Added `rJava` dependency
 
 # enmSdmX 1.0.2 2023-03-04
 
