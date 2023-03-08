@@ -52,7 +52,7 @@
 #' @param cores Positive integer. Number of processor cores to use. Note that if the number of time steps at which velocity is calculated is small, using more cores may not always be faster.
 #' @param warn Logical, if \code{TRUE} (default) then display function-specific warnings.
 #' @param paths This is used internally and rarely (never?) needs to be defined by a user (i.e., leave it as \code{NULL}). Valid values are a character vector or \code{NULL} (default). If a character vector, it should give the values used by \code{\link{.libPaths}}.
-#' @param ... Other arguments (not used).#
+#' @param ... Other arguments (not used).
 #'
 #' @return A data frame with biotic velocities and related values. Fields are as follows:
 #' \itemize{
@@ -65,7 +65,7 @@
 #' \itemize{
 #' 	\item If \code{metrics} has \code{'centroid'}: Columns named \code{centroidVelocity}, \code{centroidLong}, \code{centroidLat} -- Speed of weighted centroid, plus its longitude and latitude (in the \code{timeTo} period of each time step). Values are always >= 0.
 #' 	\item If \code{metrics} has \code{'nsCentroid'}: Columns named \code{nsCentroid} and \code{nsCentroidLat} -- Velocity of weighted centroid in north-south direction, plus its latitude (in the \code{timeTo} period of each time step). Positive values connote movement north, and negative values south.
-#' 	\item If \code{metrics} has \code{'ewControid'}: \code{ewCentroid} and \code{ewCentroidLong} -- Velocity of weighted centroid in east-west direction, plus its longitude (in the \code{timeTo} period of each time step).  Positive values connote movement east, and negative values west.
+#' 	\item If \code{metrics} has \code{'ewCentroid'}: \code{ewCentroid} and \code{ewCentroidLong} -- Velocity of weighted centroid in east-west direction, plus its longitude (in the \code{timeTo} period of each time step).  Positive values connote movement east, and negative values west.
 #' 	\item If \code{metrics} has \code{'nCentroid'}, \code{'sCentroid'}, \code{'eCentroid'}, and/or \code{'wCentroid'}: Columns named \code{nCentroidVelocity} and \code{nCentroidAbund}, \code{sCentroid} and \code{sCentroidAbund}, \code{eCentroid} and \code{eCentroidAbund}, and/or \code{wCentroid} and \code{wCentroidAbund} -- Speed of weighted centroid of all cells that fall north, south, east, or west of the landscape-wide centroid, plus a column indicating the total weight (abundance) of all such populations. Values are always >= 0.
 #' 	\item If \code{metrics} contains any of \code{nsQuants} or \code{ewQuants}: Columns named \code{nsQuantVelocity_quant}\emph{Q} and \code{nsQuantLat_quant}\emph{Q}, or \code{ewQuantVelocity_quant}\emph{Q} and \code{ewQuantLat_quant}\emph{Q}: Velocity of the \emph{Q}th quantile weight in the north-south or east-west directions, plus the latitude or longitude thereof (in the \code{timeTo} period of each time step). Quantiles are cumulated starting from the south or the west, so the 0.05th quantile, for example, is in the far south or west of the range and the 0.95th in the far north or east. Positive values connote movement north or east, and negative values movement south or west.
 #' \item If \code{metrics} contains \code{similarity}, metrics of similarity are calculated for each pair of successive landscapes, defined below as \code{x1} (raster in \code{timeFrom}) and \code{x2} (raster in \code{timeTo}), with the number of shared non-\code{NA} cells between them being \code{n}:

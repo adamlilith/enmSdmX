@@ -45,6 +45,7 @@ Imports:
 	omnibus,
 	parallel,
 	randomForest,
+	rJava,
 	scales,
 	shiny,
 	sf,
