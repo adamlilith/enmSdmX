@@ -57,6 +57,9 @@ trainMaxEnt <- function(
 	###########
 	## setup ##
 	###########
+	
+		# need this bc on some platforms fails CRAN checks bc rJava isn't imported and if we import it we need to use it
+		if (FALSE) rJava::clone(data) # yields an errorl but we need to call it somewhere!
 
 		if (!is.null(anyway)) dropOverparam <- anyway
 		
