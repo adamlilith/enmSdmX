@@ -59,32 +59,41 @@ plot(st_geometry(madVert), main='Vertical')
 
 par(oldPar)
 
-# The effect is more noticable when plotting large areas,
+# The effect is more noticeable when plotting large areas,
 # especially if they lie near the poles.
 \donttest{
 
 library(geodata)
 library(terra)
 
-can <- gadm('CAN', level=0, path=tempdir()) # outline of Canada
+# Get outline of Canada...
+# We wrap this in tryCatch() in case the server is down.
+can <- tryCatch(
+	gadm('CAN', level=0, path=tempdir()),
+	error=function(cond) FALSE
+)
 
-alb <- customAlbers(can)
-lamb <- customLambert(can)
-vert <- customVNS(can)
+if (!is.logical(can)) {
 
-canAlb <- project(can, alb)
-canLamb <- project(can, lamb)
-canVert <- project(can, vert)
+	alb <- customAlbers(can)
+	lamb <- customLambert(can)
+	vert <- customVNS(can)
 
-oldPar <- par(mfrow=c(2, 2))
+	canAlb <- project(can, alb)
+	canLamb <- project(can, lamb)
+	canVert <- project(can, vert)
 
-plot(can, main='Unprojected (WGS84)')
-plot(canAlb, main='Albers')
-plot(canLamb, main='Lambert')
-plot(canVert, main='Vertical')
+	oldPar <- par(mfrow=c(2, 2))
+
+	plot(can, main='Unprojected (WGS84)')
+	plot(canAlb, main='Albers')
+	plot(canLamb, main='Lambert')
+	plot(canVert, main='Vertical')
+		
+	par(oldPar)
 	
-par(oldPar)
-	
+}
+		
 }
 }
 \seealso{

@@ -1,3 +1,7 @@
+# enmSdmX 1.0.4 2023-04-10
+
+- Fixed failing example in customCRS() when GADM server is down
+
 # enmSdmX 1.0.3 2023-03-07
 
 - Removed Fedora issue with external link to `raster` package
