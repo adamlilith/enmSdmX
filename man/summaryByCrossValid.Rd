@@ -37,17 +37,17 @@ Data frame with statistics on the best set of models across k-folds. Depending o
 This function summarizes models calibrated using the \code{\link[enmSdmX]{trainByCrossValid}} function. It returns aspects of the best models across k-folds (the particular aspects depends on the kind of models used).
 }
 \examples{
-# The example below show a very basic modeling workflow. They have been 
+# The example below show a very basic modeling workflow. It has been 
 # designed to work fast, not produce accurate, defensible models.
 # The general idea is to calibrate a series of models and evaluate them
 # against a withheld set of data. One can then use the series of models
 # of the top models to better select a "final" model.
 
-# Runing the entire set of commands can take quite a bit of time. This can
+\dontrun{
+# Running the entire set of commands can take a few minutes. This can
 # be sped up by increasing the number of cores used. The examples below use
 # one core, but you can change that argument according to your machine's
 # capabilities.
-\dontrun{
 
 library(sf)
 library(terra)

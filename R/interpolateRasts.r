@@ -29,6 +29,7 @@
 #' @examples
 #'
 #' \donttest{
+#' # NB: The example below can take a few minutes to run.
 #'
 #' library(terra)
 #'

@@ -138,7 +138,7 @@ For the \code{nsQuants} and \code{ewQuants} metrics it is assumed that the latit
 }
 \examples{
 \donttest{
-
+# NB These examples can take a few minutes to run.
 # To illustrate calculation and interpretation of biotic velocity,
 # we will calibrate a SDM for the Red-Bellied Lemur and project
 # the model to the present and successive future climates. The time series
