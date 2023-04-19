@@ -1,6 +1,10 @@
 # enmSdmX 1.0.4 2023-04-10
 
-- Fixed failing example in customCRS() when GADM server is down
+- Fixed failing example in `customCRS()` when GADM server is down
+- Fixed bug in `geoThin()` which returned input if it was a `data.frame`*
+- Fixed issue in `geoThin()` which returned a `data.frame` lacking coordinates if input was a `data.frame`*
+- Users can select clustering method in `geoThin()` and `geoFold()`*
+* Thank you, Pascal Title!
 
 # enmSdmX 1.0.3 2023-03-07
 

@@ -20,9 +20,10 @@ plot(st_geometry(madVert), main='Vertical')
 
 par(oldPar)
 
+\donttest{
 # The effect is more noticeable when plotting large areas,
 # especially if they lie near the poles.
-\donttest{
+# This example can take a few minutes to run and plot.
 
 library(geodata)
 library(terra)
@@ -53,6 +54,5 @@ if (!is.logical(can)) {
 		
 	par(oldPar)
 	
-}
-		
+}		
 }

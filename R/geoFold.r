@@ -15,10 +15,11 @@
 #' The potential downside of this approach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
 #'
 #' @param x 		A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
-#' @param k 		Number of folds to create.
-#' @param minIn 	Minimum number of points required to be in a fold.
-#' @param longLat 	This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
-#' @param ... Additional arguments set to \code{\link[stats]{hclust}}. Of particular interest is the \code{methods} argument, which determines how clusters are grown.
+#' @param k 		Numeric: Number of folds to create.
+#' @param minIn 	Numeric: Minimum number of points required to be in a fold.
+#' @param longLat 	Character or integer vector: This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
+#' @param method Character: Method used by \code{\link[stats]{hclust}} to cluster points. By default, this is \code{'single'}, but in some cases this may result in strange clustering (especially when there is a large number of points). The \code{'complete'} method (or others) may give more reasonable results in these cases.
+#' @param ... Additional arguments (unused)
 #'
 #' @return A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
 #'
@@ -30,6 +31,7 @@ geoFold <- function(
 	k,
 	minIn = floor(nrow(x) / k),
 	longLat = 1:2,
+	method = 'single',
 	...
 ) {
 
@@ -43,7 +45,7 @@ geoFold <- function(
 	diag(allDists) <- NA
 	dists <- stats::as.dist(allDists)
 	# clust <- stats::hclust(dists, method = 'single')
-	clust <- stats::hclust(dists)
+	clust <- stats::hclust(dists, method = method)
 
 	# define folds
 	folds <- stats::cutree(clust, k = k)

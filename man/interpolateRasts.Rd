@@ -57,6 +57,7 @@ This function can be very memory-intensive for large rasters.  It may speed thin
 \examples{
 
 \donttest{
+# NB: The example below can take a few minutes to run.
 
 library(terra)
 

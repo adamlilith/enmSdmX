@@ -8,8 +8,9 @@
 #'
 #' @param x A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
 #' @param minDist Minimum distance (in meters) needed between points to retain them. Points falling closer than this distance will be candidates for being discarded.
-#' @param random If \code{FALSE} (default), then use the deterministic method for thinning. If \code{TRUE}, then use the random method.
-#' @param longLat This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
+#' @param random Logical: If \code{FALSE} (default), then use the deterministic method for thinning. If \code{TRUE}, then use the random method.
+#' @param longLat Numeric or integer vector: This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
+#' @param method Character: Method used by \code{\link[stats]{hclust}} to cluster points. By default, this is \code{'single'}, but in some cases this may result in strange clustering (especially when there is a large number of points). The \code{'complete'} method (or others) may give more reasonable results in these cases.
 #' @param ... Additional arguments. Not used.
 #'
 #' @return Object of class \code{x}.
@@ -52,11 +53,12 @@ geoThin <- function(
 	minDist,
 	random = FALSE,
 	longLat = 1:2,
+	method = 'single',
 	...
 ) {
 
 	if (!inherits(x, c('SpatVector', 'sf'))) {
-		x <- sf::st_as_sf(x, coords = longLat, crs = getCRS('WGS84'))
+		x <- sf::st_as_sf(x, coords = longLat, remove = FALSE, crs = getCRS('WGS84'))
 		input <- 'data.frame'
 	} else if (inherits(x, 'SpatVector')) {
 		x <- sf::st_as_sf(x)
@@ -73,7 +75,7 @@ geoThin <- function(
 	dists <- sf::st_distance(x)
 	diag(dists) <- NA
 	distsDists <- stats::as.dist(dists)
-	clust <- stats::hclust(distsDists, method = 'single')
+	clust <- stats::hclust(distsDists, method = method)
 
 	# define groups
 	groups <- stats::cutree(clust, h = minDist)
@@ -124,7 +126,7 @@ geoThin <- function(
 	}
 		
 	if (input == 'data.frame') {
-		out <- as.data.frame(x)
+		out <- as.data.frame(out)
 		out$geometry <- NULL
 	} else if (input == 'SpatVector') {
 		out <- terra::vect(out)

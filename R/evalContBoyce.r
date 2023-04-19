@@ -34,57 +34,6 @@
 #' presWeight <- c(rep(1, 10), rep(0.5, 90))
 #' evalContBoyce(pres, contrast, presWeight=presWeight)
 #' 
-#' \donttest{
-#' # compare stability of CBI calculated with ecospat.boyce() in ecospat package
-#' library(ecospat)
-#' set.seed(123)
-#' results <- data.frame()
-#' for (perform in c(1, 1.5, 2)) {
-#'  for (i in 1:30) {
-#'
-#'    pres <- runif(100)^(1 / perform)
-#'    contrast <- runif(1000)
-#'
-#'    cbi_enmSdmX <- evalContBoyce(pres, contrast)
-#'    cbi_ecospat <- ecospat.boyce(contrast, pres, PEplot=FALSE)$Spearman.cor
-#'
-#'    results <- rbind(
-#'      results,
-#'      data.frame(
-#'        performance = rep(perform, 2),
-#'        method = c('enmSdmX', 'ecospat'),
-#'        cbi = c(cbi_enmSdmX, cbi_ecospat)
-#'      )
-#'    )
-#'
-#' 	}
-#'
-#' }
-#'
-#' results$performance[results$performance == 1] <- 'poor'
-#' results$performance[results$performance == 1.5] <- 'OK'
-#' results$performance[results$performance == 2] <- 'good'
-#'
-#' results$category <- paste0(results$method, '\n', results$performance)
-#'
-#' boxplot(cbi ~ category,
-#'  data=results,
-#'  ylab='CBI',
-#'  main='CBI of poor, OK, and good models',
-#'  border=c(rep('darkred', 3),
-#'  rep('darkblue', 3))
-#' )
-#' legend('bottomright', fill=c('darkred', 'cornflowerblue'), legend=c('ecospat', 'enmSdmX'))
-#' 
-#' plot(results$cbi,
-#'  pch=rep(c(21, 22, 23, 24), each=2),
-#'  contrast=ifelse(results$method == 'ecospat', 'darkred', 'cornflowerblue'),
-#'  main='Pairs of CBIs',
-#'  ylab='CBI'
-#' )
-#' legend('bottomright', fill=c('darkred', 'cornflowerblue'), legend=c('ecospat', 'enmSdmX'))
-#' }
-#'
 #' @export
 
 evalContBoyce <- function(

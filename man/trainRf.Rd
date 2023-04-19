@@ -59,10 +59,10 @@ The object that is returned depends on the value of the \code{out} argument. It 
 This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). See \code{\link[randomForest]{randomForest}} for more details. Its output is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
 }
 \examples{
-# The examples below show a very basic modeling workflow. They have been 
-# designed to work fast, not produce accurate, defensible models.
-
 \donttest{
+# NB: The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models. They can
+# take a few minutes to run.
 
 library(mgcv)
 library(sf)

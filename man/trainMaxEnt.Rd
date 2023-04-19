@@ -71,10 +71,10 @@ This function calculates the "best" Maxent model using AICc across all possible 
 This function is a wrapper for \code{maxent()}. That function relies on a maxent \code{jar} file in the folder \code{./library/dismo/java}. See \code{\link[dismo]{maxent}} for more details. The \code{maxent} function creates a series of files on disk for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \pkg{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion.
 }
 \examples{
-# The examples below show a very basic modeling workflow. They have been 
-# designed to work fast, not produce accurate, defensible models.
-
 \donttest{
+# NB: The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models. They can
+# take a few minutes to run.
 
 library(mgcv)
 library(sf)

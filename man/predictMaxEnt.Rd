@@ -53,10 +53,10 @@ Numeric.
 Takes a MaxEnt \code{lambda} object or a MaxEnt object and returns raw or logistic predictions.  Its output is the same as the \code{\link[terra]{predict}} function from the \pkg{terra} package, and in fact, is slower than the function from \pkg{terra}. However, this function does allow custom manipulations that those functions do not allow (e.g., permuting product features while leaving other features with the same variables intact).  This function does \emph{not} clamp predictions--beyond the range of the training data, it extends the prediction in the direction it was going (up/down/no change). The function is based on Peter D. Wilson's document "Guidelines for computing MaxEnt model output values from a lambdas file". The function has a special feature in that it allows you to permute single variables or combinations of variables in specific features before making predictions. This is potentially useful, for example, if you wanted to determine the relative importance of a quadratic feature for a particular variable in a Maxent model relative to the other features in the model.  You can also permute values of a variable regardless of which features they appear in. For product features, you can implement the permutation before or after the values are multiplied together (before often makes for bigger differences in predictions).
 }
 \examples{
-# The examples below show a very basic modeling workflow. They have been 
-# designed to work fast, not produce accurate, defensible models.
-
 \donttest{
+# NB: The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models. They can
+# take a few minutes to run.
 
 library(mgcv)
 library(sf)

@@ -71,17 +71,17 @@ This function is an extension of any of the \code{trainXYZ} functions for calibr
 In some cases models do not converge (e.g., boosted regression trees and generalized additive models sometimes suffer from this issue). In this case the model will be skipped, but a data frame with the k-fold and model number in the fold will be returned in the $meta element in the output. If no models converged, then this data frame will be empty.
 }
 \examples{
-# The example below show a very basic modeling workflow. They have been 
+# The example below show a very basic modeling workflow. It has been 
 # designed to work fast, not produce accurate, defensible models.
 # The general idea is to calibrate a series of models and evaluate them
 # against a withheld set of data. One can then use the series of models
 # of the top models to better select a "final" model.
 
-# Runing the entire set of commands can take quite a bit of time. This can
+\dontrun{
+# Running the entire set of commands can take a few minutes. This can
 # be sped up by increasing the number of cores used. The examples below use
 # one core, but you can change that argument according to your machine's
 # capabilities.
-\dontrun{
 
 library(sf)
 library(terra)

@@ -36,10 +36,10 @@ Numeric or \code{SpatRaster}.
 This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, Maxent, and more.
 }
 \examples{
-# The examples below show a very basic modeling workflow. They have been 
-# designed to work fast, not produce accurate, defensible models.
-
 \donttest{
+# NB: The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models. They can
+# take a few minutes to run.
 
 library(mgcv)
 library(sf)

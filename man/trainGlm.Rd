@@ -80,10 +80,10 @@ The object that is returned depends on the value of the \code{out} argument. It 
 This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model). Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 }
 \examples{
-# The examples below show a very basic modeling workflow. They have been 
-# designed to work fast, not produce accurate, defensible models.
-
 \donttest{
+# NB: The examples below show a very basic modeling workflow. They have been 
+# designed to work fast, not produce accurate, defensible models. They can
+# take a few minutes to run.
 
 library(mgcv)
 library(sf)
