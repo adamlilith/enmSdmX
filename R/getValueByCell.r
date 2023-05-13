@@ -57,7 +57,7 @@ setValueByCell <- function(x, val, cell, format = 'raster') {
 	
 	lv <- length(val)
 	lc <- length(cell)
-	if (lv > lc) stop('The length of "val" must be as long as or shorter than the length of "cell".')
+	if (lv > lc) stop('The length of ', sQuote('val'), ' the same length as or shorter than the length of ', sQuote('cell'), '.')
 		
 	# values
 	if (lv < lc) val <- rep(val, length.out=lc)
