@@ -43,7 +43,7 @@ trainMaxNet(
     \item    \code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 }}
 
-\item{cores}{Number of cores to use. Default is 1.}
+\item{cores}{Number of cores to use. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.}
 
 \item{verbose}{Logical. If \code{TRUE} report the AICc table.}
 

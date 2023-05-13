@@ -66,7 +66,7 @@ bioticVelocity(
 
 \item{onlyInSharedCells}{If \code{TRUE}, calculate biotic velocity using only those cells that are not \code{NA} in the start \emph{and} end of each time period. This is useful for controlling for shifting land mass due to sea level rise, for example, when calculating biotic velocity for an ecosystem or a species. The default is \code{FALSE}, in which case velocity is calculated using all cells in each time period, regardless of whether some become \code{NA} or change from \code{NA} to not \code{NA}.}
 
-\item{cores}{Positive integer. Number of processor cores to use. Note that if the number of time steps at which velocity is calculated is small, using more cores may not always be faster.}
+\item{cores}{Positive integer. Number of processor cores to use. Note that if the number of time steps at which velocity is calculated is small, using more cores may not always be faster.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.}
 
 \item{warn}{Logical, if \code{TRUE} (default) then display function-specific warnings.}
 

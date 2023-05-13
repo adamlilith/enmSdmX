@@ -70,7 +70,7 @@ If \code{tryBy} is NULL then the function attempts to train the model with the s
     \item    \code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by deviance.
 }}
 
-\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.}
+\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.}
 
 \item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
