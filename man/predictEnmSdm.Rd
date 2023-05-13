@@ -21,7 +21,7 @@ predictEnmSdm(
 
 \item{maxentFun}{This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used.}
 
-\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!)}
+\item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!).  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.}
 
 \item{nrows}{Number of rows of \code{newdata} to predict at a time. This is only used if \code{newdata} is a \code{data.frame} or \code{matrix}. The default is to predict all rows at once, but for very large data frames/matrices this can lead to memory issues in some cases. By setting the number of rows, \code{newdata} is divided into chunks, and predictions made to each chunk, which may ease memory limitations. This can be combined with multi-coring (which will increase memory requirements). In this case, all cores combined will get \code{nrows} of data. How many rows are too many? You will have to decide depending on the capabilities of your system. For example, predicting the outcome of a GLM on data with 10E6 rows may be fine, but predicting a PCA (with multiple axes) to the data data may require too much memory.}
 
@@ -33,7 +33,7 @@ predictEnmSdm(
 Numeric or \code{SpatRaster}.
 }
 \description{
-This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, Maxent, and more.
+This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, MaxEnt, and more.
 }
 \examples{
 \donttest{

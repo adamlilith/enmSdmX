@@ -20,7 +20,7 @@
 #' @param jackknife Logical. If \code{TRUE} (default) the the returned model will be also include jackknife testing of variable importance.
 #' @param arguments \code{NULL} (default) or a character list. Options to pass to \code{maxent()}'s \code{args} argument. (Do not include \code{l}, \code{p}, \code{q}, \code{h}, \code{t}, \code{betamultiplier}, or \code{jackknife}!)
 #' @param scratchDir Character. Directory to which to write temporary files. Leave as NULL to create a temporary folder in the current working directory.
-#' @param cores Number of cores to use. Default is 1.
+#' @param cores Number of cores to use. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} report progress and AICc table.
 #' @param ... Extra arguments. Not used.
 #'
@@ -144,7 +144,8 @@ trainMaxEnt <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
-			# on.exit(parallel::stopCluster(cl))
+			# doSNOW::registerDoSNOW(cl)
+			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
@@ -162,7 +163,7 @@ trainMaxEnt <- function(
 			.combine = 'c',
 			.inorder = FALSE,
 			.export = c('.trainMaxEntWorker'),
-			.packages = c('rJava')
+			.packages = c('rJava', 'parallel', 'doParallel')
 		) %makeWork% {
 			.trainMaxEntWorker(
 				i = i,
@@ -173,11 +174,12 @@ trainMaxEnt <- function(
 				allPres = allPres,
 				allBg = allBg,
 				jackknife = jackknife,
-				arguments = arguments
+				arguments = arguments,
+				paths = paths
 			)
 		}
 
-		if (cores > 1L) parallel::stopCluster(cl)
+		# if (cores > 1L) parallel::stopCluster(cl)
 	
 	### collate results
 	###################
@@ -279,9 +281,13 @@ trainMaxEnt <- function(
 	allPres,						# df with all presence environmental data
 	allBg,							# df with all background environmental data
 	jackknife,						# logical
-	arguments						# string of arguments for maxent
+	arguments,						# string of arguments for maxent
+	paths							# .libPaths() output
 ) {
 	
+	 # need to call this to avoid "object '.doSnowGlobals' not found" error!!!
+	.libPaths(paths)
+
 	thisRegMult <- tuning$regMult[i]
 	thisClasses <- tuning$classes[i]
 	

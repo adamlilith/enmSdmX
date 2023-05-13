@@ -49,7 +49,7 @@
 #' }
 #' @param quants Numeric vector indicating the quantiles at which biotic velocity is calculated for the "\code{quant}" and "\code{Quants}" metrics. Default quantiles to calculate are \code{c(0.1, 0.9)}.
 #' @param onlyInSharedCells If \code{TRUE}, calculate biotic velocity using only those cells that are not \code{NA} in the start \emph{and} end of each time period. This is useful for controlling for shifting land mass due to sea level rise, for example, when calculating biotic velocity for an ecosystem or a species. The default is \code{FALSE}, in which case velocity is calculated using all cells in each time period, regardless of whether some become \code{NA} or change from \code{NA} to not \code{NA}.
-#' @param cores Positive integer. Number of processor cores to use. Note that if the number of time steps at which velocity is calculated is small, using more cores may not always be faster.
+#' @param cores Positive integer. Number of processor cores to use. Note that if the number of time steps at which velocity is calculated is small, using more cores may not always be faster.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param warn Logical, if \code{TRUE} (default) then display function-specific warnings.
 #' @param paths This is used internally and rarely (never?) needs to be defined by a user (i.e., leave it as \code{NULL}). Valid values are a character vector or \code{NULL} (default). If a character vector, it should give the values used by \code{\link{.libPaths}}.
 #' @param ... Other arguments (not used).
@@ -308,7 +308,7 @@ bioticVelocity <- function(
 				`%makeWork%` <- foreach::`%dopar%`
 				cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 				doParallel::registerDoParallel(cl)
-				# on.exit(parallel::stopCluster(cl))
+				on.exit(parallel::stopCluster(cl), add=TRUE)
 				
 			} else {
 				`%makeWork%` <- foreach::`%do%`
@@ -356,7 +356,7 @@ bioticVelocity <- function(
 				)
 			}
 					
-			parallel::stopCluster(cl)
+			# if (cores > 1L) parallel::stopCluster(cl)
 		
 			out <- out[order(out$timeFrom), ]
 			

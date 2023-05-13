@@ -1,6 +1,6 @@
 #' Generic predict function for SDMs/ENMs
 #'
-#' This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, Maxent, and more.
+#' This is a generic predict function that automatically uses the model common arguments for predicting models of the following types: linear models, generalized linear models (GLMs), generalized additive models (GAMs), random forests, boosted regression trees (BRTs)/gradient boosting machines (GBMs), conditional random forests, MaxEnt, and more.
 #'
 #' @param model		Object of class \code{lm}, \code{glm}, \code{gam}, \code{randomForest}, \code{MaxEnt}, \code{maxnet}, \code{prcomp}, \code{kde}, \code{gbm}, and possibly others (worth a try!).
 #'
@@ -8,7 +8,7 @@
 #'
 #' @param maxentFun	This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used.
 #'
-#' @param cores		Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!)
+#' @param cores	 Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!).  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #'
 #' @param nrows		Number of rows of \code{newdata} to predict at a time. This is only used if \code{newdata} is a \code{data.frame} or \code{matrix}. The default is to predict all rows at once, but for very large data frames/matrices this can lead to memory issues in some cases. By setting the number of rows, \code{newdata} is divided into chunks, and predictions made to each chunk, which may ease memory limitations. This can be combined with multi-coring (which will increase memory requirements). In this case, all cores combined will get \code{nrows} of data. How many rows are too many? You will have to decide depending on the capabilities of your system. For example, predicting the outcome of a GLM on data with 10E6 rows may be fine, but predicting a PCA (with multiple axes) to the data data may require too much memory.
 #'
@@ -36,9 +36,9 @@ predictEnmSdm <- function(
 	cores <- min(cores, parallel::detectCores(logical = FALSE))
 	i <- NULL
 	
-	# doing this for cases where this function is called as a functional in a mult-core state and packages are in a custom location
+	# doing this for cases where this function is called as a functional in a multi-core state and packages are in a custom location
 	ells <- list(...)
-	if (any(names(ells) == 'paths')) .libPaths(paths)
+	.libPaths(paths)
 
 	### predict to each subset of rows
 	##################################
@@ -71,7 +71,7 @@ predictEnmSdm <- function(
 		`%makeWork%` <- foreach::`%dopar%`
 		cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 		doParallel::registerDoParallel(cl)
-		# on.exit(parallel::stopCluster(cl))
+		on.exit(parallel::stopCluster(cl), add=TRUE)
 			
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = TRUE)
@@ -101,11 +101,12 @@ predictEnmSdm <- function(
 				newdata = newdata[jobs == i, , drop = FALSE],
 				maxentFun = maxentFun,
 				cores = 1L,
+				paths = paths,
 				...
 			)
 		}
 
-		if (cores > 1L) parallel::stopCluster(cl)
+		# if (cores > 1L) parallel::stopCluster(cl)
 
 	### single-core/raster
 	######################
@@ -143,7 +144,7 @@ predictEnmSdm <- function(
 				nd <- terra::as.data.frame(newdata, na.rm=FALSE)
 				notNas <- which(stats::complete.cases(nd))
 				nd <- nd[notNas, , drop=FALSE]
-				preds <- gbm::predict.gbm(model, newdata, n.trees=model$gbm.call$n.trees, type='response', ...)
+				preds <- gbm::predict.gbm(model, nd, n.trees=model$gbm.call$n.trees, type='response', ...)
 				out <- newdata[[1L]]
 				out[] <- NA
 				out <- setValueByCell(out, preds, cell=notNas, format='raster')
@@ -156,7 +157,7 @@ predictEnmSdm <- function(
 		} else if (inherits(model, 'kde')) {
 
 			# hack... not calling ks functions explicitly at least once in package generates warning
-			fhat <- ks::kde(stats::rnorm(100))
+			if (FALSE) fhat <- ks::kde(stats::rnorm(100))
 			predictKde <- utils::getFromNamespace('predict.kde', 'ks')
 			out <- predictKde(model, x=as.matrix(newdata), ...)
 

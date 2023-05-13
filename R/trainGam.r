@@ -29,7 +29,7 @@
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
-#' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
+#' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device.
 #' @param ... Extra arguments (not used).
 #'
@@ -89,7 +89,7 @@ trainGAM <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
-			# on.exit(parallel::stopCluster(cl))
+			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
@@ -370,7 +370,7 @@ trainGAM <- function(
 		
 	} # if not constructing model term-by-term
 
-	if (cores > 1L) parallel::stopCluster(cl)
+	# if (cores > 1L) parallel::stopCluster(cl)
 
 	### return
 	##########
