@@ -16,7 +16,7 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
 #' @param forceLinear Logical. If \code{TRUE} (default) then require any tested models to include at least linear features.
-#' @param cores Number of cores to use. Default is 1.
+#' @param cores Number of cores to use. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} report the AICc table.
 #' @param ... Extra arguments. Not used.
 #'
@@ -29,7 +29,7 @@
 #' Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}
 #'
 #' @example man/examples/trainXYZ_examples.R
-#' 
+#'
 #' @export
 
 trainMaxNet <- function(
@@ -68,7 +68,7 @@ trainMaxNet <- function(
 
 	### generate table of parameterizations
 	#######################################
-		
+
 		### get combinations of features to test for each regularization multiplier
 		classesToTest <- if (classes == 'default') {
 			c('l', 'p', 'q', 'h')
@@ -94,7 +94,7 @@ trainMaxNet <- function(
 		if (forceLinear & any(classGrid$l == 0)) classGrid <- classGrid[-which(classGrid$l == 0), , drop=FALSE]
 
 		tuning <- data.frame()
-		
+
 		# by beta
 		for (thisRegMult in regMult) {
 
@@ -109,7 +109,7 @@ trainMaxNet <- function(
 					ifelse('h' %in% names(classGrid) && classGrid$h[countParam] == 1, 'h', ''),
 					ifelse('t' %in% names(classGrid) && classGrid$t[countParam] == 1, 't', '')
 				)
-				
+
 				tuning <- rbind(
 					tuning,
 						data.frame(
@@ -117,14 +117,14 @@ trainMaxNet <- function(
 						classes = classes
 					)
 				)
-				
+
 			}
-			
+
 		}
 
 	### parallelization
 	###################
-			
+
 		cores <- min(cores, nrow(tuning), parallel::detectCores(logical = FALSE))
 
 		if (cores > 1L) {
@@ -132,8 +132,8 @@ trainMaxNet <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
-			# on.exit(parallel::stopCluster(cl))
-			
+			on.exit(parallel::stopCluster(cl), add=TRUE)
+
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}
@@ -143,7 +143,7 @@ trainMaxNet <- function(
 
 	### train models
 	################
-		
+
 		work <- foreach::foreach(
 			i = 1L:nrow(tuning),
 			.options.multicore = mcOptions,
@@ -158,12 +158,13 @@ trainMaxNet <- function(
 				presBg = presBg,
 				data = data,
 				allPres = allPres,
-				allBg = allBg
+				allBg = allBg,
+				paths = paths
 			)
 		}
-				
-		if (cores > 1L) parallel::stopCluster(cl)
-	
+
+		# if (cores > 1L) parallel::stopCluster(cl)
+
 	### collate results
 	###################
 
@@ -174,10 +175,10 @@ trainMaxNet <- function(
 			models[[i]] <- work[[i]]$model
 			tuning <- rbind(tuning, work[[i]]$thisTuning)
 		}
-		
+
 	### process models
 	##################
-		
+
 		# sort from best to worst model
 		modelOrder <- order(tuning$AICc, tuning$numClasses, tuning$regMult, tuning$numCoeff, decreasing=c(FALSE, FALSE, TRUE, FALSE))
 		tuning <- tuning[modelOrder, , drop = FALSE]
@@ -185,7 +186,7 @@ trainMaxNet <- function(
 
 		# remove models with more parameters than data points that have more than 0 parameters
 		if (dropOverparam) {
-		
+
 			topModel <- models[[1L]]
 			topTuning <- tuning[1L, , drop=FALSE]
 
@@ -205,9 +206,9 @@ trainMaxNet <- function(
 			} else {
 				model <- models[[1L]]
 			}
-				
+
 		}
-		
+
 		# AICc weights
 		if (nrow(tuning) > 0L) {
 
@@ -216,7 +217,7 @@ trainMaxNet <- function(
 			tuning$aicWeight <- tuning$relLike / sum(tuning$relLike)
 
 			rownames(tuning) <- 1L:nrow(tuning)
-		
+
 		}
 
 		if (verbose) {
@@ -229,7 +230,7 @@ trainMaxNet <- function(
 
 	### return
 	##########
-		
+
 		if (length(out) > 1L) {
 			output <- list()
 			if ('models' %in% out) output$models <- models
@@ -256,12 +257,16 @@ trainMaxNet <- function(
 	presBg,							# vector with 1 (present) / 0 (background)
 	data,							# df with all presence/background environmental data
 	allPres,						# df with all presence environmental data
-	allBg							# df with all background environmental data
+	allBg,							# df with all background environmental data
+	paths							# .libPaths)() output
 ) {
-	
+
+	 # need to call this to avoid "object '.doSnowGlobals' not found" error!!!
+	.libPaths(paths)
+
 	thisRegMult <- tuning$regMult[i]
 	thisClasses <- tuning$classes[i]
-	
+
 	# add dummy column if doing univariate model to avoid error in maxnet.default.regularizationMOD
 	if (ncol(data) == 1L & thisClasses == 'l') {
 
@@ -280,7 +285,7 @@ trainMaxNet <- function(
 		thisBg <- allBg
 
 	}
-	
+
 	# train model
 	model <- maxnet::maxnet(
 		p=as.vector(presBg),
@@ -330,7 +335,7 @@ trainMaxNet <- function(
 			)
 		)
 	)
-	
+
 	out
 
 }

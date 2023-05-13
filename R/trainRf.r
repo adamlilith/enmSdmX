@@ -21,7 +21,7 @@
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest OOB.
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by OOB error rate.
 #' }
-#' @param cores Number of cores to use. Default is 1.
+#' @param cores Number of cores to use. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} then display progress for finding optimal value of \code{mtry}.
 #' @param ... Arguments to pass to \code{\link[randomForest]{randomForest}}.
 #'
@@ -76,7 +76,7 @@ trainRF <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
-			# on.exit(parallel::stopCluster(cl))
+			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
@@ -107,7 +107,7 @@ trainRF <- function(
 			)
 		}
 	
-		if (cores > 1L) parallel::stopCluster(cl)
+		# if (cores > 1L) parallel::stopCluster(cl)
 	
 		# tuning table
 		tuning <- data.frame(

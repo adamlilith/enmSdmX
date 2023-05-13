@@ -32,7 +32,7 @@
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest deviance.
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by deviance.
 #' }
-#' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.
+#' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
@@ -105,7 +105,7 @@ trainBRT <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
-			# on.exit(parallel::stopCluster(cl))
+			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
@@ -142,7 +142,7 @@ trainBRT <- function(
 				
 		}
 						
-		if (cores > 1L) parallel::stopCluster(cl)
+		# if (cores > 1L) parallel::stopCluster(cl)
 
 	### collate models
 	##################

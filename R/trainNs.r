@@ -25,7 +25,7 @@
 #' 	\item	\code{'models'}: All models evaluated, sorted from lowest to highest AICc (lowest is best).
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
-#' @param cores Number of cores to use. Default is 1.
+#' @param cores Number of cores to use. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.
 #' @param ... Arguments to send to \code{\link[stats]{glm}}.
 #'
@@ -77,7 +77,7 @@ trainNS <- function(
 			`%makeWork%` <- foreach::`%dopar%`
 			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
 			doParallel::registerDoParallel(cl)
-			# on.exit(parallel::stopCluster(cl))
+			on.exit(parallel::stopCluster(cl))
 			
 		} else {
 			`%makeWork%` <- foreach::`%do%`
@@ -217,7 +217,7 @@ trainNS <- function(
 			)
 		}
 	
-		if (cores > 1L) parallel::stopCluster(cl)
+		# if (cores > 1L) parallel::stopCluster(cl)
 
 		# tuning table
 		tuning <- data.frame(
