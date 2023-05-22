@@ -97,7 +97,13 @@ trainGLM <- function(
 	### make list of candidate model terms
 	######################################
 
-		n <- if (family %in% c('binomial', 'quasibinomial')) {
+		fam <- if (inherits(family, 'family')) {
+			family$family
+		} else {
+			family
+		}
+
+		n <- if (fam %in% c('binomial', 'quasibinomial')) {
 			sum(data[ , resp, drop=TRUE])
 		} else {
 			nrow(data)
