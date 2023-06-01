@@ -1,3 +1,6 @@
+# enmSdmX 1.0.7 2023-05-22
+- Added `geoFoldContrast()` for assigning geo-folds to background or absence sites
+
 # enmSdmX 1.0.6 2023-05-22
 - Expanded capacity of .calcWeights() (a hidden function) to handle different values for `family`
 

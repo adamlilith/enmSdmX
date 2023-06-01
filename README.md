@@ -33,6 +33,7 @@ You may need to install the `remotes` package first.
 ### Data preparation ###
 * `elimCellDuplicates`: Eliminate duplicate points in each cell of a raster
 * `geoFold`: Assign geographically-distinct k-folds
+* `geoFoldContrast`: Assign geographically-distinct k-folds to background or contrast sites
 
 ### Bias correction
 * `geoThin`: Thin geographic points deterministically or randomly

@@ -12,6 +12,7 @@
 #'
 #' @section Data preparation:
 #' 		\code{\link{geoFold}}: Assign geographically-distinct k-folds \cr
+#' 		\code{\link{geoFoldContrast}}: Assign geographically-distinct k-folds to background or absence sites\cr
 #' 		\code{\link{elimCellDuplicates}}: Eliminate duplicate points in each cell of a raster \cr
 #'
 #' @section Bias correction:

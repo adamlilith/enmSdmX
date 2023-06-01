@@ -21,12 +21,19 @@
 #'
 #' @export
 countPoints <- function(x, byFeature = FALSE) {
-	x <- sf::st_as_sf(x)
-	if (byFeature) {
-		.countVertices(sf::st_geometry(x))
+
+	if (inherits(x, 'SpatVector')) {
+		if (terra::geomtype(x) == 'points') out <- nrow(x)
 	} else {
-		sum(.countVertices(sf::st_geometry(x)))
+		# out <- mapview::npts(x, by_feature=byFeature)
+		x <- sf::st_as_sf(x)
+		if (byFeature) {
+			out <- .countVertices(sf::st_geometry(x))
+		} else {
+			out <- sum(.countVertices(sf::st_geometry(x)))
+		}
 	}
+	out
 }
 
 .countVertices <- function(x) {

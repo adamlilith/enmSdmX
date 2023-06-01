@@ -12,7 +12,9 @@
 #'		\item The process repeats iteratively until there are \code{k} folds assigned, each with at least the desired number of points. 
 #' 	}
 #' }
-#' The potential downside of this approach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
+#' The potential downside of this approach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.\cr\cr
+#'
+#' Note that in general it is probably mathematically impossible to cluster points in 2-dimensional space into \code{k} groups, each with at least \code{minIn} points, in a manner that seems "reasonable" to the eye in all cases. In experimentation, "unreasonable" results often appear when the number of groups is high.
 #'
 #' @param x 		A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).
 #' @param k 		Numeric: Number of folds to create.
@@ -22,6 +24,7 @@
 #' @param ... Additional arguments (unused)
 #'
 #' @return A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
+#' @seealso \code{\link{geoFoldContrast}}
 #'
 #' @example man/examples/geoFold_examples.r
 #' 
@@ -29,22 +32,30 @@
 geoFold <- function(
 	x,
 	k,
-	minIn = floor(nrow(x) / k),
+	minIn = 1,
 	longLat = 1:2,
-	method = 'single',
+	method = 'complete',
 	...
 ) {
 
 	### initialize folds
-	n <- countPoints(x)
+	n <- if (inherits(x, 'sf')) {
+		countPoints(x)
+	} else {
+		nrow(x)
+	}
+
 	if (n < k * minIn) stop(paste('Not possible to divide points into', k, 'folds each with at least', minIn, 'points each. Reduce the value of minIn or increase k.'))
 
-	# cluster based on distances
-	allDists <- sf::st_distance(x)
-	allDists <- methods::as(allDists, 'matrix')
-	diag(allDists) <- NA
-	dists <- stats::as.dist(allDists)
-	# clust <- stats::hclust(dists, method = 'single')
+	# distances
+	if (inherits(x, 'SpatVector')) x <- sf::st_as_sf(x)
+	if (!inherits(x, 'sf')) x <- terra::vect(x, geom=longLat, crs=getCRS('wgs84'))
+	
+	dists <- sf::st_distance(x)
+	dists <- methods::as(dists, 'matrix')
+	diag(dists) <- NA
+	dists <- stats::as.dist(dists)	
+
 	clust <- stats::hclust(dists, method = method)
 
 	# define folds
@@ -57,81 +68,96 @@ geoFold <- function(
 	focalFold <- 1
 	while (any(nPerFold < minIn) | nAssigned < n) {
 
-		# for (focalFold in 1L:(k - 1)) {
-
-			### calculate centroids of folds
-			if (exists('cents', inherits = FALSE)) rm(cents)
-			for (kk in 1L:k) {
-			
-				xInFold <- x[folds == kk, ]
+		### calculate centroids of folds
+		if (exists('cents', inherits = FALSE)) rm(cents)
+		for (kk in 1L:k) {
+		
+			xInFold <- x[folds == kk, ]
+			# if (inherits(x, 'sf')) {
 				xInFold <- sf::st_union(xInFold)
 				cent <- sf::st_centroid(xInFold)
-				cents <- if (exists('cents', inherits = FALSE)) {
-					c(cents, cent)
-				} else {
-					cent
-				}
-			
+			# } else {
+				# cent <- terra::centroids(xInFold)
+			# }
+			cents <- if (exists('cents', inherits = FALSE)) {
+				c(cents, cent)
+			} else {
+				cent
 			}
-			
-			# find centroid with LARGEST distance to any other centroid
+		
+		}
+		
+		# find centroid with LARGEST distance to any other centroid
+		# if (inherits(x, 'sf')) {
 			centToCentDists <- sf::st_distance(cents)
 			centToCentDists <- methods::as(centToCentDists, 'matrix')
-			
-			diag(centToCentDists) <- NA
-			maxCentToCentDists <- apply(centToCentDists, 1, max, na.rm = TRUE)
-			maxDist <- max(maxCentToCentDists)
-			
-			# find centroid with SECOND-LARGEST distance to any other centroid
-			centToCentDists <- sweep(centToCentDists, 2L, maxCentToCentDists)
-			centToCentDists[centToCentDists == 0] <- NA
-			maxCentToCentDists <- apply(centToCentDists, 1, max, na.rm = TRUE)
-			maxDist <- max(maxCentToCentDists)
-			maxDistIndex <- which(maxCentToCentDists == maxDist)
-			
-			# assign points closest to this centroid to this fold
-			cent <- cents[maxDistIndex]
-			
-			newFolds <- folds
-			newFolds[newFolds != focalFold] <- NA
-			# newFolds[folds == maxDistIndex] <- focalFold
+		# } else {
+			# centToCentDists <- terra::distance(cents)
+		# }
+		centToCentDists <- methods::as(centToCentDists, 'matrix')
+		
+		diag(centToCentDists) <- -Inf
+		maxCentToCentDists <- apply(centToCentDists, 1, max, na.rm = TRUE)
+		maxDist <- max(maxCentToCentDists)
+		
+		# find centroid with SECOND-LARGEST distance to any other centroid
+		# centToCentDists <- sweep(centToCentDists, 2L, maxCentToCentDists)
+		centToCentDists[centToCentDists == maxDist] <- -Inf
+		# centToCentDists[centToCentDists == 0] <- NA
+		maxCentToCentDists <- apply(centToCentDists, 1, max, na.rm = TRUE)
+		maxDist <- max(maxCentToCentDists)
+		# maxDistIndex <- which(maxCentToCentDists == maxDist)
+		maxDistIndex <- which.max(maxCentToCentDists == maxDist)
+		
+		# assign points closest to this centroid to this fold
+		cent <- cents[maxDistIndex]
+		
+		newFolds <- folds
+		newFolds[newFolds != focalFold] <- NA
+		# newFolds[folds == maxDistIndex] <- focalFold
 
-			nThisFold <- sum(newFolds == focalFold, na.rm = TRUE)
+		nThisFold <- sum(newFolds == focalFold, na.rm = TRUE)
 
-			while (nThisFold < minIn) {
-			
-				# assign next-closest point to centroid
-				xOutFold <- x[which(is.na(newFolds)), ]
+		while (nThisFold < minIn) {
+		
+			# assign next-closest point to centroid
+			xOutFold <- x[which(is.na(newFolds)), ]
+			# if (inherits(x, 'sf')) {
 				distToCent <- sf::st_distance(xOutFold, cent)[ , 1L]
-				closest <- which.min(distToCent)
-				newFolds[which(is.na(newFolds))[closest]] <- focalFold
-				
-				# re-calculate group centroid
-				xInFold <- x[which(newFolds == focalFold), ]
+			# } else {
+				# distToCent <- terra::distance(xOutFold, cent) # !!!
+			# }
+			closest <- which.min(distToCent)
+			newFolds[which(is.na(newFolds))[closest]] <- focalFold
+			
+			# re-calculate group centroid
+			xInFold <- x[which(newFolds == focalFold), ]
+			# if (inherits(x, 'sf')) {
 				xInFold <- sf::st_union(xInFold)
 				cent <- sf::st_centroid(xInFold)
-				
-				nThisFold <- nThisFold + 1
-				
-			} # if focal fold has too few points
+			# } else {
+				# cent <- terra::centroids(xInFold)
+			# }
 			
-			xOutFold <- x[which(is.na(newFolds)), ]
-			subFolds <- geoFold(x = xOutFold, k = k - focalFold, minIn = minIn, longLat = longLat)
-			# subFolds <- subFolds + max(folds, na.rm = TRUE) + 1
-			subFolds <- subFolds + focalFold
-			newFolds[is.na(newFolds)] <- subFolds
+			nThisFold <- nThisFold + 1
 			
-			newFolds <<- newFolds
-			folds <<- folds
-			
-			folds <- newFolds
-			folds <- .renumFolds(folds)
-			
-			nPerFold <- table(folds)
-			nAssigned <- sum(nPerFold)
-
-		# } # next fold
+		} # if focal fold has too few points
 		
+		xOutFold <- x[which(is.na(newFolds)), ]
+		subFolds <- geoFold(x = xOutFold, k = k - focalFold, minIn = minIn, longLat = longLat)
+		# subFolds <- subFolds + max(folds, na.rm = TRUE) + 1
+		subFolds <- subFolds + focalFold
+		newFolds[is.na(newFolds)] <- subFolds
+		
+		newFolds <- newFolds
+		folds <- folds
+		
+		folds <- newFolds
+		folds <- .renumFolds(folds)
+		
+		nPerFold <- table(folds)
+		nAssigned <- sum(nPerFold)
+
 		focalFold <- focalFold + 1
 		
 	} # if any fold has too few points
@@ -164,4 +190,3 @@ geoFold <- function(
 	folds
 
 }
-
