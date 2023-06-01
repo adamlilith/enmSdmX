@@ -20,6 +20,8 @@
 #'
 #' @return A vector of integers the same length as the number of points in \code{contrast}. Each integer indicates which fold a point in \code{contrast} belongs to.
 #'
+#' @seealso \code{\link{geoFold}}
+#'
 #' @example man/examples/geoFold_examples.r
 #' 
 #' @export
