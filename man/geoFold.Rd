@@ -4,7 +4,7 @@
 \alias{geoFold}
 \title{Assign geographically-distinct k-folds}
 \usage{
-geoFold(x, k, minIn = floor(nrow(x)/k), longLat = 1:2, method = "single", ...)
+geoFold(x, k, minIn = 1, longLat = 1:2, method = "complete", ...)
 }
 \arguments{
 \item{x}{A "spatial points" object of class \code{SpatVector}, \code{sf}, \code{data.frame}, or \code{matrix}. If \code{x} is a \code{data.frame} or \code{matrix}, then the points will be assumed to have the WGS84 coordinate system (i.e., unprojected).}
@@ -35,10 +35,14 @@ More specifically, g-folds are created using this process:
 	\item The process repeats iteratively until there are \code{k} folds assigned, each with at least the desired number of points. 
 	}
 }
-The potential downside of this approach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.
+The potential downside of this approach is that the last fold is assigned the remainder of points, so will be the largest. One way to avoid gross imbalance is to select the value of \code{minIn} such that it divides the points into nearly equally-sized groups.\cr\cr
+}
+\details{
+Note that in general it is probably mathematically impossible to cluster points in 2-dimensional space into \code{k} groups, each with at least \code{minIn} points, in a manner that seems "reasonable" to the eye in all cases. In experimentation, "unreasonable" results often appear when the number of groups is high.
 }
 \examples{
 library(sf)
+library(terra)
 
 # lemur occurrence data
 data(mad0)
@@ -49,20 +53,38 @@ ll <- c('longitude', 'latitude')
 # use occurrences of all species... easier to see on map
 occs <- st_as_sf(lemurs, coords = ll, crs = getCRS('WGS84'))
 
-folds2 <- geoFold(occs, k = 2, minIn = 51)
-folds4 <- geoFold(occs, k = 4, minIn = 25)
+# create 1000 background points
+mad0 <- vect(mad0)
+bg <- spatSample(mad0, 1000)
 
-# map folds
-oldPar <- par(mfrow = c(1, 2))
-plot(st_geometry(occs), pch=folds2, col=folds2, main = '2 g-folds')
-plot(st_geometry(mad0), border = 'gray', add = TRUE)
+### assign 3 folds to occurrences and to background sites
+k <- 3
+minIn <- floor(nrow(occs) / k) # maximally spread between folds
 
-plot(st_geometry(occs), pch=folds4, col=folds4, main = '4 g-folds')
-plot(st_geometry(mad0), border = 'gray', add = TRUE)
+presFolds <- geoFold(occs, k = k, minIn = minIn)
+bgFolds <- geoFoldContrast(bg, pres = occs, presFolds = presFolds)
 
-par(oldPar)
+# number of sites per fold
+table(presFolds)
+table(bgFolds)
 
-# inspect number of sites per fold
-table(folds2) # 2 folds
-table(folds4) # 4 folds
+# map
+plot(mad0, border = 'gray', main = paste(k, 'geo-folds'))
+plot(bg, pch = 3, col = bgFolds + 1, add = TRUE)
+plot(st_geometry(occs), pch = 20 + presFolds, bg = presFolds + 1, add = TRUE)
+
+legend(
+	'bottomright',
+	legend = c(
+		'presence fold 1',
+		'presence fold 2',
+		'presence fold 3',
+		'background fold 1',
+		'background fold 2',
+		'background fold 3'
+	),
+	pch = c(21, 22, 23, 3, 3),
+	col = c(rep('black', 3), 2, 3),
+	pt.bg = c(2, 3, 4, NA, NA)
+)
 }
