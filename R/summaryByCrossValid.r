@@ -14,6 +14,8 @@
 #' 	\item \code{'trainSe95'} and/or \code{'trainSe90'}: Sensitivity at the threshold that ensures either 95% or 90% of all training presences are classified as "present" (training sensitivity = 0.95 or 0.9).
 #' }
 #' @param decreasing Logical, if \code{TRUE} (default), for each k-fold sort models by the value listed in \code{metric} in decreasing order (highest connotes "best", lowest "worst"). If \code{FALSE} use the lowest value of \code{metric}.
+#' @param interceptOnly Logical. If \code{TRUE} (default) and the top models in each case were intercept-only models, return an emppty data frame (with a warning). If \code{FALSE}, return results using the first model in each fold that was not an intercept-only model. This is only used if the training function was a generalized linear model (GLM), natural splines model (NS), or generalized additive model (GAM).
+#'
 #' @return Data frame with statistics on the best set of models across k-folds. Depending on the model algorithm, this could be:
 #' \itemize{
 #' 	\item BRTs (boosted regression trees): Learning rate, tree complexity, and bag fraction.
@@ -25,12 +27,13 @@
 #' @seealso \code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNS}}, \code{\link[enmSdmX]{trainRF}}
 #'
 #' @example man/examples/trainByCrossValid_examples.r
-#' 
+#'
 #' @export
 summaryByCrossValid <- function(
 	x,
 	metric = 'cbiTest',
-	decreasing = TRUE
+	decreasing = TRUE,
+	interceptOnly = TRUE
 ) {
 
 	trainFxName <- tolower(x$meta$trainFxName)
@@ -100,104 +103,148 @@ summaryByCrossValid <- function(
 
 			thisTuning <- tuning[[k]]
 
-			thisTerm <- thisTuning$model[1L]
-			thisTerm <- strsplit(thisTerm, ' + ', fixed=TRUE)[[1L]]
-			thisTerm <- thisTerm[2L:length(thisTerm)]
-			if (any(thisTerm == 'presBg')) thisTerm <- thisTerm[-which(thisTerm == 'presBg')]
-			if (any(thisTerm == '~')) thisTerm <- thisTerm[-which(thisTerm == '~')]
-			if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
-			if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
-			if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+			foundViableModel <- FALSE
+			while (foundViableModel) {
 
-			if (length(thisTerm) == 0) thisTerm <- 1
+				thisTerm <- thisTuning$model[1L]
+				thisTerm <- strsplit(thisTerm, ' + ', fixed=TRUE)[[1L]]
+				thisTerm <- thisTerm[2L:length(thisTerm)]
+				if (any(thisTerm == 'presBg')) thisTerm <- thisTerm[-which(thisTerm == 'presBg')]
+				if (any(thisTerm == '~')) thisTerm <- thisTerm[-which(thisTerm == '~')]
+				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+				if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
+				if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+
+				if (length(thisTerm) == 0 & interceptOnly) {
+					thisTerm <- '1'
+					foundViableModel <- TRUE
+				} else if (length(thisTerm) == 0 & !interceptOnly) {
+					thisTuning <- thisTuning[-1, drop = FALSE]
+				} else {
+					foundViableModel <- TRUE
+				}
+
+			}
+
 
 			term <- c(term, thisTerm)
 
-		}
-		
+		} # next fold
+
 		term <- unique(term)
-		out <- data.frame(term)
-		out$frequencyInBestModels <- 0
 
-		# tally usage of best term(s)
-		for (k in seq_along(tuning)) {
+		if (all(term == '1')) {
 
-			thisTuning <- tuning[[k]]
+			warning('All top models were intercept-only.')
+			out <- data.frame()
+		} else {
 
-			thisTerm <- thisTuning$model[1]
-			thisTerm <- strsplit(thisTerm, ' + ', fixed=TRUE)[[1L]]
-			thisTerm <- thisTerm[2L:length(thisTerm)]
-			if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
-			if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
-			if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+			out <- data.frame(term)
+			out$frequencyInBestModels <- 0
 
-			for (countTerm in seq_along(thisTerm)) {
-				whichTerm <- which(out$term == thisTerm[countTerm])
-				out$frequencyInBestModels[whichTerm] <- out$frequencyInBestModels[whichTerm] + 1
+			# tally usage of best term(s)
+			for (k in seq_along(tuning)) {
+
+				thisTuning <- tuning[[k]]
+
+				thisTerm <- thisTuning$model[1]
+				thisTerm <- strsplit(thisTerm, ' + ', fixed=TRUE)[[1L]]
+				thisTerm <- thisTerm[2L:length(thisTerm)]
+				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+				if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
+				if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+
+				for (countTerm in seq_along(thisTerm)) {
+					whichTerm <- which(out$term == thisTerm[countTerm])
+					out$frequencyInBestModels[whichTerm] <- out$frequencyInBestModels[whichTerm] + 1
+				}
+
 			}
 
-		}
+			out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
+			out$proportionOfModels <- out$frequencyInBestModels / length(x$tuning)
+			out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
 
-		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
-		out$proportionOfModels <- out$frequencyInBestModels / length(x$tuning)
-		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
+		} # if at least one top model wasn't intercept-only
 
 	} else if (trainFxName == tolower('trainGLM')) {
 
-		# get list of terms in best models
+		# get list of terms in models
 		term <- character()
 		for (k in seq_along(tuning)) {
 
 			thisTuning <- tuning[[k]]
 
-			thisTerm <- thisTuning$model[1L]
-			thisTerm <- strsplit(thisTerm, '~')[[1L]]
-			thisTerm <- strsplit(thisTerm, ' \\+ ')[[1L]]
-			if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+			foundViableModel <- FALSE
+			while (!foundViableModel) {
 
-			if (length(thisTerm) == 0) thisTerm <- 1
+				thisTerm <- thisTuning$model[1L]
+				thisTerm <- strsplit(thisTerm, '~')[[1L]]
+				thisTerm <- strsplit(thisTerm, ' \\+ ')[[1L]]
+				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+
+				if (length(thisTerm) == 0 & interceptOnly) {
+					thisTerm <- '1'
+					foundViableModel <- TRUE
+				} else if (length(thisTerm) == 0 & !interceptOnly) {
+					thisTuning <- thisTuning[-1, drop = FALSE]
+				} else {
+					foundViableModel <- TRUE
+				}
+
+			}
 
 			term <- c(term, thisTerm)
 
-		}
+		} # next fold
 
 		term <- unique(term)
-		out <- data.frame(term)
-		out$frequencyInBestModels <- 0
 
-		# tally usage of best term(s)
-		for (k in seq_along(tuning)) {
+		if (all(term == '1')) {
+			warning('All top models were intercept-only.')
+			out <- data.frame()
+		} else {
 
-			thisTuning <- tuning[[k]]
+			out <- data.frame(term)
+			out$frequencyInBestModels <- 0
 
-			thisTerm <- thisTuning$model[1L]
-			
-			# natural splines model
-			if (grepl(thisTerm, pattern='splines')) {
-			
-				thisTerm <- strsplit(thisTerm, ' \\+\\ ')[[1L]]
-				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
-			
-			# "normal" GLM model
-			} else  {
-				
-				thisTerm <- strsplit(thisTerm, ' ')[[1]]
-				thisTerm <- thisTerm[3:length(thisTerm)]
-				if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
-				if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
-				if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
-				
+			# tally usage of best term(s)
+			for (k in seq_along(tuning)) {
+
+				thisTuning <- tuning[[k]]
+
+				thisTerm <- thisTuning$model[1L]
+
+				# natural splines model
+				if (grepl(thisTerm, pattern='splines')) {
+
+					thisTerm <- strsplit(thisTerm, ' \\+\\ ')[[1L]]
+					if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+
+				# "normal" GLM model
+				} else  {
+
+					thisTerm <- strsplit(thisTerm, ' ')[[1]]
+					thisTerm <- thisTerm[3:length(thisTerm)]
+					if (any(thisTerm == '1')) thisTerm <- thisTerm[-which(thisTerm == '1')]
+					if (any(thisTerm == '+')) thisTerm <- thisTerm[-which(thisTerm == '+')]
+					if (any(thisTerm == '-')) thisTerm <- thisTerm[-which(thisTerm == '-')]
+
+				}
+
+				for (countTerm in seq_along(thisTerm)) {
+					if (!is.na(thisTerm[countTerm])) {
+						whichTerm <- which(out$term == thisTerm[countTerm])
+						out$frequencyInBestModels[whichTerm] <- out$frequencyInBestModels[whichTerm] + 1
+					}
+				}
+
 			}
 
-			for (countTerm in seq_along(thisTerm)) {
-				whichTerm <- which(out$term == thisTerm[countTerm])
-				out$frequencyInBestModels[whichTerm] <- out$frequencyInBestModels[whichTerm] + 1
-			}
+			out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
+			out$proportionOfModels <- out$frequencyInBestModels / length(x$tuning)
 
-		}
-
-		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
-		out$proportionOfModels <- out$frequencyInBestModels / length(x$tuning)
+		} # at least one top model was not intercept-only
 
 	### MAXENT
 	##########
@@ -249,7 +296,7 @@ summaryByCrossValid <- function(
 			frequencyInBestModels = featFreqs,
 			meanRegMult = featRegMultMeans
 		)
-		
+
 		out <- out[order(out$frequencyInBestModels, decreasing = TRUE), ]
 
 
@@ -331,11 +378,11 @@ summaryByCrossValid <- function(
 			# )
 
 			# out <- rbind(out, thisPredOut)
-		
+
 		# }
 
 	} else if (trainFxName == tolower('trainRF')) {
-	
+
 		# get list of terms in best models
 		params <- data.frame()
 		for (k in seq_along(tuning)) {
@@ -376,7 +423,7 @@ summaryByCrossValid <- function(
 			out <- data.frame()
 		}
 
-		
+
 	}
 
 	rownames(out) <- NULL
