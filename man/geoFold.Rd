@@ -88,3 +88,6 @@ legend(
 	pt.bg = c(2, 3, 4, NA, NA)
 )
 }
+\seealso{
+\code{\link{geoFoldContrast}}
+}

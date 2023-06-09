@@ -1,6 +1,10 @@
 #' Calibrate a generalized linear model (GLM)
 #'
-#' This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model). Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+#' @description This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model).
+#'
+#' By default, the function uses the \code{\link[stats]{glm}} function (the "standard" GLM function in \code{R}). However, if the arguments \code{speed} is \code{TRUE}, it uses the \code{\link[speedglm]{speedglm}} function, which is optimized for efficient memory use.
+#'
+#' The function outputs any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
@@ -29,8 +33,9 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
+#' @param speed Logical. If \code{FALSE}, use the \code{\link[stats]{glm}} function (i.e., the "standard" GLM function in \code{R}). If \code{TRUE}, use the \code{\link[speedglm]{speedglm}} function, which is optimized for efficient use of memory.
 #' @param verbose Logical. If \code{TRUE} then display progress.
-#' @param ... Arguments to pass to \code{glm}.
+#' @param ... Arguments to pass to \code{glm} or \code{speedglm}.
 #'
 #' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 #'
@@ -39,7 +44,6 @@
 #' @example man/examples/trainXYZ_examples.R
 #' 
 #' @export
-
 trainGLM <- function(
 	data,
 	resp = names(data)[1],
@@ -57,6 +61,7 @@ trainGLM <- function(
 	family = 'binomial',
 	out = 'model',
 	cores = 1,
+	speed = FALSE,
 	verbose = FALSE,
 	...
 ) {
@@ -71,6 +76,12 @@ trainGLM <- function(
 
 		w <- .calcWeights(w, data = data, resp = resp, family = family)
 
+		if (speed) {
+			glmFx <- speedglm::speedglm
+		} else {
+			glmFx <- stats::glm
+		}
+
 	### parallelization
 	###################
 			
@@ -80,18 +91,25 @@ trainGLM <- function(
 			min(cores, parallel::detectCores(logical = FALSE))
 		}
 
+		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		if (cores > 1L) {
 
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			cl <- parallel::makeCluster(cores)
+			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
 			on.exit(parallel::stopCluster(cl), add=TRUE)
-			
+
+			# `%makeWork%` <- doRNG::`%dorng%`
+			# doFuture::registerDoFuture()
+			# future::plan(future::multisession(workers = cores))
+			# on.exit(future:::ClusterRegistry('stop'), add=TRUE)
+
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}
 
-		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
 
 	### make list of candidate model terms
@@ -142,6 +160,7 @@ trainGLM <- function(
 			.options.multicore = mcOptions,
 			.combine = 'rbind',
 			.inorder = FALSE,
+			# .packages = c('parallel', 'doParallel'),
 			.export = c('.trainGlmWorker')
 		) %makeWork% {
 			.trainGlmWorker(
@@ -199,7 +218,7 @@ trainGLM <- function(
 			
 			thisForm <- paste0(resp, ' ~ 1 + ', form)
 			
-			model <- stats::glm(
+			model <- glmFx(
 				formula = stats::as.formula(thisForm),
 				family = family,
 				data = data,
@@ -330,7 +349,7 @@ trainGLM <- function(
 				omnibus::say('Model selection:', level=2)
 				print(tuning)
 				utils::flush.console()
-			
+
 			}
 		
 		} # if selecting best model from subsets of "full" model
@@ -345,7 +364,7 @@ trainGLM <- function(
 		form <- paste(form, collapse = ' + ')
 		thisForm <- paste0(resp, ' ~ 1 + ', form)
 	
-		model <- stats::glm(
+		model <- glmFx(
 			formula = stats::as.formula(thisForm),
 			family = family,
 			data = data,
@@ -370,7 +389,7 @@ trainGLM <- function(
 			omnibus::say('Model (no construction or selection):', level=2)
 			print(summary(model))
 			utils::flush.console()
-		
+
 		}
 		
 	} # if not constructing model term-by-term
@@ -414,6 +433,12 @@ trainGLM <- function(
 	...
 ) {
 
+	# # so doFuture knows to load these packages are needed
+	# if (FALSE) {
+		# parallel::splitIndices(nonsense, nonsense)
+		# doParallel::registerDoParallel(nonsense)
+	# }
+
 	 # need to call this to avoid "object '.doSnowGlobals' not found" error!!!
 	.libPaths(paths)
 
@@ -427,7 +452,7 @@ trainGLM <- function(
 	}
 	thisForm <- paste0(resp, ' ~ ', form)
 
-	model <- stats::glm(
+	model <- glmFx(
 		formula = stats::as.formula(thisForm),
 		family = family,
 		data = data,

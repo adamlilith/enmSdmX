@@ -20,7 +20,6 @@ trainBRT(
   family = "bernoulli",
   out = "model",
   cores = 1,
-  parallelType = "doParallel",
   verbose = FALSE,
   ...
 )
@@ -71,8 +70,6 @@ If \code{tryBy} is NULL then the function attempts to train the model with the s
 }}
 
 \item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.}
-
-\item{parallelType}{Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.}
 
 \item{verbose}{Logical. If \code{TRUE} display progress.}
 
@@ -198,7 +195,7 @@ brt <- trainBRT(
 	resp = 'presBg',
 	preds = predictors,
 	learningRate = 0.001, # too few values for reliable model(?)
-	treeComplexity = 2, # too few values for reliable model, but fast
+	treeComplexity = c(2, 3), # too few values for reliable model, but fast
 	minTrees = 1200, # minimum trees for reliable model(?), but fast
 	maxTrees = 1200, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',

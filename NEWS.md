@@ -1,3 +1,6 @@
+# enmSdmX 1.0.8 2023-06-08
+- Added support for `speedglm` package's `speedglm()` function in `trainGLM()`
+
 # enmSdmX 1.0.7 2023-05-22
 - Added `geoFoldContrast()` for assigning geo-folds to background or absence sites
 

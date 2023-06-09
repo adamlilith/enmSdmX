@@ -1,6 +1,8 @@
 #' Calibrate a random forest model
 #'
-#' This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). See \code{\link[randomForest]{randomForest}} for more details. Its output is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
+#' @description This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). The number of trees in each candidate model is set by the user with argument \code{numTrees}. The number of predictors to test per split, \code{mtry}, is found by exploring a range of values. If the response (\code{y}) is a factor, the starting value for \code{mtry} is \code{max(1, floor(p / 3))}, where \code{p} is the number of predictors. If the response is not a factor, the starting value is \code{max(1, floor(sqrt(p)))}. Values y\code{mtryIncrement} argument until the total number of predictors is used.  See \code{\link[randomForest]{randomForest}} for more details.
+#'
+#' The output of the function is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
@@ -74,10 +76,17 @@ trainRF <- function(
 		if (cores > 1L) {
 
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			cl <- parallel::makeCluster(cores)
+			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
 			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
+			# `%makeWork%` <- doRNG::`%dorng%`
+			# doFuture::registerDoFuture()
+			# future::plan(future::multisession(workers = cores))
+			# on.exit(future:::ClusterRegistry('stop'), add=TRUE)
+
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}

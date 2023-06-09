@@ -142,11 +142,20 @@ trainMaxEnt <- function(
 		if (cores > 1L) {
 
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			cl <- parallel::makeCluster(cores)
+			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
-			# doSNOW::registerDoSNOW(cl)
 			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
+			# `%makeWork%` <- doRNG::`%dorng%`
+			# doFuture::registerDoFuture()
+			# # future::plan(future::multisession(workers = cores))
+			# # cl <- future::multisession(workers = cores)
+			# future::plan(future::multisession, workers = cores)
+			# on.exit(utils::getFromNamespace('ClusterRegistry', 'future')('stop'), add=TRUE)
+			# # on.exit(future:::plan('origPlan'), add=TRUE)
+
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}
@@ -164,6 +173,7 @@ trainMaxEnt <- function(
 			.inorder = FALSE,
 			.export = c('.trainMaxEntWorker'),
 			.packages = c('rJava', 'parallel', 'doParallel')
+			# .packages = c('rJava')
 		) %makeWork% {
 			.trainMaxEntWorker(
 				i = i,

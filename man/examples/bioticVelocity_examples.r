@@ -121,7 +121,7 @@ bv <- bioticVelocity(
 	quants = quants,
 	cores = 2
 )
-
+ 
 bv
 
 ### centroid velocities

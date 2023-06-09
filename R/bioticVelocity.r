@@ -306,10 +306,18 @@ bioticVelocity <- function(
 			if (cores > 1L) {
 
 				`%makeWork%` <- foreach::`%dopar%`
-				cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+				# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+				cl <- parallel::makeCluster(cores)
+				parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 				doParallel::registerDoParallel(cl)
 				on.exit(parallel::stopCluster(cl), add=TRUE)
 				
+				# `%makeWork%` <- doRNG::`%dorng%`
+				# doFuture::registerDoFuture()
+				# # cl <- future::multisession(workers = cores)
+				# future::plan(future::multisession())
+				# on.exit(utils::getFromNamespace('ClusterRegistry', 'future')('stop'), add=TRUE)
+
 			} else {
 				`%makeWork%` <- foreach::`%do%`
 			}

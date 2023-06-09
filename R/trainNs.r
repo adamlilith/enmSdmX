@@ -75,10 +75,17 @@ trainNS <- function(
 		if (cores > 1L) {
 
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			cl <- parallel::makeCluster(cores)
+			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
-			on.exit(parallel::stopCluster(cl))
+			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
+			# `%makeWork%` <- doRNG::`%dorng%`
+			# doFuture::registerDoFuture()
+			# future::plan(future::multisession(workers = cores))
+			# on.exit(future:::ClusterRegistry('stop'), add=TRUE)
+
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}
