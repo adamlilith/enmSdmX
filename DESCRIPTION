@@ -32,12 +32,9 @@ Depends:
 Imports:
 	boot,
 	dismo,
-	doFuture,
 	doParallel,
-	doRNG,
 	DT,
 	foreach,
-	future,
 	gbm,
 	graphics,
 	ks,
@@ -52,7 +49,7 @@ Imports:
 	scales,
 	sf,
 	shiny,
-	speedglm,
+	statisfactory,
 	stats,
 	terra,
 	utils

@@ -5,6 +5,7 @@
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
+#' @param scale Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$means} and \code{model$scales$sds}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do it's operations.
 #' @param method Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.
 #' @param df A vector of integers > 0 or \code{NULL}. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.
 #' @param interaction If \code{TRUE} (default), include two-way interaction terms.
@@ -40,6 +41,7 @@ trainNS <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
+	scale = NA,
 	df = 1:4,
 	interaction = TRUE,
 	interceptOnly = TRUE,
@@ -67,6 +69,8 @@ trainNS <- function(
 
 		w <- .calcWeights(w, data = data, resp = resp, family = family)
 		
+		if (is.na(scale) || scale) scales <- .scalePredictors(scale, preds, data)
+
 	### parallelization
 	###################
 			
@@ -244,6 +248,10 @@ trainNS <- function(
 				)
 				
 			}
+		}
+	
+		if (!is.na(scale)) {
+			if (scale) for (i in seq_along(work)) work[[i]]$model$scale <- scales
 		}
 	
 		bestOrder <- order(tuning$AICc)

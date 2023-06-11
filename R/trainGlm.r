@@ -2,19 +2,18 @@
 #'
 #' @description This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model).
 #'
-#' By default, the function uses the \code{\link[stats]{glm}} function (the "standard" GLM function in \code{R}). However, if the arguments \code{speed} is \code{TRUE}, it uses the \code{\link[speedglm]{speedglm}} function, which is optimized for efficient memory use.
-#'
 #' The function outputs any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
+#' @param scale Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$means} and \code{model$scales$sds}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do it's operations.
 #' @param family Name of family for data error structure (see \code{\link[stats]{family}}). Default is to use the 'binomial' family.
 #' @param construct Logical. If \code{TRUE} (default) then construct model from individual terms entered in order from lowest to highest AICc up to limits set by \code{presPerTermInitial} or \code{maxTerms} is met. If \code{FALSE} then the "full" model consists of all terms allowed by \code{quadratic} and \code{interaction}.
 #' @param select Logical. If \code{TRUE} (default) then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if any).
 #' @param quadratic Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include quadratic terms in model construction stage for non-factor predictors.
 #' @param interaction Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include 2-way interaction terms (including interactions between factor predictors).
-#' @param method Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.
+#' @param method Character: Name of function used to solve the GLM. For "normal" GLMs, this can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.
 #' @param interceptOnly If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.
 #' @param presPerTermInitial Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only is \code{construct} is TRUE.
 #' @param presPerTermFinal Positive integer. Minimum number of presence sites per term in initial starting model. Used only if \code{select} is \code{TRUE}.
@@ -33,9 +32,8 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by AICc.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
-#' @param speed Logical. If \code{FALSE}, use the \code{\link[stats]{glm}} function (i.e., the "standard" GLM function in \code{R}). If \code{TRUE}, use the \code{\link[speedglm]{speedglm}} function, which is optimized for efficient use of memory.
 #' @param verbose Logical. If \code{TRUE} then display progress.
-#' @param ... Arguments to pass to \code{glm} or \code{speedglm}.
+#' @param ... Arguments to pass to \code{glm}.
 #'
 #' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 #'
@@ -48,6 +46,7 @@ trainGLM <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
+	scale = NA,
 	construct = TRUE,
 	select = TRUE,
 	quadratic = TRUE,
@@ -58,13 +57,40 @@ trainGLM <- function(
 	presPerTermFinal = 10,
 	maxTerms = 8,
 	w = TRUE,
-	family = 'binomial',
+	family = stats::binomial(),
 	out = 'model',
 	cores = 1,
-	speed = FALSE,
 	verbose = FALSE,
 	...
 ) {
+
+	### for debugging
+	#################
+	
+	if (FALSE) {
+	
+		construct = TRUE
+		select = TRUE
+		quadratic = TRUE
+		interaction = TRUE
+		interceptOnly = TRUE
+		presPerTermInitial = 10
+		presPerTermFinal = 10
+		maxTerms = 8
+		w = TRUE
+		scale = TRUE
+		family = stats::binomial()
+		out = 'model'
+		cores = 1
+		verbose = TRUE
+	
+		# speed = TRUE
+		# method = 'eigen'
+
+		# speed = FALSE
+		method = 'glm.fit'
+
+	}
 
 	###########
 	## setup ##
@@ -75,12 +101,8 @@ trainGLM <- function(
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 		w <- .calcWeights(w, data = data, resp = resp, family = family)
-
-		if (speed) {
-			glmFx <- speedglm::speedglm
-		} else {
-			glmFx <- stats::glm
-		}
+		
+		if (is.na(scale) || scale) scales <- .scalePredictors(scale, preds, data)
 
 	### parallelization
 	###################
@@ -122,7 +144,11 @@ trainGLM <- function(
 		}
 
 		n <- if (fam %in% c('binomial', 'quasibinomial')) {
-			sum(data[ , resp, drop=TRUE])
+			if (inherits(data, 'data.table')) {
+				unlist(data[, lapply(.SD, sum), , .SDcols = resp])
+			} else {
+				sum(data[ , resp, drop=TRUE])
+			}
 		} else {
 			nrow(data)
 		}
@@ -157,8 +183,8 @@ trainGLM <- function(
 
 		assess <- foreach::foreach(
 			i = seq_along(terms),
-			.options.multicore = mcOptions,
 			.combine = 'rbind',
+			.multicombine = TRUE,
 			.inorder = FALSE,
 			# .packages = c('parallel', 'doParallel'),
 			.export = c('.trainGlmWorker')
@@ -171,19 +197,18 @@ trainGLM <- function(
 				family = family,
 				method = method,
 				w = w,
-				insertIntercept = FALSE,
+				insertIntercept = TRUE,
 				paths = paths,
 				modelOut = FALSE,
 				...
 			)
-				
 		}
-		
+	
 		assess <- assess[order(assess$AICc), , drop=FALSE]
 		rownames(assess) <- NULL
 
 		if (verbose) {
-			omnibus::say('Term-by-term evaluation:', level=2)
+			omnibus::say('Term-by-term evaluation:', pre=1)
 			print(assess)
 			utils::flush.console()
 		}
@@ -218,7 +243,7 @@ trainGLM <- function(
 			
 			thisForm <- paste0(resp, ' ~ 1 + ', form)
 			
-			model <- glmFx(
+			model <- stats::glm(
 				formula = stats::as.formula(thisForm),
 				family = family,
 				data = data,
@@ -238,7 +263,7 @@ trainGLM <- function(
 
 			if (verbose) {
 
-				omnibus::say('Final model (construction from best terms, but no selection):', level=2)
+				omnibus::say('Final model (construction from best terms, but no selection):', pre=1)
 				print(summary(model))
 				utils::flush.console()
 				
@@ -251,51 +276,86 @@ trainGLM <- function(
 		
 		} else {
 
-			# make formulae for all possible models
-			candidates <- list(x = c(FALSE, TRUE))
-			if (length(terms) > 1L) for (i in 2L:length(terms)) candidates <- c(candidates, list(x = c(FALSE, TRUE)))
-			candidates <- expand.grid(candidates, stringsAsFactors = FALSE)
-			names(candidates) <- terms
-			candidates <- candidates[rowSums(candidates) != 0, , drop=FALSE]
+			### make all possible models
+			terms <- assess$formula
+			terms <- strsplit(terms, split='\\+')
+			terms <- lapply(terms, trimws)
+			lengthTerms <- length(terms)
 
-			numTerms <- rowSums(candidates)
-			requiredPresPerTerm <- numTerms * presPerTermFinal
-			candidates <- candidates[requiredPresPerTerm <= n, , drop = FALSE]
+			form <- terms[[1L]]
 			
-			numTerms <- rowSums(candidates)
-			candidates <- candidates[numTerms <= maxTerms, , drop=FALSE]
+			numTerms <- length(form)
+			i <- 2L
+			while (numTerms <= maxTerms & n / presPerTermInitial >= numTerms & i <= lengthTerms) {
 
-			forms <- character()
-			for (i in 1L:nrow(candidates)) {
+				form <- c(form, terms[[i]])
+				form <- unique(form)
+				numTerms <- length(form)
+				i <- i + 1L
+			
+			}
+			
+			ias <- form[grepl(form, pattern=':')]
+			quads <- form[grepl(form, pattern='\\^2')]
+			linears <- form[!grepl(form, pattern=':') & !grepl(form, pattern='\\^2')]
 
-				form <- colnames(candidates)[unlist(candidates[i, ])]
-				if (length(form) > 1L) {
-					form <- paste(form, collapse = ' + ')
-					form <- strsplit(form, ' \\+ ')[[1L]]
-					form <- unique(form)
-					form <- sort(form)
-					numTerms <- length(form)
-					
-					if (n >= numTerms * presPerTermFinal & numTerms <= maxTerms) {
-						form <- paste(form, collapse = ' + ')
-						forms <- c(forms, form)
-					}
-				} else {
-					forms <- c(form, forms)
+			haveQuads <- (length(quads) > 0L)
+			haveIas <- (length(ias) > 0L)
+
+			form <- paste0(resp, ' ~ ', paste(linears, collapse=' + '))
+			form <- as.formula(form)
+			
+			forms <- statisfactory::makeFormulae(form, quad=haveQuads, ia=haveIas, maxTerms=maxTerms, returnFx=as.character)
+
+			forms <- strsplit(forms, split='\\+')
+			forms <- lapply(forms, trimws)
+
+			lhs <- paste0(resp, ' ~ 1')
+			for (i in seq_along(forms)) forms[[i]] <- forms[[i]][forms[[i]] != lhs]
+
+			# len <- sapply(forms, length)
+			# forms[len == 0L] <- NULL
+
+			# keep models with quads we already had
+			ok <- rep(FALSE, length(forms))
+			if (haveQuads) {
+				for (quad in quads) {
+					thisOk <- lapply(forms, grepl, pattern=quad, fixed=TRUE)
+					thisOk <- sapply(thisOk, any)
+					ok <- ok | thisOk
 				}
 			}
 			
-			forms <- unique(forms)
+			# keep models with IAs we already had
+			if (haveIas) {
+				for (ia in ias) {
+					thisOk <- lapply(forms, grepl, pattern=ia, fixed=TRUE)
+					thisOk <- sapply(thisOk, any)
+					ok <- ok | thisOk
+				}
+			}
 			
-			forms <- paste0('1 + ', forms)
-				
-			if (interceptOnly) forms <- c(forms, '1')
+			# keep models with just linears
+			for (i in seq_along(forms)) {
+				if (haveIas & haveQuads) {
+					thisFormOk <- !any(ias %in% forms[[i]]) & !any(quads %in% forms[[i]])
+				} else if (haveIas & !haveQuads) {
+					thisFormOk <- !any(ias %in% forms[[i]])
+				} else if (!haveIas & haveQuads) {
+					thisFormOk <- !any(quads %in% forms[[i]])
+				}
+				ok[i] <- ok[i] | thisFormOk
+			}
 
-			work <- foreach::foreach(
+			forms <- sapply(forms, paste, collapse=' + ')
+
+			assess <- foreach::foreach(
 				i = seq_along(forms),
 				.options.multicore = mcOptions,
 				.combine = 'c',
+				.multicombine = TRUE,
 				.inorder = FALSE,
+				# .packages = c('parallel', 'doParallel'),
 				.export = c('.trainGlmWorker')
 			) %makeWork% {
 				.trainGlmWorker(
@@ -306,50 +366,33 @@ trainGLM <- function(
 					family = family,
 					method = method,
 					w = w,
-					insertIntercept = FALSE,
+					insertIntercept = TRUE,
 					paths = paths,
-					modelOut = ('models' %in% out | 'model' %in% out),
+					modelOut = TRUE,
 					...
 				)
 			}
-			
-			# tuning table
-			tuning <- data.frame(
-				model = work[[1L]]$formula,
-				AICc = work[[1L]]$AICc
-			)
-			
-			if (length(work) > 1L) {
-				for (i in 2L:length(work)) {
-					
-					tuning <- rbind(
-						tuning,
-						data.frame(
-							model = work[[i]]$formula,
-							AICc = work[[i]]$AICc
-						)
-					)
-					
-				}
+
+			tuning <- data.frame(model = rep(NA_character_, length(assess)), AICc = rep(NA_real_, length(assess)))
+			models <- list()
+			for (i in seq_along(assess)) {
+				models[[i]] <- assess[[i]]$model
+				if (!is.na(scale)) if (scale) models[[i]]$scale <- scales
+				tuning$model[i] <- assess[[i]]$formula
+				tuning$AICc[i] <- assess[[i]]$AICc
 			}
-		
-			bestOrder <- order(tuning$AICc)
-			if ('model' %in% out) model <- work[[bestOrder[1L]]]$model
-			if ('models' %in% out) {
-				models <- list()
-				models[[1]] <- work[[1L]]$model
-				for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
-				models <- models[bestOrder]
-			}
-			tuning <- tuning[bestOrder, , drop = FALSE]
+			
+			ranks <- order(tuning$AICc)
+			models <- models[ranks]
+			tuning <- tuning[ranks, , drop=FALSE]
 			rownames(tuning) <- NULL
-		
-			if (verbose) {
 			
-				omnibus::say('Model selection:', level=2)
+			model <- models[[1L]]
+			
+			if (verbose) {
+				omnibus::say('Model-by-model evaluation:', pre=1)
 				print(tuning)
 				utils::flush.console()
-
 			}
 		
 		} # if selecting best model from subsets of "full" model
@@ -364,7 +407,7 @@ trainGLM <- function(
 		form <- paste(form, collapse = ' + ')
 		thisForm <- paste0(resp, ' ~ 1 + ', form)
 	
-		model <- glmFx(
+		model <- stats::glm(
 			formula = stats::as.formula(thisForm),
 			family = family,
 			data = data,
@@ -404,14 +447,14 @@ trainGLM <- function(
 		if ('models' %in% out) output$models <- models
 		if ('model' %in% out) output$model <- model
 		if ('tuning' %in% out) output$tuning <- tuning
-		output
 	} else if ('models' %in% out) {
-		models
+		output <- models
 	} else if ('model' %in% out) {
-		model
+		output <- model
 	} else if ('tuning' %in% out) {
-		tuning
+		output <- tuning
 	}
+	output
 		
 }
 
@@ -452,21 +495,21 @@ trainGLM <- function(
 	}
 	thisForm <- paste0(resp, ' ~ ', form)
 
-	model <- glmFx(
+	model <- stats::glm(
 		formula = stats::as.formula(thisForm),
-		family = family,
 		data = data,
-		method = method,
+		family = family,
 		weights = w,
+		method = method,
 		...
 	)
 	
 	AICc <- MuMIn::AICc(model)
 	
 	# out
-	out <- if (modelOut) {
+	if (modelOut) {
 		
-		list(
+		out <- list(
 			list(
 				model = model,
 				formula = form,
@@ -476,13 +519,12 @@ trainGLM <- function(
 		
 	} else {
 	
-		data.frame(
+		out <- data.frame(
 			formula = form,
 			AICc = AICc
 		)
 	
 	}
-		
 	out
 
 }

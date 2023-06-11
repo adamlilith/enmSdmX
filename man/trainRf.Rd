@@ -56,7 +56,9 @@ trainRF(
 The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
-This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). See \code{\link[randomForest]{randomForest}} for more details. Its output is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
+This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). The number of trees in each candidate model is set by the user with argument \code{numTrees}. The number of predictors to test per split, \code{mtry}, is found by exploring a range of values. If the response (\code{y}) is a factor, the starting value for \code{mtry} is \code{max(1, floor(p / 3))}, where \code{p} is the number of predictors. If the response is not a factor, the starting value is \code{max(1, floor(sqrt(p)))}. Values y\code{mtryIncrement} argument until the total number of predictors is used.  See \code{\link[randomForest]{randomForest}} for more details.
+
+The output of the function is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
 }
 \examples{
 \donttest{
@@ -137,11 +139,12 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Normally, we'd center and standardize variables before modeling.
+# Note the automatic centering/scaling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE,
 	verbose = TRUE,
 	cores = cores
 )

@@ -131,7 +131,7 @@ predictEnmSdm <- function(
 			}
 
 		# GLM
-		} else if (inherits(model, 'glm')) {
+		} else if (inherits(model, c('glm'))) {
 
 			out <- if (inherits(newdata, c('SpatRaster'))) {
 				terra::predict(newdata, model, type='response', ...)

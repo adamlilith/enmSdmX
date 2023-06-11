@@ -131,11 +131,12 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Normally, we'd center and standardize variables before modeling.
+# Note the automatic centering/scaling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE,
 	verbose = TRUE,
 	cores = cores
 )
