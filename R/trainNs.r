@@ -30,7 +30,7 @@
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.
 #' @param ... Arguments to send to \code{\link[stats]{glm}}.
 #'
-#' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
+#' @returns The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors.
 #'
 #' @seealso \code{\link[splines]{ns}}
 #'
