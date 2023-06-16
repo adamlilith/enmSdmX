@@ -8,38 +8,50 @@
 #'
 #' @param data A data frame.
 #'
+#' @import data.table
 #' @noRd
 .scalePredictors <- function(scale, preds, data) {
 
-	numPreds <- length(preds)
-	predIsNotFactor <- rep(FALSE, numPreds)
-	means <- sds <- mags <- rep(NA_real_, numPreds)
-	names(means) <- names(sds) <- names(mags) <- names(predIsNotFactor) <- preds
+	# which predictors are not factors?
+	predIsNotFactor <- rep(FALSE, length(preds))
+	names(predIsNotFactor) <- preds
 	for (pred in preds) {
-		
-		if (!inherits(data[ , pred], 'factor')) {
-			means[[pred]] <- mean(data[ , pred])
-			sds[[pred]] <- sd(data[ , pred])
-			mags[[pred]] <- abs(max(data[ , pred]))
-			predIsNotFactor[[pred]] <- TRUE
-		}
-	
+		predIsNotFactor[[pred]] <- !inherits(data[ , (pred)], 'factor')
 	}
 	
 	if (any(predIsNotFactor)) {
 	
+		# get centers and scales
+		predsNotFactors <- preds[predIsNotFactor]
+		if (inherits(data, 'data.table')) {
+			.SD <- .SDcols <- NULL
+			means <- unlist(data[ , lapply(.SD, mean), .SDcols=predsNotFactors])
+			sds <- unlist(data[ , lapply(.SD, stats::sd), .SDcols=predsNotFactors])
+			mags <- unlist(abs(data[ , lapply(.SD, max), .SDcols=predsNotFactors]))
+		} else {
+			means <- colMeans(data[ , predsNotFactors, drop=FALSE])
+			sds <- apply(data[ , predsNotFactors, drop=FALSE], 2, stats::sd)
+			mags <- abs(apply(data[ , predsNotFactors, drop=FALSE], 2, max))
+		}
+
+		# scale
 		if (is.na(scale)) {
 			mags <- mags * 1E-6
 			if (any(abs(means) > mags) | any(abs(sds - 1) > 1E-6)) {
 				warning('Predictors do not seem to be centered and scaled. Model may be unstable.')
 			}
 		} else {
-			for (pred in preds[predIsNotFactor]) {
-				data[ , pred] <- (data[ , pred] - means[[pred]]) / sds[[pred]]
+			for (pred in predsNotFactors) {
+				if (inherits(data, 'data.table')) {
+					data[ , (pred)] <- (data[[pred]] - means[[pred]]) / sds[[pred]]
+				} else {
+					data[ , pred] <- (data[ , pred] - means[[pred]]) / sds[[pred]]
+				}
 			}
 		}
+		
 	}
 	
-	list(mean=means, sd=sds)
+	list(data = data, scales = list(mean=means, sd=sds))
 	
 }
