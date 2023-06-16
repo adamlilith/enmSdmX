@@ -9,13 +9,19 @@
 #' @return Object of class \code{x}.
 #' @examples
 #'
+#' \donttest{
+#' This example can take more than 5 second to run.
+#'
+#' library(terra)
 #' x <- data.frame(
 #'     long=c(-90.1, -90.1, -90.2, 20),
 #'     lat=c(38, 38, 38, 38), point=letters[1:4]
 #' )
-#' rast <- terra::rast() # empty raster covering entire world with 1-degree resolution
+#' rast <- rast() # empty raster covering entire world with 1-degree resolution
 #' elimCellDuplicates(x, rast, longLat=c(1, 2))
 #' elimCellDuplicates(x, rast, longLat=c(1, 2), priority=c(3, 2, 1, 0))
+#'
+#' }
 #'
 #' @export
 elimCellDuplicates <- function(
