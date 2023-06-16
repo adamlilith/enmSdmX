@@ -114,12 +114,11 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Note the automatic centering/scaling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
-	scale = TRUE,
+	scale = TRUE, # automatic scaling of predictors
 	verbose = TRUE,
 	cores = cores
 )
@@ -138,6 +137,7 @@ ns <- trainNS(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE,
 	cores = cores
@@ -172,14 +172,14 @@ rf <- trainRF(
 ### make maps of models
 #######################
 
-# NB As of January 2023, the terra package sometimes shows apparant errors.
-# This is a known issue with terra, but the functions still work!
+# Create scaled version of rasters for GLMs and NSs.
+madClimScaled <- scale(madClim, center=model$scale$mean, scale=model$scale$sd)
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 
-glMap <- predictEnmSdm(gl, madClim)
+glMap <- predictEnmSdm(gl, madClimScaled)
 gaMap <- predictEnmSdm(ga, madClim)
-nsMap <- predictEnmSdm(ns, madClim)
+nsMap <- predictEnmSdm(ns, madClimScaled)
 brtMap <- predictEnmSdm(brt, madClim)
 rfMap <- predictEnmSdm(rf, madClim)
 
