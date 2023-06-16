@@ -1,18 +1,18 @@
 #' Calibrate a random forest model
 #'
-#' @description This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). The number of trees in each candidate model is set by the user with argument \code{numTrees}. The number of predictors to test per split, \code{mtry}, is found by exploring a range of values. If the response (\code{y}) is a factor, the starting value for \code{mtry} is \code{max(1, floor(p / 3))}, where \code{p} is the number of predictors. If the response is not a factor, the starting value is \code{max(1, floor(sqrt(p)))}. Values y\code{mtryIncrement} argument until the total number of predictors is used.  See \code{\link[randomForest]{randomForest}} for more details.
+#' @description This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). The number of trees in each candidate model is set by the user with argument \code{numTrees}. The number of predictors to test per split, \code{mtry}, is found by exploring a range of values. If the response (\code{y}) is a factor, the starting value for \code{mtry} is \code{max(1, floor(p / 3))}, where \code{p} is the number of predictors. If the response is not a factor, the starting value is \code{max(1, floor(sqrt(p)))}. Values y\code{mtryIncrement} argument until the total number of predictors is used.  See \code{\link[ranger]{ranger}} for more details.
 #'
 #' The output of the function is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
-#' @param family Character. If "\code{binomial}" then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect.
+#' @param binary Logical. If \code{TRUE} (default) then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect and the response will be assumed to be a real number.
 #' @param numTrees Vector of number of trees to grow. All possible combinations of \code{mtry} and \code{numTrees} will be assessed.
 #' @param mtryIncrement Positive integer (default is 2).  Number of predictors to add to \code{mtry} until all predictors are in each tree.
 #' @param w Weights. For random forests, weights are simply used as relative probabilities of selecting a row in \code{data} to be used in a particular tree. This argument takes any of:
 #' \itemize{
-#'	\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+#'	\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{binary = TRUE})
 #' 	\item \code{FALSE}: Each datum is assigned a weight of 1.
 #'  \item A numeric vector of weights, one per row in \code{data}.
 #' 	\item The name of the column in \code{data} that contains site weights.
@@ -25,11 +25,11 @@
 #' }
 #' @param cores Number of cores to use. Default is 1. If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} then display progress for finding optimal value of \code{mtry}.
-#' @param ... Arguments to pass to \code{\link[randomForest]{randomForest}}.
+#' @param ... Arguments to pass to \code{\link[ranger]{ranger}}. Of note, \code{num.threads} will allow for multi-threaded computation of each RF. However, it could be problemmatic to use this when \code{cores} > 1. Also of note, \code{save.memory} reduces speed but may make larger jobs possible.
 #'
 #' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 #'
-#' @seealso \code{\link[randomForest]{randomForest}}
+#' @seealso \code{\link[ranger]{ranger}}
 #'
 #' @example man/examples/trainXYZ_examples.R
 #' 
@@ -38,10 +38,10 @@ trainRF <- function(
 	data,
 	resp = names(data)[1],
 	preds = names(data)[2:ncol(data)],
-	numTrees = c(500, 1000),
+	numTrees = c(250, 500, 750, 1000),
 	mtryIncrement = 2,
 	w = TRUE,
-	family = 'binomial',
+	binary = TRUE,
 	out = 'model',
 	cores = 1,
 	verbose = FALSE,
@@ -53,26 +53,31 @@ trainRF <- function(
 	if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 	# model weights
-	w <- .calcWeights(w, data = data, resp = resp, family = family)
-	
+	w <- .calcWeights(w, data = data, resp = resp, family = ifelse(binary, 'binomial', 'whatever'))
+
 	# binomial response
-	if (family == 'binomial') data[ , resp] <- factor(data[ , resp], levels=0:1, labels=c('0', '1'))
+	if (binary) {
+		if (inherits(data, 'data.table')) {
+			.SD <- NULL
+			eval(parse(text=paste0('data$', resp, ' <- factor(data$', resp, ', levels=0:1, labels=c(\'0\', \'1\'))')))
+		} else {
+			data[ , resp] <- factor(data[ , resp], levels=0:1, labels=c('0', '1'))
+		}
+	}
 
-	x <- data[ , preds, drop = FALSE]
-	y <- data[ , resp, drop = TRUE]
-
-	mtryStart <- if (!is.null(y) && !is.factor(y)) max(floor(ncol(x)/3), 1) else floor(sqrt(ncol(x)))
+	mtryStart <- if (binary) { floor(sqrt(length(preds))) } else { max(floor(ncol(x) / 3), 1) }
 	mtryEnd <- length(preds)
-	mtries <- seq(mtryStart, mtryEnd, mtryIncrement)
-	if (utils::tail(mtries)[1L] != mtryEnd) mtries <- c(mtries, mtryEnd)
+	mtries <- unique(seq(mtryStart, mtryEnd, mtryIncrement))
+	if (utils::tail(mtries, 1L) != mtryEnd) mtries <- c(mtries, mtryEnd)
 
 	params <- expand.grid(numTrees = numTrees, mtry = mtries, stringsAsFactors = FALSE)
 
 	### parallelization
 	###################
 			
-		cores <- min(cores, nrow(params), parallel::detectCores(logical = FALSE))
+		cores <- min(cores, parallel::detectCores(logical = FALSE))
 
+		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		if (cores > 1L) {
 
 			`%makeWork%` <- foreach::`%dopar%`
@@ -81,7 +86,7 @@ trainRF <- function(
 			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
 			on.exit(parallel::stopCluster(cl), add=TRUE)
-			
+
 			# `%makeWork%` <- doRNG::`%dorng%`
 			# doFuture::registerDoFuture()
 			# future::plan(future::multisession(workers = cores))
@@ -91,33 +96,36 @@ trainRF <- function(
 			`%makeWork%` <- foreach::`%do%`
 		}
 
-		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = verbose)
 
 	### grow forest
 	###############
-	
+		
 		work <- foreach::foreach(
 			i = 1L:nrow(params),
-			.options.multicore = mcOptions,
 			.combine = 'c',
+			.multicombine = TRUE,
 			.inorder = FALSE,
+			.packages = c('ranger', 'parallel', 'doParallel'),
 			.export = c('.trainRfWorker')
 		) %makeWork% {
 			.trainRfWorker(
 				i = i,
-				x = x,
-				y = y,
+				resp = resp,
+				preds = preds,
+				data = data,
 				w = w,
+				binary = binary,
 				params = params,
+				modelOut = any(c('model', 'models') %in% out),
 				paths = paths,
-				modelOut = ('models' %in% out | 'model' %in% out),
 				...
 			)
 		}
-	
-		# if (cores > 1L) parallel::stopCluster(cl)
-	
+
+	### collate results
+	###################
+
 		# tuning table
 		tuning <- data.frame(
 			numTrees = work[[1L]]$numTrees,
@@ -144,7 +152,7 @@ trainRF <- function(
 		if ('model' %in% out) model <- work[[bestOrder[1L]]]$model
 		if ('models' %in% out) {
 			models <- list()
-			models[[1]] <- work[[1L]]$model
+			models[[1L]] <- work[[1L]]$model
 			for (i in 2L:length(work)) models[[i]] <- work[[i]]$model
 			models <- models[bestOrder]
 		}
@@ -153,7 +161,7 @@ trainRF <- function(
 	
 		if (verbose) {
 		
-			omnibus::say('Model selection:', level=2)
+			omnibus::say('Model selection:', pre=1)
 			print(tuning)
 			utils::flush.console()
 
@@ -180,12 +188,14 @@ trainRF <- function(
 
 .trainRfWorker <- function(
 	i,
-	x,
-	y,
+	resp,
+	preds,
+	data,
 	w,
+	binary,
 	params,
-	paths,
 	modelOut,
+	paths,
 	...
 ) {
 
@@ -194,22 +204,25 @@ trainRF <- function(
 	ntree <- params$numTrees[i]
 	mtry <- params$mtry[i]
 
-	model <- randomForest::randomForest(
-		x = x,
-		y = y,
+	form <- paste0(resp, ' ~ ', paste(preds, collapse=' + '))
+	form <- as.formula(form)
+
+	model <- ranger::ranger(
+		form,
+		data = data,
 		mtry = mtry,
-		ntree = ntree,
-		weights = w,
-		strata = y,
+		num.trees = ntree,
+		case.weights = w,
 		...
 	)
+	
+	model$binary <- binary
 
-	oob <- model$err.rate[ntree, 1L]
+	oob <- model$prediction.error
 
 	# out
-	out <- if (modelOut) {
-		
-		list(
+	if (modelOut) {
+		thisOut <- list(
 			list(
 				model = model,
 				numTrees = ntree,
@@ -217,17 +230,14 @@ trainRF <- function(
 				oob = oob
 			)
 		)
-		
 	} else {
-	
-		data.frame(
+		thisOut <- data.frame(
 			numTrees = ntree,
 			mtry = mtry,
 			oob = oob
 		)
-	
 	}
 		
-	out
+	thisOut
 	
 }
