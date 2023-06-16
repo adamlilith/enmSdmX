@@ -69,26 +69,27 @@ trainGLM <- function(
 	
 	if (FALSE) {
 	
-		construct = TRUE
-		select = TRUE
-		quadratic = TRUE
-		interaction = TRUE
-		interceptOnly = TRUE
-		presPerTermInitial = 10
-		presPerTermFinal = 10
-		maxTerms = 8
-		w = TRUE
-		scale = TRUE
-		family = stats::binomial()
-		out = 'model'
-		cores = 1
-		verbose = TRUE
+		resp <- 'presBg'
+		construct <- TRUE
+		select <- TRUE
+		quadratic <- TRUE
+		interaction <- TRUE
+		interceptOnly <- TRUE
+		presPerTermInitial <- 10
+		presPerTermFinal <- 10
+		maxTerms <- 8
+		w <- TRUE
+		scale <- TRUE
+		family <- stats::binomial()
+		out <- 'model'
+		cores <- 1
+		verbose <- TRUE
 	
-		# speed = TRUE
-		# method = 'eigen'
+		# speed <- TRUE
+		# method <- 'eigen'
 
-		# speed = FALSE
-		method = 'glm.fit'
+		# speed <- FALSE
+		method <- 'glm.fit'
 
 	}
 
@@ -100,9 +101,13 @@ trainGLM <- function(
 		if (inherits(resp, c('integer', 'numeric'))) resp <- names(data)[resp]
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
+		# weights and scaling
 		w <- .calcWeights(w, data = data, resp = resp, family = family)
-		
-		if (is.na(scale) || scale) scales <- .scalePredictors(scale, preds, data)
+		if (is.na(scale) || scale) {
+			scaleds <- .scalePredictors(scale, preds, data)
+			data <- scaleds$data
+			scales <- scaleds$scales
+		}
 
 	### parallelization
 	###################
@@ -143,40 +148,22 @@ trainGLM <- function(
 			family
 		}
 
-		n <- if (fam %in% c('binomial', 'quasibinomial')) {
-			if (inherits(data, 'data.table')) {
-				unlist(data[, lapply(.SD, sum), , .SDcols = resp])
+		if (fam %in% c('binomial', 'quasibinomial')) {
+			n <- if (inherits(data, 'data.table')) {
+				.SD <- NULL
+				unlist(data[ , lapply(.SD, sum), , .SDcols = resp])
 			} else {
-				sum(data[ , resp, drop=TRUE])
+				n <- sum(data[ , resp, drop=TRUE])
 			}
 		} else {
-			nrow(data)
+			n <- nrow(data)
 		}
 
 		### create vector of terms
 		terms <- preds
-		if (quadratic & n >= 2 * presPerTermInitial) {
-			for (i in seq_along(preds)) terms <- c(terms, paste0(preds[i], ' + I(', preds[i], '^2)'))
-		}
+		if (quadratic) terms <- c(terms, .makeQuadsMarginality(preds=preds, n=n, presPerTermInitial=presPerTermInitial))
+		if (interaction) terms <- c(terms, .makeIAsMarginality(preds=preds, n=n, presPerTermInitial=presPerTermInitial))
 		
-		# interaction terms
-		if (interaction & length(preds) > 1L & n >= 2 * presPerTermInitial) {
-		
-			for (countPred1 in 1L:(length(preds) - 1L)) { # for each predictor test two-variable terms
-
-				pred1 <- preds[countPred1]
-
-				for (countPred2 in 2L:length(preds)) { # for each second predictor test two-variable terms
-
-					pred2 <- preds[countPred2]
-					terms <- c(terms, paste0(preds[countPred1], ' + ', preds[countPred2], ' + ', preds[countPred1], ':', preds[countPred2]))
-					
-				} # next second term
-				
-			} # next first term
-			
-		} # if more than one term
-			
 	## term-by-term model construction
 	##################################
 	if (construct) {
@@ -242,6 +229,8 @@ trainGLM <- function(
 			}
 			
 			thisForm <- paste0(resp, ' ~ 1 + ', form)
+			numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
+			start <- rep(0, numTerms)
 			
 			model <- stats::glm(
 				formula = stats::as.formula(thisForm),
@@ -249,6 +238,7 @@ trainGLM <- function(
 				data = data,
 				method = method,
 				weights = w,
+				start = start,
 				...
 			)
 			
@@ -276,14 +266,18 @@ trainGLM <- function(
 		
 		} else {
 
-			### make all possible models
+			### make all possible formulae given constraints
 			terms <- assess$formula
 			terms <- strsplit(terms, split='\\+')
 			terms <- lapply(terms, trimws)
+			for (i in seq_along(terms)) {
+				if (any(terms[[i]] == '1')) terms[[i]] <- terms[[i]][terms[[i]] != '1']
+			}
 			lengthTerms <- length(terms)
 
 			form <- terms[[1L]]
 			
+			# basic full-model formula
 			numTerms <- length(form)
 			i <- 2L
 			while (numTerms <= maxTerms & n / presPerTermInitial >= numTerms & i <= lengthTerms) {
@@ -294,60 +288,65 @@ trainGLM <- function(
 				i <- i + 1L
 			
 			}
-			
+
+			# all possible models: keep only desired quadratics and interactions (and respect marginality)
+			if (any(form == '1')) form <- form[form != '1']
 			ias <- form[grepl(form, pattern=':')]
 			quads <- form[grepl(form, pattern='\\^2')]
 			linears <- form[!grepl(form, pattern=':') & !grepl(form, pattern='\\^2')]
 
 			haveQuads <- (length(quads) > 0L)
-			haveIas <- (length(ias) > 0L)
+			haveIAs <- (length(ias) > 0L)
 
 			form <- paste0(resp, ' ~ ', paste(linears, collapse=' + '))
-			form <- as.formula(form)
-			
-			forms <- statisfactory::makeFormulae(form, quad=haveQuads, ia=haveIas, maxTerms=maxTerms, returnFx=as.character)
+			form <- stats::as.formula(form)
+			forms <- statisfactory::makeFormulae(form, quad=haveQuads, ia=haveIAs, maxTerms=maxTerms, returnFx=as.character)
 
-			forms <- strsplit(forms, split='\\+')
-			forms <- lapply(forms, trimws)
-
-			lhs <- paste0(resp, ' ~ 1')
-			for (i in seq_along(forms)) forms[[i]] <- forms[[i]][forms[[i]] != lhs]
-
-			# len <- sapply(forms, length)
-			# forms[len == 0L] <- NULL
-
-			# keep models with quads we already had
-			ok <- rep(FALSE, length(forms))
 			if (haveQuads) {
-				for (quad in quads) {
-					thisOk <- lapply(forms, grepl, pattern=quad, fixed=TRUE)
-					thisOk <- sapply(thisOk, any)
-					ok <- ok | thisOk
+				candidateQuads <- .makeQuads(linears)
+				verbotenQuads <- candidateQuads[!(candidateQuads %in% quads)]
+				if (length(verbotenQuads) > 0L) {
+				
+					discards <- rep(FALSE, length(forms))
+					for (i in seq_along(verbotenQuads)) {
+						discards <- discards | grepl(forms, pattern=verbotenQuads[i], fixed=TRUE)
+					}
+					
+					if (any(discards)) forms <- forms[!discards]
 				}
-			}
-			
-			# keep models with IAs we already had
-			if (haveIas) {
-				for (ia in ias) {
-					thisOk <- lapply(forms, grepl, pattern=ia, fixed=TRUE)
-					thisOk <- sapply(thisOk, any)
-					ok <- ok | thisOk
-				}
-			}
-			
-			# keep models with just linears
-			for (i in seq_along(forms)) {
-				if (haveIas & haveQuads) {
-					thisFormOk <- !any(ias %in% forms[[i]]) & !any(quads %in% forms[[i]])
-				} else if (haveIas & !haveQuads) {
-					thisFormOk <- !any(ias %in% forms[[i]])
-				} else if (!haveIas & haveQuads) {
-					thisFormOk <- !any(quads %in% forms[[i]])
-				}
-				ok[i] <- ok[i] | thisFormOk
 			}
 
-			forms <- sapply(forms, paste, collapse=' + ')
+			if (haveIAs) {
+
+				candidateIAs <- .makeIAs(linears)
+				swapCandidateIAs <- rep(NA_character_, length(candidateIAs))
+				for (i in seq_along(candidateIAs)) {
+				
+					colon <- regexpr(candidateIAs[i], pattern=':')[1L]
+					swapCandidateIAs[i] <- paste0(
+						substr(candidateIAs[i], colon + 1, nchar(candidateIAs[i])),
+						':',
+						substr(candidateIAs[i], 1, colon - 1)
+					)
+				}
+				
+				verbotenIAs <- setdiff(ias, c(candidateIAs, swapCandidateIAs))
+				
+				if (length(verbotenIAs) > 0L) {
+				
+					discards <- rep(FALSE, length(forms))
+					for (i in seq_along(verbotenIAs)) {
+						discards <- discards | grepl(forms, pattern=verbotenIAs[i], fixed=TRUE)
+					}
+					
+					if (any(discards)) forms <- forms[!discards]
+				}
+			
+			}
+			
+			lens <- sapply(forms, nchar)
+			lenLhs <- nchar(paste0(resp, ' ~ 1 + ')) + 1
+			for (i in seq_along(forms)) forms[[i]] <- substr(forms[[i]], lenLhs, lens[i])
 
 			assess <- foreach::foreach(
 				i = seq_along(forms),
@@ -360,7 +359,7 @@ trainGLM <- function(
 			) %makeWork% {
 				.trainGlmWorker(
 					i = i,
-					forms = forms,
+					forms = as.list(forms),
 					data = data,
 					resp = resp,
 					family = family,
@@ -373,6 +372,7 @@ trainGLM <- function(
 				)
 			}
 
+			# compile all possible models and rank
 			tuning <- data.frame(model = rep(NA_character_, length(assess)), AICc = rep(NA_real_, length(assess)))
 			models <- list()
 			for (i in seq_along(assess)) {
@@ -406,6 +406,8 @@ trainGLM <- function(
 		form <- unique(form)
 		form <- paste(form, collapse = ' + ')
 		thisForm <- paste0(resp, ' ~ 1 + ', form)
+		numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
+		start <- rep(0, numTerms)
 	
 		model <- stats::glm(
 			formula = stats::as.formula(thisForm),
@@ -413,6 +415,7 @@ trainGLM <- function(
 			data = data,
 			method = method,
 			weights = w,
+			start = start,
 			...
 		)
 		
@@ -494,6 +497,8 @@ trainGLM <- function(
 		}
 	}
 	thisForm <- paste0(resp, ' ~ ', form)
+	numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
+	start <- rep(0, numTerms)
 
 	model <- stats::glm(
 		formula = stats::as.formula(thisForm),
@@ -501,6 +506,7 @@ trainGLM <- function(
 		family = family,
 		weights = w,
 		method = method,
+		start = start,
 		...
 	)
 	
@@ -527,4 +533,61 @@ trainGLM <- function(
 	}
 	out
 
+}
+
+# make vector of quadratic terms respecting marginality
+.makeQuadsMarginality <- function(preds, n, presPerTermInitial) {
+	
+	quads <- character()
+	if (n >= 2 * presPerTermInitial) {
+		for (i in seq_along(preds)) quads <- c(quads, paste0(preds[i], ' + I(', preds[i], '^2)'))
+	}
+	quads
+
+}
+
+# make vector of quadratic terms ONLY
+.makeQuads <- function(preds) {
+	paste0('I(', preds, '^2)')
+}
+
+# make vector of interaction terms respecting marginality
+.makeIAsMarginality <- function(preds, n, presPerTermInitial) {
+	
+	ias <- character()
+	if (length(preds) > 1L & n >= 2 * presPerTermInitial) {
+		
+		nPreds <- length(preds)
+		for (countPred1 in 1L:(nPreds - 1L)) { # for each predictor test two-variable terms
+
+			pred1 <- preds[countPred1]
+
+			for (countPred2 in (countPred1 + 1L):length(preds)) { # for each second predictor test two-variable terms
+
+				pred2 <- preds[countPred2]
+				ias <- c(ias, paste0(preds[countPred1], ' + ', preds[countPred2], ' + ', preds[countPred1], ':', preds[countPred2]))
+				
+			} # next second term
+			
+		} # next first term
+	
+	} # if more than one term
+
+	ias
+}
+
+# make vector of interaction terms ONLY
+.makeIAs <- function(preds) {
+	
+	ias <- character()
+	nPreds <- length(preds)
+	for (countPred1 in 1L:(nPreds - 1L)) { # for each predictor test two-variable terms
+		pred1 <- preds[countPred1]
+		for (countPred2 in (countPred1 + 1):nPreds) { # for each second predictor test two-variable terms
+			pred2 <- preds[countPred2]
+			ias <- c(ias, paste0(preds[countPred1], ':', preds[countPred2]))
+		} # next second term
+	} # next first term
+	ias
+	
 }
