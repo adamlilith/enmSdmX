@@ -31,7 +31,7 @@ trainByCrossValid(
 \item If a matrix or data frame, there must be one row per row in \code{data}. Each column corresponds to a different model to be trained. For a given column there should be only two unique values, plus possibly \code{NA}s. Of the two values, the lesser value will be used to identify the calibration data and the greater value the evaluation data. Rows with \code{NA}s will be ignored and not used in training or testing.  For example, a particular column could contain 1s, 2, and \code{NA}s. Data rows corresponding to 1s will be used as training data, data rows corresponding to 2s as test data, and rows with \code{NA} are dropped. The \code{NA} flag is useful for creating spatially-structured cross-validation folds where training and test sites are separated (spatially) by censored (ignored) data.
 }}
 
-\item{trainFx}{Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, and \code{\link[enmSdmX]{trainNS}}.}
+\item{trainFx}{Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainRF}}, and \code{\link[enmSdmX]{trainNS}}.}
 
 \item{...}{Arguments to pass to the "trainXYZ" function.}
 

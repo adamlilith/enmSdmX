@@ -16,6 +16,8 @@
 		family
 	}
 
+	if (inherits(data, 'data.table')) data <- as.data.frame(data)
+
 	if (inherits(w, 'logical')) {
 
 		if (w & (fam %in% c('binomial', 'quasibinomial'))) {

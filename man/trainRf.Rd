@@ -8,10 +8,10 @@ trainRF(
   data,
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
-  numTrees = c(500, 1000),
+  numTrees = c(250, 500, 750, 1000),
   mtryIncrement = 2,
   w = TRUE,
-  family = "binomial",
+  binary = TRUE,
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -31,13 +31,13 @@ trainRF(
 
 \item{w}{Weights. For random forests, weights are simply used as relative probabilities of selecting a row in \code{data} to be used in a particular tree. This argument takes any of:
 \itemize{
-\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{family='binomial'})
+\item \code{TRUE}: Causes the total weight of presences to equal the total weight of absences (if \code{binary = TRUE})
     \item \code{FALSE}: Each datum is assigned a weight of 1.
  \item A numeric vector of weights, one per row in \code{data}.
     \item The name of the column in \code{data} that contains site weights.
 }}
 
-\item{family}{Character. If "\code{binomial}" then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect.}
+\item{binary}{Logical. If \code{TRUE} (default) then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect and the response will be assumed to be a real number.}
 
 \item{out}{Character vector. One or more values:
 \itemize{
@@ -50,13 +50,15 @@ trainRF(
 
 \item{verbose}{Logical. If \code{TRUE} then display progress for finding optimal value of \code{mtry}.}
 
-\item{...}{Arguments to pass to \code{\link[randomForest]{randomForest}}.}
+\item{...}{Arguments to pass to \code{\link[ranger]{ranger}}. Of note, \code{num.threads} will allow for multi-threaded computation of each RF. However, it could be problemmatic to use this when \code{cores} > 1. Also of note, \code{save.memory} reduces speed but may make larger jobs possible.}
 }
 \value{
 The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
-This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). See \code{\link[randomForest]{randomForest}} for more details. Its output is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
+This function trains a random forest model. It identifies the optimal number of trees and value for \code{mtry} (number of variables sampled as candidates at each split) using out-of-bag error (OOB). The number of trees in each candidate model is set by the user with argument \code{numTrees}. The number of predictors to test per split, \code{mtry}, is found by exploring a range of values. If the response (\code{y}) is a factor, the starting value for \code{mtry} is \code{max(1, floor(p / 3))}, where \code{p} is the number of predictors. If the response is not a factor, the starting value is \code{max(1, floor(sqrt(p)))}. Values y\code{mtryIncrement} argument until the total number of predictors is used.  See \code{\link[ranger]{ranger}} for more details.
+
+The output of the function is any or all of: a table with out-of-bag (OOB) error of evaluated models; all evaluated models; and/or the single model with the lowest OOB error.
 }
 \examples{
 \donttest{
@@ -137,11 +139,11 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Normally, we'd center and standardize variables before modeling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	verbose = TRUE,
 	cores = cores
 )
@@ -160,6 +162,7 @@ ns <- trainNS(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE,
 	cores = cores
@@ -172,7 +175,7 @@ brt <- trainBRT(
 	resp = 'presBg',
 	preds = predictors,
 	learningRate = 0.001, # too few values for reliable model(?)
-	treeComplexity = 2, # too few values for reliable model, but fast
+	treeComplexity = c(2, 3), # too few values for reliable model, but fast
 	minTrees = 1200, # minimum trees for reliable model(?), but fast
 	maxTrees = 1200, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',
@@ -194,14 +197,14 @@ rf <- trainRF(
 ### make maps of models
 #######################
 
-# NB As of January 2023, the terra package sometimes shows apparant errors.
-# This is a known issue with terra, but the functions still work!
+# Create scaled version of rasters for GLMs and NSs.
+madClimScaled <- scale(madClim, center=gl$scale$mean, scale=gl$scale$sd)
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 
-glMap <- predictEnmSdm(gl, madClim)
+glMap <- predictEnmSdm(gl, madClimScaled)
 gaMap <- predictEnmSdm(ga, madClim)
-nsMap <- predictEnmSdm(ns, madClim)
+nsMap <- predictEnmSdm(ns, madClimScaled)
 brtMap <- predictEnmSdm(brt, madClim)
 rfMap <- predictEnmSdm(rf, madClim)
 
@@ -281,5 +284,5 @@ legend(
 }
 }
 \seealso{
-\code{\link[randomForest]{randomForest}}
+\code{\link[ranger]{ranger}}
 }

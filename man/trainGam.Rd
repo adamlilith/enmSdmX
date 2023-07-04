@@ -161,11 +161,11 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Normally, we'd center and standardize variables before modeling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	verbose = TRUE,
 	cores = cores
 )
@@ -184,6 +184,7 @@ ns <- trainNS(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE,
 	cores = cores
@@ -196,7 +197,7 @@ brt <- trainBRT(
 	resp = 'presBg',
 	preds = predictors,
 	learningRate = 0.001, # too few values for reliable model(?)
-	treeComplexity = 2, # too few values for reliable model, but fast
+	treeComplexity = c(2, 3), # too few values for reliable model, but fast
 	minTrees = 1200, # minimum trees for reliable model(?), but fast
 	maxTrees = 1200, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',
@@ -218,14 +219,14 @@ rf <- trainRF(
 ### make maps of models
 #######################
 
-# NB As of January 2023, the terra package sometimes shows apparant errors.
-# This is a known issue with terra, but the functions still work!
+# Create scaled version of rasters for GLMs and NSs.
+madClimScaled <- scale(madClim, center=gl$scale$mean, scale=gl$scale$sd)
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 
-glMap <- predictEnmSdm(gl, madClim)
+glMap <- predictEnmSdm(gl, madClimScaled)
 gaMap <- predictEnmSdm(ga, madClim)
-nsMap <- predictEnmSdm(ns, madClim)
+nsMap <- predictEnmSdm(ns, madClimScaled)
 brtMap <- predictEnmSdm(brt, madClim)
 rfMap <- predictEnmSdm(rf, madClim)
 

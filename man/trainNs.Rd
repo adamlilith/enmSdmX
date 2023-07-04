@@ -8,6 +8,7 @@ trainNS(
   data,
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
+  scale = NA,
   df = 1:4,
   interaction = TRUE,
   interceptOnly = TRUE,
@@ -28,6 +29,8 @@ trainNS(
 \item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.}
 
 \item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
+
+\item{scale}{Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$means} and \code{model$scales$sds}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do it's operations.}
 
 \item{df}{A vector of integers > 0 or \code{NULL}. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.}
 
@@ -65,7 +68,7 @@ trainNS(
 \item{...}{Arguments to send to \code{\link[stats]{glm}}.}
 }
 \value{
-The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors.
 }
 \description{
 This function constructs a natural-spline model by evaluating all possible models given the available predictors and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model. Its output is any or all of: a table with AICc for all evaluated models; all models evaluated; and/or the single model with the lowest AICc.
@@ -149,11 +152,11 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Normally, we'd center and standardize variables before modeling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	verbose = TRUE,
 	cores = cores
 )
@@ -172,6 +175,7 @@ ns <- trainNS(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE,
 	cores = cores
@@ -184,7 +188,7 @@ brt <- trainBRT(
 	resp = 'presBg',
 	preds = predictors,
 	learningRate = 0.001, # too few values for reliable model(?)
-	treeComplexity = 2, # too few values for reliable model, but fast
+	treeComplexity = c(2, 3), # too few values for reliable model, but fast
 	minTrees = 1200, # minimum trees for reliable model(?), but fast
 	maxTrees = 1200, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',
@@ -206,14 +210,14 @@ rf <- trainRF(
 ### make maps of models
 #######################
 
-# NB As of January 2023, the terra package sometimes shows apparant errors.
-# This is a known issue with terra, but the functions still work!
+# Create scaled version of rasters for GLMs and NSs.
+madClimScaled <- scale(madClim, center=gl$scale$mean, scale=gl$scale$sd)
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 
-glMap <- predictEnmSdm(gl, madClim)
+glMap <- predictEnmSdm(gl, madClimScaled)
 gaMap <- predictEnmSdm(ga, madClim)
-nsMap <- predictEnmSdm(ns, madClim)
+nsMap <- predictEnmSdm(ns, madClimScaled)
 brtMap <- predictEnmSdm(brt, madClim)
 rfMap <- predictEnmSdm(rf, madClim)
 

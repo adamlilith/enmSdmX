@@ -53,9 +53,9 @@ ll <- c('longitude', 'latitude')
 # use occurrences of all species... easier to see on map
 occs <- st_as_sf(lemurs, coords = ll, crs = getCRS('WGS84'))
 
-# create 1000 background points
+# create 100 background points
 mad0 <- vect(mad0)
-bg <- spatSample(mad0, 1000)
+bg <- spatSample(mad0, 100)
 
 ### assign 3 folds to occurrences and to background sites
 k <- 3
@@ -87,4 +87,7 @@ legend(
 	col = c(rep('black', 3), 2, 3),
 	pt.bg = c(2, 3, 4, NA, NA)
 )
+}
+\seealso{
+\code{\link{geoFold}}
 }

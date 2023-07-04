@@ -33,7 +33,6 @@
 #' 	\item	\code{'tuning'}: Data frame with tuning parameters, one row per model, sorted by deviance.
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
-#' @param parallelType Either \code{'doParallel'} (default) or \code{'doSNOW'}. Issues with parallelization might be solved by trying the non-default option.
 #' @param verbose Logical. If \code{TRUE} display progress.
 #' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
 #'
@@ -63,7 +62,6 @@ trainBRT <- function(
 	family = 'bernoulli',
 	out = 'model',
 	cores = 1,
-	parallelType = 'doParallel',
 	verbose = FALSE,
 	...
 ) {
@@ -103,10 +101,17 @@ trainBRT <- function(
 		if (cores > 1L) {
 
 			`%makeWork%` <- foreach::`%dopar%`
-			cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+			cl <- parallel::makeCluster(cores)
+			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
 			on.exit(parallel::stopCluster(cl), add=TRUE)
 			
+			# `%makeWork%` <- doRNG::`%dorng%`
+			# doFuture::registerDoFuture()
+			# future::plan(future::multisession(workers = cores))
+			# on.exit(future:::ClusterRegistry('stop'), add=TRUE)
+
 		} else {
 			`%makeWork%` <- foreach::`%do%`
 		}

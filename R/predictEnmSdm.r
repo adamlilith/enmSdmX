@@ -69,10 +69,17 @@ predictEnmSdm <- function(
 	} else if (cores > 1L & nrows > n) {
 
 		`%makeWork%` <- foreach::`%dopar%`
-		cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+		# cl <- parallel::makeCluster(cores, setup_strategy = 'sequential')
+		cl <- parallel::makeCluster(cores)
+		parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 		doParallel::registerDoParallel(cl)
 		on.exit(parallel::stopCluster(cl), add=TRUE)
 			
+		# `%makeWork%` <- doRNG::`%dorng%`
+		# doFuture::registerDoFuture()
+		# future::plan(future::multisession(workers = cores))
+		# on.exit(future:::ClusterRegistry('stop'), add=TRUE)
+
 		paths <- .libPaths() # need to pass this to avoid "object '.doSnowGlobals' not found" error!!!
 		mcOptions <- list(preschedule = TRUE, set.seed = TRUE, silent = TRUE)
 
@@ -124,7 +131,7 @@ predictEnmSdm <- function(
 			}
 
 		# GLM
-		} else if (inherits(model, 'glm')) {
+		} else if (inherits(model, c('glm'))) {
 
 			out <- if (inherits(newdata, c('SpatRaster'))) {
 				terra::predict(newdata, model, type='response', ...)
@@ -175,31 +182,71 @@ predictEnmSdm <- function(
 
 			out <- predictMaxNet(model = model, newdata = newdata, ...)
 
-		# random forest in party package
+		# random forest in randomForest package
 		} else if (inherits(model, 'randomForest')) {
 
-			nd <- terra::as.data.frame(newdata, na.rm=FALSE)
-			notNas <- which(stats::complete.cases(nd))
-			nd <- nd[notNas, , drop=FALSE]
 			predictRandomForest <- utils::getFromNamespace('predict.randomForest', 'randomForest')
-			preds <- predictRandomForest(object = model, newdata = nd, type = 'prob', ...)
-			# preds <- do.call(randomForest:::predict.randomForest, args = list(object = model, newdata = nd, type = 'prob', ...))
-			preds <- preds[ , '1']
 
 			if (inherits(newdata, 'SpatRaster')) {
+
+				nd <- terra::as.data.frame(newdata, na.rm=FALSE)
+				notNas <- which(stats::complete.cases(nd))
+				nd <- nd[notNas, , drop=FALSE]
+				preds <- predictRandomForest(object = model, newdata = nd, type = 'prob', ...)
+				preds <- preds[ , '1']
 				out <- newdata[[1L]]
 				out[] <- NA
 				out <- setValueByCell(out, preds, cell=notNas, format='raster')
+				names(out) <- 'randomForest'
+				
 			} else {
-				out <- rep(NA, nrow(newdata))
-				out[notNas] <- preds
+				preds <- predictRandomForest(object = model, newdata = newdata, type = 'prob', ...)
+				out <- preds[ , '1']
+			}
+
+		# random forest in ranger package
+		} else if (inherits(model, 'ranger')) {
+
+			predictRanger <- utils::getFromNamespace('predict.ranger', 'ranger')
+			binary <- if (!exists('binary', where=model, inherits=FALSE)) {
+				FALSE
+			} else {
+				model$binary
+			}
+
+
+			if (inherits(newdata, 'SpatRaster')) {
+
+				nd <- as.data.frame(newdata, na.rm=FALSE)
+				notNas <- which(stats::complete.cases(nd))
+				nd <- nd[notNas, , drop=FALSE]
+				
+				preds <- predictRanger(model, data=nd, predict.all=binary, type='response', ...)
+				
+				if (binary) {
+					preds <- rowMeans(preds$predictions)
+					preds <- preds - 1
+				}
+				
+				out <- newdata[[1L]]
+				out[] <- NA
+				out <- setValueByCell(out, preds, cell=notNas, format='raster')
+				names(out) <- 'ranger'
+				
+			} else {
+			
+				preds <- predictRanger(model, data=nd, predict.all=binary, type='response', ...)
+				
+				if (binary) {
+					preds <- rowMeans(preds$predictions)
+					preds <- preds - 1
+				}
+			
 			}
 
 		# anything else!
 		} else {
-
 			out <- do.call('predict', args=list(object=model, newdata=newdata, type='response', ...))
-
 		}
 		
 	} # single-core

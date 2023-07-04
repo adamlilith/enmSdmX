@@ -8,6 +8,7 @@ trainGLM(
   data,
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
+  scale = NA,
   construct = TRUE,
   select = TRUE,
   quadratic = TRUE,
@@ -18,7 +19,7 @@ trainGLM(
   presPerTermFinal = 10,
   maxTerms = 8,
   w = TRUE,
-  family = "binomial",
+  family = stats::binomial(),
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -32,6 +33,8 @@ trainGLM(
 
 \item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
+\item{scale}{Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$means} and \code{model$scales$sds}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do it's operations.}
+
 \item{construct}{Logical. If \code{TRUE} (default) then construct model from individual terms entered in order from lowest to highest AICc up to limits set by \code{presPerTermInitial} or \code{maxTerms} is met. If \code{FALSE} then the "full" model consists of all terms allowed by \code{quadratic} and \code{interaction}.}
 
 \item{select}{Logical. If \code{TRUE} (default) then calculate AICc for all possible subsets of models and return the model with the lowest AICc of these. This step if performed \emph{after} model construction (if any).}
@@ -40,7 +43,7 @@ trainGLM(
 
 \item{interaction}{Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include 2-way interaction terms (including interactions between factor predictors).}
 
-\item{method}{Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.}
+\item{method}{Character: Name of function used to solve the GLM. For "normal" GLMs, this can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.}
 
 \item{interceptOnly}{If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.}
 
@@ -74,10 +77,12 @@ trainGLM(
 \item{...}{Arguments to pass to \code{glm}.}
 }
 \value{
-The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors.
 }
 \description{
-This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model). Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model).
+
+The function outputs any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 }
 \examples{
 \donttest{
@@ -158,11 +163,11 @@ mn <- trainMaxNet(
 )
 
 # generalized linear model (GLM)
-# Normally, we'd center and standardize variables before modeling.
 gl <- trainGLM(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	verbose = TRUE,
 	cores = cores
 )
@@ -181,6 +186,7 @@ ns <- trainNS(
 	data = env,
 	resp = 'presBg',
 	preds = predictors,
+	scale = TRUE, # automatic scaling of predictors
 	df = 1:2, # too few values for reliable model(?)
 	verbose = TRUE,
 	cores = cores
@@ -193,7 +199,7 @@ brt <- trainBRT(
 	resp = 'presBg',
 	preds = predictors,
 	learningRate = 0.001, # too few values for reliable model(?)
-	treeComplexity = 2, # too few values for reliable model, but fast
+	treeComplexity = c(2, 3), # too few values for reliable model, but fast
 	minTrees = 1200, # minimum trees for reliable model(?), but fast
 	maxTrees = 1200, # too small for reliable model(?), but fast
 	tryBy = 'treeComplexity',
@@ -215,14 +221,14 @@ rf <- trainRF(
 ### make maps of models
 #######################
 
-# NB As of January 2023, the terra package sometimes shows apparant errors.
-# This is a known issue with terra, but the functions still work!
+# Create scaled version of rasters for GLMs and NSs.
+madClimScaled <- scale(madClim, center=gl$scale$mean, scale=gl$scale$sd)
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 
-glMap <- predictEnmSdm(gl, madClim)
+glMap <- predictEnmSdm(gl, madClimScaled)
 gaMap <- predictEnmSdm(ga, madClim)
-nsMap <- predictEnmSdm(ns, madClim)
+nsMap <- predictEnmSdm(ns, madClimScaled)
 brtMap <- predictEnmSdm(brt, madClim)
 rfMap <- predictEnmSdm(rf, madClim)
 

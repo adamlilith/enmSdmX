@@ -22,7 +22,7 @@
 #' 	\item GLMs (generalized linear models): Frequency of use of each term in the best models.
 #' 	\item Maxent: Frequency of times each specific combination of feature classes was used in the best models plus mean master regularization multiplier for each feature set.
 #' 	\item NSs (natural splines): Data frame, one row per fold and one column per predictor, with values representing the maximum degrees of freedom used for each variable in the best model of each fold.
-#' 	\item RFs (random forests): Data frame, one row per fold, with values representing the optimal value of \code{mtry} (see \code{\link[randomForest]{randomForest}}).
+#' 	\item RFs (random forests): Data frame, one row per fold, with values representing the optimal value of \code{numTrees} and \code{mtry} (see \code{\link[ranger]{ranger}}).
 #' }
 #' @seealso \code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNS}}, \code{\link[enmSdmX]{trainRF}}
 #'

@@ -1,8 +1,8 @@
 Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
-Version: 1.0.7
-Date: 2023-05-31
+Version: 1.1.1
+Date: 2023-06-22
 Authors@R: 
 	c(
 		person(
@@ -31,6 +31,7 @@ Depends:
 	R (>= 4.0.0)
 Imports:
 	boot,
+	data.table,
 	dismo,
 	doParallel,
 	DT,
@@ -44,11 +45,12 @@ Imports:
 	MuMIn,
 	omnibus,
 	parallel,
-	randomForest,
+	ranger,
 	rJava,
 	scales,
-	shiny,
 	sf,
+	shiny,
+	statisfactory,
 	stats,
 	terra,
 	utils

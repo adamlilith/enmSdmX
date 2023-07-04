@@ -2,7 +2,7 @@
 #'
 #' @title Troubleshooting parallel operations
 #'
-#' @description This is a guide to solving issues with running functions that can use more than one core. This includes the \code{train}\emph{XYZ} functions, \code{\link{bioticVelocity}} function, and the \code{\link{predictEnmSdm}}. Each of these function has the argument \code{cores}. By default, the value of \code{cores} is 1, so the function will use only one core. By setting this higher, you can use more cores on your machine.  However, occasionally you will run into the error:\cr
+#' @description This is a guide to solving issues with running functions that can use more than one core. This includes the \code{train}\emph{XYZ} functions, \code{\link{bioticVelocity}}, and \code{\link{predictEnmSdm}}. Each of these function has the argument \code{cores}. By default, the value of \code{cores} is 1, so the function will use only one core. By setting this higher, you can use more cores on your machine.  However, occasionally you will run into the error:\cr
 #' \code{Error in checkForRemoteErrors(lapply(cl, recvResult)) :}\cr
 #' \code{  2 nodes produced errors; first error: object '.doSnowGlobals' not found}\cr
 #' This means that the worker "nodes" (different instances of \code{R} started by the function to run in parallel) cannot find the \pkg{doParallel} package, even if it is installed on your system.

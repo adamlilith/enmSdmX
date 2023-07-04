@@ -10,7 +10,7 @@
 #' 	\item If a vector, there must be one value per row in \code{data}. If there are \emph{K} unique values in the vector, then \emph{K} unique models will be trained. Each model will use all of the data except for rows that match a particular value in the \code{folds} vector. For example, if \code{folds = c(1, 1, 1, 2, 2, 2, 3, 3, 3)}, then three models will be trained, one with all rows that match the 2s and 3s, one with all rows matching 1s and 2s, and one will all rows matching 1s and 3s. The models will be evaluated against the training data and against the withheld data. Use \code{NA} to exclude rows from all testing/training. The default is to construct 5 folds of roughly equal size.
 #' \item If a matrix or data frame, there must be one row per row in \code{data}. Each column corresponds to a different model to be trained. For a given column there should be only two unique values, plus possibly \code{NA}s. Of the two values, the lesser value will be used to identify the calibration data and the greater value the evaluation data. Rows with \code{NA}s will be ignored and not used in training or testing.  For example, a particular column could contain 1s, 2, and \code{NA}s. Data rows corresponding to 1s will be used as training data, data rows corresponding to 2s as test data, and rows with \code{NA} are dropped. The \code{NA} flag is useful for creating spatially-structured cross-validation folds where training and test sites are separated (spatially) by censored (ignored) data.
 #' }
-#' @param trainFx Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, and \code{\link[enmSdmX]{trainNS}}.
+#' @param trainFx Function, name of the \code{trainXYZ} function to use. Currently the functions/algorithms supported are \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainRF}}, and \code{\link[enmSdmX]{trainNS}}.
 #' @param ... Arguments to pass to the "trainXYZ" function.
 #' @param weightEvalTrain Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "train" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of sites. Note that this applies \emph{only} to the calculation of evaluation statistics, not to model calibration.  If \code{w} is supplied, they will be used for model calibration.
 #' @param weightEvalTest Logical, if \code{TRUE} (default) and an argument named \code{w} is specified in \code{...}, then evaluation statistics that support weighting will use the weights specified by \code{w} \emph{for the "test" version of evaluation statistics}. If \code{FALSE}, there will be no weighting of sites. Note that this applies \emph{only} to the calculation of evaluation statistics.  If \code{w} is supplied, they will be used for model calibration.
@@ -373,7 +373,7 @@ trainByCrossValid <- function(
 		'trainGAM'
 	} else if (inherits(someModel, 'glm')) {
 		'trainGLM'
-	} else if (inherits(someModel, 'randomForest')) {
+	} else if (inherits(someModel, c('randomForest', 'ranger'))) {
 		'trainRF'
 	}
 
