@@ -193,7 +193,7 @@ rf <- trainRF(
 #######################
 
 # Create scaled version of rasters for GLMs and NSs.
-madClimScaled <- scale(madClim, center=model$scale$mean, scale=model$scale$sd)
+madClimScaled <- scale(madClim, center=gl$scale$mean, scale=gl$scale$sd)
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 

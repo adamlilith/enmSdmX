@@ -24,7 +24,7 @@ This function thins spatial points such that no more than one point falls within
 \examples{
 
 \donttest{
-This example can take more than 5 second to run.
+# This example can take >10 second to run.
 
 library(terra)
 x <- data.frame(
@@ -36,5 +36,4 @@ elimCellDuplicates(x, rast, longLat=c(1, 2))
 elimCellDuplicates(x, rast, longLat=c(1, 2), priority=c(3, 2, 1, 0))
 
 }
-
 }
