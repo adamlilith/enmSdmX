@@ -65,7 +65,7 @@ trainRF <- function(
 		}
 	}
 
-	mtryStart <- if (binary) { floor(sqrt(length(preds))) } else { max(floor(ncol(x) / 3), 1) }
+	mtryStart <- if (binary) { floor(sqrt(length(preds))) } else { max(floor(ncol(data) / 3), 1) }
 	mtryEnd <- length(preds)
 	mtries <- unique(seq(mtryStart, mtryEnd, mtryIncrement))
 	if (utils::tail(mtries, 1L) != mtryEnd) mtries <- c(mtries, mtryEnd)
@@ -205,7 +205,7 @@ trainRF <- function(
 	mtry <- params$mtry[i]
 
 	form <- paste0(resp, ' ~ ', paste(preds, collapse=' + '))
-	form <- as.formula(form)
+	form <- stats::as.formula(form)
 
 	model <- ranger::ranger(
 		form,
