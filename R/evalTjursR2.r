@@ -10,7 +10,7 @@
 #'
 #' @return Numeric value.
 #'
-#' @references Tjur, T. 2009. Coefficients of determination in logistic regression models—A new proposal: The coefficient of discrimination. \emph{The American Statistician} 63:366–372. \doi{10.1198/tast.2009.08210}.
+#' @references Tjur, T. 2009. Coefficients of determination in logistic regression models-A new proposal: The coefficient of discrimination. \emph{The American Statistician} 63:366-372. \doi{10.1198/tast.2009.08210}
 #'
 #' @seealso \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTSS}}
 #'

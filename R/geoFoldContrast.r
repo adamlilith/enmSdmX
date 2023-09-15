@@ -3,11 +3,9 @@
 #' This function generates geographically-distinct cross-validation folds, or "geo-folds" of background or absence sites (i.e., "contrast" sites). Each contrast site is assigned to a fold based on the fold of the presence site that is closest. Typically, this function is run after \code{\link{geoFold}} is run to assign presences to folds.
 #'
 #' @param contrast	A "spatial points" object representing contrast sites:
-#' \itemize{
 #'	\itemize{
 #'		\item A \code{SpatVector} or \code{sf} vector with points
 #'  	\item A \code{data.frame} or \code{matrix}: Points will be assumed to have the WGS84 coordinate system (i.e., unprojected), and \code{contrastLongLat} should denote the columns with coordinates.
-#' }
 #' }
 #' @param pres 		A "spatial points" object representing presence sites:
 #'	\itemize{

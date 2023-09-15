@@ -33,7 +33,7 @@
 #'			\item Root-mean squared difference
 #'			\item Expected Fraction of Shared Presences or ESP (Godsoe, W. 2014. \emph{Ecography} 37:130-136 \doi{10.1111/j.1600-0587.2013.00403.x})
 #'			\item D statistic (Schoener, T.W. 1968. \emph{Ecology} 49:704-726. \doi{10.2307/1935534})
-#'			\item I statistic (Warren, D.L., et al. 2008. \emph{Evolution} 62:2868-2883 \doi{10.111/j.1558-5646.2008.00482.x})
+#'			\item I statistic (Warren, D.L., et al. 2008. \emph{Evolution} 62:2868-2883 \doi{10.1111/j.1558-5646.2008.00482.x})
 #'			\item Pearson correlation
 #'			\item Spearman rank correlation
 #'		}
@@ -933,7 +933,6 @@ bioticVelocity <- function(
 #' @param x1 Matrix of weights in time 1 (i.e., population size).
 #' @param x2 Matrix of weights in time 2 (i.e., population size).
 #' @param refCoord Numeric, latitude or longitude (depending on \code{longOrLat}) of reference point from which to partition the weights into a northern, southern, eastern, or western portion.
-#' @param refLat Numeric, latitude of reference point.
 #' @param x1weightedLongs Matrix of longitudes weighted (i.e., by population size, given by \code{x1}).
 #' @param x1weightedLats Matrix of latitudes weighted (i.e., by population size, given by \code{x1}).
 #' @param x2weightedLongs Matrix of longitudes weighted (i.e., by population size, given by \code{x2}).
@@ -1050,6 +1049,7 @@ bioticVelocity <- function(
 #' @param coordVect Vector of latitudes, one per row in \code{x} (from south to north!!!) **OR** vector or longitudes, one per column in \code{x} (from west to east!!!).
 #' @param weightedElev Raster of elevations weighted by x1 or x2 or \code{NULL}.
 #' @param warn Logical. Show warnings.
+#' @keywords internal
 #' @keywords internal
 .interpCoordFromQuantile <- compiler::cmpfun(
 	function(latOrLong, quants, x, coordVect, weightedElev=NULL, warn=TRUE) {

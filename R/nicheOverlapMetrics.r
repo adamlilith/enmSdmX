@@ -22,7 +22,7 @@
 #' @return List object with one element per value specified by the argument in \code{method}.
 #' @references Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Environmental niche equivalency versus conservatism: Quantitative approaches to niche evolution. \emph{Evolution} 62:2868-2883. \doi{10.1111/j.1558-5646.2008.00482.x}
 #' @references Warren, D.L., Glor, R.E., and Turelli, M.  2008.  Erratum.  \emph{Evolution} 62:2868-2883. \doi{10.1111/j.1558-5646.2010.01204.x}
-#' @references Godsoe, W.  2014.  Inferring the similarity of species distributions using Species’ Distribution Models.  \emph{Ecography} 37:130-136. \doi{10.1111/j.1600-0587.2013.00403.x}
+#' @references Godsoe, W. 2014. Inferring the similarity of species distributions using Species' Distribution Models.  \emph{Ecography} 37:130-136. \doi{10.1111/j.1600-0587.2013.00403.x}
 #' 
 #' @seealso \code{\link[enmSdmX]{compareResponse}}
 #' @examples

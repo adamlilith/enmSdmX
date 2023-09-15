@@ -9,7 +9,7 @@
 #' @param data A data frame.
 #'
 #' @import data.table
-#' @noRd
+#' @keywords internal
 .scalePredictors <- function(scale, preds, data) {
 
 	# which predictors are not factors?
