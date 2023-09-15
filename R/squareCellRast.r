@@ -53,7 +53,7 @@ squareCellRast <- function(
 	if (inherits(x, 'sf')) x <- terra::vect(x)
 	
 	crs <- terra::crs(x)
-	ext <- terra::ext(x)@ptr$vector
+	ext <- as.vector(terra::ext(x))
 	names(ext) <- c('xmin', 'xmax', 'ymin', 'ymax')
 		
 	longDist <- ext['xmax'] - ext['xmin']

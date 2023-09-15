@@ -15,7 +15,6 @@
 #' plot(mad0[1], add=TRUE)
 #'
 #' @export
-
 extentToVect <- function(x, ...) {
 
 	if (inherits(x, c('numeric'))) {
@@ -29,7 +28,7 @@ extentToVect <- function(x, ...) {
 
 		proj <- terra::crs(x)
 
-		x <- terra::ext(x)@ptr$vector
+		x <- as.vector(terra::ext(x))
 		xCorners <- c(x[1L], x[2L], x[2L], x[1L])
 		yCorners <- c(x[3L], x[3L], x[4L], x[4L])
 		corners <- cbind(xCorners, yCorners)
@@ -49,7 +48,7 @@ extentToVect <- function(x, ...) {
 		out <- sf::st_as_sf(out, crs=proj)
 			
 	} else {
-		stop('Argument "x" must be a vector of 4 numbers, a SpatVector, a SpatRaster, or an sf object.')
+		stop('Argument x must be a vector of 4 numbers, a SpatVector, a SpatRaster, or an sf object.')
 	}
 	
 	out
