@@ -235,11 +235,11 @@ predictEnmSdm <- function(
 				
 			} else {
 			
-				preds <- predictRanger(model, data=nd, predict.all=binary, type='response', ...)
+				out <- predictRanger(model, data=newdata, predict.all=binary, type='response', ...)
 				
 				if (binary) {
-					preds <- rowMeans(preds$predictions)
-					preds <- preds - 1
+					out <- rowMeans(out$predictions)
+					out <- out - 1
 				}
 			
 			}
