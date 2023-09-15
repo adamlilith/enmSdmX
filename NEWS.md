@@ -1,3 +1,10 @@
+# enmSdmX 1.1.3 2023-09-15
+- Added European Datrim 1950 (ED50) to coordinate reference systems table (mea cupla!)
+
+# enmSdmX 1.1.2 2023-09-07
+- Minor issue fixes with undocumented arguments for non-exported functions
+- Bug fix in `squareCellRast()` that occurred on Linux/Fedora
+
 # enmSdmX 1.1.1 2023-06-11
 - Backwards incompatible: `trainRF()` uses `ranger` package for random forests (changed from `randomForest` package)
 - Backwards incompatible: `geoFold()` uses `complete` clustering method by default (changed from `single`)
