@@ -294,7 +294,7 @@ legend(
 
 # range of longitude shown in plot
 madExtent <- ext(madClim)
-xExtent <- madExtent@ptr$vector[1:2]
+xExtent <- as.vector(madExtent)[1:2]
 
 plot(predPresent, main = 'North/South Range Margin Location')
 lines(c(xExtent[1], xExtent[2]),
@@ -331,7 +331,7 @@ legend(
 
 # range of longitude shown in plot
 madExtent <- ext(madClim)
-yExtent <- madExtent@ptr$vector[3:4]
+yExtent <- as.vector(madExtent)[3:4]
 
 plot(predPresent, main = 'North/South Range Margin Location')
 lines(c(bv$ewQuantLong_quant0p9[1], bv$ewQuantLong_quant0p9[1]),

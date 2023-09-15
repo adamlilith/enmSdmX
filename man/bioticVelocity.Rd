@@ -47,7 +47,7 @@ bioticVelocity(
         \item Root-mean squared difference
         \item Expected Fraction of Shared Presences or ESP (Godsoe, W. 2014. \emph{Ecography} 37:130-136 \doi{10.1111/j.1600-0587.2013.00403.x})
         \item D statistic (Schoener, T.W. 1968. \emph{Ecology} 49:704-726. \doi{10.2307/1935534})
-        \item I statistic (Warren, D.L., et al. 2008. \emph{Evolution} 62:2868-2883 \doi{10.111/j.1558-5646.2008.00482.x})
+        \item I statistic (Warren, D.L., et al. 2008. \emph{Evolution} 62:2868-2883 \doi{10.1111/j.1558-5646.2008.00482.x})
         \item Pearson correlation
         \item Spearman rank correlation
     }
@@ -433,7 +433,7 @@ legend(
 
 # range of longitude shown in plot
 madExtent <- ext(madClim)
-xExtent <- madExtent@ptr$vector[1:2]
+xExtent <- as.vector(madExtent)[1:2]
 
 plot(predPresent, main = 'North/South Range Margin Location')
 lines(c(xExtent[1], xExtent[2]),
@@ -470,7 +470,7 @@ legend(
 
 # range of longitude shown in plot
 madExtent <- ext(madClim)
-yExtent <- madExtent@ptr$vector[3:4]
+yExtent <- as.vector(madExtent)[3:4]
 
 plot(predPresent, main = 'North/South Range Margin Location')
 lines(c(bv$ewQuantLong_quant0p9[1], bv$ewQuantLong_quant0p9[1]),

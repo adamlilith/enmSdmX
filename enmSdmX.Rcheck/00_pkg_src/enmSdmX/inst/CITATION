@@ -1,0 +1,10 @@
+bibentry(
+  "Article",
+  title = "Including imprecisely georeferenced specimens improves accuracy of species distribution models and estimates of niche breadth",
+  author = "AB Smith, SJ Murphy, D Henderson, and KL Erickson",
+  year = 2023,
+  journal = "Global Ecology & Biogeography",
+  volume = 32,
+  pages = 342-355,
+  doi = "10.1111/geb.13628"
+)

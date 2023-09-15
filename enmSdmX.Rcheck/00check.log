@@ -1,0 +1,29 @@
+* using log directory 'C:/Ecology/Drive/R/enmSdmX/enmSdmX.Rcheck'
+* using R version 4.3.1 (2023-06-16 ucrt)
+* using platform: x86_64-w64-mingw32 (64-bit)
+* R was compiled by
+    gcc.exe (GCC) 12.2.0
+    GNU Fortran (GCC) 12.2.0
+* running under: Windows 11 x64 (build 22621)
+* using session charset: UTF-8
+* checking for file 'enmSdmX/DESCRIPTION' ... OK
+* checking extension type ... Package
+* this is package 'enmSdmX' version '1.1.2'
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... ERROR
+Packages required but not available:
+  'data.table', 'dismo', 'doParallel', 'DT', 'foreach', 'gbm', 'ks',
+  'maxnet', 'MuMIn', 'omnibus', 'ranger', 'rJava', 'scales', 'sf',
+  'shiny', 'statisfactory', 'terra'
+
+Package suggested but not available: 'geodata'
+
+The suggested packages are required for a complete check.
+Checking can be attempted without them by setting the environment
+variable _R_CHECK_FORCE_SUGGESTS_ to a false value.
+
+See section 'The DESCRIPTION file' in the 'Writing R Extensions'
+manual.
+* DONE
+Status: 1 ERROR
