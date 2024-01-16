@@ -22,8 +22,8 @@
 	if (inherits(w, 'logical')) {
 
 		if (w & (fam %in% c('binomial', 'quasibinomial'))) {
-			posCases <- sum(data[ , resp, drop=TRUE] == 1)
-			negCases <- sum(data[ , resp, drop=TRUE] == 0)
+			posCases <- sum(data[ , resp, drop = TRUE] == 1)
+			negCases <- sum(data[ , resp, drop = TRUE] == 0)
 			w <- c(rep(1, posCases), rep(posCases / negCases, negCases))
 		} else {
 			w <- rep(1, nrow(data))
