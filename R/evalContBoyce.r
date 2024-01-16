@@ -22,7 +22,7 @@
 #' @references Boyce, M.S., Vernier, P.R., Nielsen, S.E., and Schmiegelow, F.K.A.  2002.  Evaluating resource selection functions.  \emph{Ecological Modeling} 157:281-300. \doi{https://doi.org/10.1016/S0304-3800(02)00200-4}
 #' @references Hirzel, A.H., Le Lay, G., Helfer, V., Randon, C., and Guisan, A.  2006.  Evaluating the ability of habitat suitability models to predict species presences.  \emph{Ecological Modeling} 199:142-152. \doi{10.1016/j.ecolmodel.2006.05.017}
 #'
-#' @seealso \code{\link[stats]{cor}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
+#' @seealso \code{\link[stats]{cor}}, \code{\link[predicts]{pa_evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 #'
 #' @examples
 #'
