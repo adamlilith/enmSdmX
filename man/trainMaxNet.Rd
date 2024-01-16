@@ -283,5 +283,5 @@ Phillips, S.J., Anderson, R.P., Dudík, M. Schapire, R.E., and Blair, M.E.  2017
 Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}
 }
 \seealso{
-\code{\link[maxnet]{maxnet}}, \code{\link[dismo]{maxent}}, \code{\link{trainMaxEnt}}
+\code{\link[maxnet]{maxnet}}, \code{\link[predicts]{MaxEnt}}, \code{\link{trainMaxEnt}}
 }

@@ -47,7 +47,7 @@ Named numeric vector.
 Fielding, A.H. and J.F. Bell. 1997. A review of methods for the assessment of prediction errors in conservation presence/absence models. \emph{Environmental Conservation} 24:38-49. \doi{10.1017/S0376892997000088}
 }
 \description{
-This function is similar to the \code{\link[dismo]{threshold}} function in the \pkg{dismo} package, which calculates thresholds to create binary predictions from continuous values. However, unlike that function, it allows the user to specify weights for presences and absence/background predictions. The output will thus be the threshold that best matches the specified criterion taking into account the relative weights of the input values.
+This function is similar to the \code{\link[predicts]{threshold}} function in the \pkg{predicts} package, which calculates thresholds to create binary predictions from continuous values. However, unlike that function, it allows the user to specify weights for presences and absence/background predictions. The output will thus be the threshold that best matches the specified criterion taking into account the relative weights of the input values.
 }
 \examples{
 set.seed(123)
@@ -70,5 +70,5 @@ presWeight <- c(rep(0.1, 100), rep(1, 100))
 evalThreshold(pres, contrast, presWeight=presWeight)
 }
 \seealso{
-\code{\link[dismo]{threshold}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
+\code{\link[predicts]{threshold}}, \code{\link[predicts]{pa_evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 }
