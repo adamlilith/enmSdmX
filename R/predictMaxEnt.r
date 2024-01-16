@@ -20,7 +20,7 @@
 #'
 #' @return Numeric.
 #'
-#' @seealso \code{\link[dismo]{maxent}}
+#' @seealso \code{\link[predicts]{MaxEnt}}
 #'
 #' @example man/examples/trainXYZ_examples.R
 #'
