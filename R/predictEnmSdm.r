@@ -169,7 +169,7 @@ predictEnmSdm <- function(
 			out <- predictKde(model, x=as.matrix(newdata), ...)
 
 		# Maxent
-		} else if (inherits(model, 'MaxEnt')) {
+		} else if (inherits(model, c('MaxEnt', 'MaxEnt_model'))) {
 
 			out <- if (maxentFun == 'terra') {
 				terra::predict(model, newdata, ...)
