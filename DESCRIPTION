@@ -2,7 +2,7 @@ Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
 Version: 1.1.3
-Date: 2023-12-06
+Date: 2023-02-02
 Authors@R: 
 	c(
 		person(
@@ -13,7 +13,6 @@ Authors@R:
 			comment = c(ORCID = '0000-0002-6420-1659')
 		)
 	)
-Maintainer: Adam B. Smith <adam.smith@mobot.org>
 Description: Implements species distribution modeling and ecological niche
 	modeling, including: bias correction, spatial cross-validation, model
 	evaluation, raster interpolation, biotic "velocity" (speed and
@@ -63,4 +62,4 @@ URL: https://github.com/adamlilith/enmSdmX
 BugReports: https://github.com/adamlilith/enmSdmX
 Encoding: UTF-8
 License: MIT + file LICENSE
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0
