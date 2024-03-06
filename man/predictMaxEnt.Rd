@@ -276,5 +276,5 @@ legend(
 }
 }
 \seealso{
-\code{\link[dismo]{maxent}}
+\code{\link[predicts]{MaxEnt}}
 }

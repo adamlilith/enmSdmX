@@ -15,6 +15,7 @@ evalContBoyce(
   method = "spearman",
   dropZeros = TRUE,
   graph = FALSE,
+  table = FALSE,
   na.rm = FALSE,
   ...
 )
@@ -40,12 +41,14 @@ evalContBoyce(
 
 \item{graph}{Logical. If \code{TRUE} then plot P vs E and P/E versus bin.}
 
+\item{table}{Logical. If \code{TRUE}, the function will also return a table of P (proportion of presence weights per bin), E (expected proportion of presence weights per bin--from contrast sites), and the ratio of the two.}
+
 \item{na.rm}{Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.}
 
 \item{...}{Other arguments (not used).}
 }
 \value{
-Numeric value.
+Numeric value, or if \code{table} is \code{TRUE}, then a list object with CBI plus a data frame with P (proportion of presence weights per bin), E (expected proportion of presence weights per bin--from contrast sites), and the ratio of the two.
 }
 \description{
 This function calculates the continuous Boyce index (CBI), a measure of model accuracy for presence-only test data.
@@ -70,5 +73,5 @@ Boyce, M.S., Vernier, P.R., Nielsen, S.E., and Schmiegelow, F.K.A.  2002.  Evalu
 Hirzel, A.H., Le Lay, G., Helfer, V., Randon, C., and Guisan, A.  2006.  Evaluating the ability of habitat suitability models to predict species presences.  \emph{Ecological Modeling} 199:142-152. \doi{10.1016/j.ecolmodel.2006.05.017}
 }
 \seealso{
-\code{\link[stats]{cor}}, \code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
+\code{\link[stats]{cor}}, \code{\link[predicts]{pa_evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}, \code{\link{evalTSS}}
 }

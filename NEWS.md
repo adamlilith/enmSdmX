@@ -1,5 +1,8 @@
-# enmSdmX 1.1.3 2023-09-15
-- Added European Datrim 1950 (ED50) to coordinate reference systems table (mea cupla!)
+# enmSdmX 1.1.3 2023-02-02
+- Removed dependency on `dismo`, replaced where possible by `predicts`; copied `gbm.step()` and `predict()` method for MaxEnt to `enmSdmX` as a momentary fix; would love a professional solution!
+- Added European Datum 1950 (ED50) to coordinate reference systems table
+- Added ability to export intermediate values for plotting in `evalContBoyce()`
+- Fixed spelling errors in `crss` data table (coordinate reference system names)
 
 # enmSdmX 1.1.2 2023-09-07
 - Minor issue fixes with undocumented arguments for non-exported functions

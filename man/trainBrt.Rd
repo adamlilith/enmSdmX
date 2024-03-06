@@ -39,7 +39,7 @@ trainBRT(
 
 \item{minTrees}{Positive integer. Minimum number of trees to be scored as a "usable" model (Elith et al. 2008 recommend at least 1000). Default is 1000.}
 
-\item{maxTrees}{Positive integer. Maximum number of trees in model set (same as parameter \code{max.trees} in \code{\link[dismo]{gbm.step}}).}
+\item{maxTrees}{Positive integer. Maximum number of trees in model set.}
 
 \item{tries}{Integer > 0. Number of times to try to train a model with a particular set of tuning parameters. The function will stop training the first time a model converges (usually on the first attempt). Non-convergence seems to be related to the number of trees tried in each step.  So if non-convergence occurs then the function automatically increases the number of trees in the step size until \code{tries} is reached.}
 
@@ -60,7 +60,7 @@ If \code{tryBy} is NULL then the function attempts to train the model with the s
 
 \item{anyway}{Logical. If \code{FALSE} (default), it is possible for no models to be returned if none converge and/or none had a number of trees is >= \code{minTrees}). If \code{TRUE} then all models are returned but with a warning.}
 
-\item{family}{Character. Name of error family.  See \code{\link[dismo]{gbm.step}}.}
+\item{family}{Character. Name of error family.}
 
 \item{out}{Character vector. One or more values:
 \itemize{
@@ -73,13 +73,13 @@ If \code{tryBy} is NULL then the function attempts to train the model with the s
 
 \item{verbose}{Logical. If \code{TRUE} display progress.}
 
-\item{...}{Arguments to pass to \code{\link[dismo]{gbm.step}}.}
+\item{...}{Additional arguments (not used).}
 }
 \value{
 The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of two or more of these.
 }
 \description{
-This function calibrates a boosted regression tree (or gradient boosting machine) model, and is a wrapper for \code{\link[dismo]{gbm.step}}. The function uses a grid search to assess the best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. If a particular combination of parameters leads to an unconverged model, the script attempts again using slightly different parameters. Its output is any or all of: a table with deviance of evaluated models; all evaluated models; and/or the single model with the lowest deviance.
+This function calibrates a boosted regression tree (or gradient boosting machine) model, and is a wrapper for \code{\link[gbm]{gbm}}. The function uses a grid search to assess the best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. If a particular combination of parameters leads to an unconverged model, the script attempts again using slightly different parameters. Its output is any or all of: a table with deviance of evaluated models; all evaluated models; and/or the single model with the lowest deviance.
 }
 \examples{
 \donttest{
@@ -308,5 +308,5 @@ legend(
 Elith, J., J.R. Leathwick, & T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813. \doi{10.1111/j.1365-2656.2008.01390.x}
 }
 \seealso{
-\code{\link[dismo]{gbm.step}}
+\code{\link[gbm]{gbm}}
 }

@@ -9,7 +9,7 @@
 #' @param ... Other arguments (unused).
 #' @return A Numeric value.
 #'
-#' @seealso \code{\link[dismo]{evaluate}}, \code{\link{evalMultiAUC}}
+#' @seealso \code{\link[predicts]{pa_evaluate}}, \code{\link{evalMultiAUC}}
 #' 
 #' @examples
 #' pres <- seq(0.5, 1, by=0.1)

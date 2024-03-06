@@ -8,7 +8,7 @@ trainByCrossValid(
   data,
   resp = names(data)[1],
   preds = names(data)[2:ncol(data)],
-  folds = dismo::kfold(data),
+  folds = predicts::folds(data),
   trainFx = enmSdmX::trainGLM,
   ...,
   weightEvalTrain = TRUE,

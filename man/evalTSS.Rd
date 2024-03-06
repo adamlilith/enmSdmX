@@ -58,18 +58,10 @@ evalTSS(pres, contrast, presWeight=presWeight)
 presWeight <- c(rep(0.1, 30), rep(1, 30))
 evalTSS(pres, contrast, presWeight=presWeight)
 
-e <- dismo::evaluate(pres, contrast)
-max(e@TPR + e@TNR) - 1
-
-# Why different values from dismo's evaluate() function?
-# Because dismo's function uses thresholds based on presence/non-presence
-# values, whereas evalTSS uses equall-spaced thresholds.
-head(e@t)
-
 }
 \references{
 See Allouche, O., Tsoar, A., and Kadmon, R. 2006. Assessing the accuracy of species distribution models: Prevalence, kappa and the true skill statistic (TSS). \emph{Journal of Applied Ecology} 43:1223-1232. \doi{10.1111/j.1365-2664.2006.01214.x}
 }
 \seealso{
-\code{\link[dismo]{evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}
+\code{\link[predicts]{pa_evaluate}}, \code{\link{evalAUC}}, \code{\link{evalMultiAUC}}, \code{\link{evalContBoyce}}, \code{\link{evalThreshold}}, \code{\link{evalThresholdStats}}, \code{\link{evalTjursR2}}
 }

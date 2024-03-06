@@ -22,7 +22,7 @@
 #'
 #' @return If \code{out = 'model'} this function returns an object of class \code{MaxEnt}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters, log likelihood, and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{MaxEnt} object and the data frame.
 #'
-#' @seealso \code{\link[maxnet]{maxnet}}, \code{\link[dismo]{maxent}}, \code{\link{trainMaxEnt}}
+#' @seealso \code{\link[maxnet]{maxnet}}, \code{\link[predicts]{MaxEnt}}, \code{\link{trainMaxEnt}}
 #'
 #' @references
 #' Phillips, S.J., Anderson, R.P., Dudík, M. Schapire, R.E., and Blair, M.E.  2017.  Opening the black box: An open-source release of Maxent. \emph{Ecography} 40:887-893. \doi{10.1111/ecog.03049}

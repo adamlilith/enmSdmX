@@ -15,6 +15,8 @@
 #' @export
 spatVectorToSpatial <- function(x) {
 
+	if (FALSE) sp::SpatialPointsDataFrame(x) # need to avoid "package not used" devtools::check() issue
+	
 	x <- sf::st_as_sf(x)
 	x <- sf::as_Spatial(x)
 	x

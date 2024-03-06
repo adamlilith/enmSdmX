@@ -1,16 +1,16 @@
 #' Calibrate a boosted regression tree (generalized boosting machine) model
 #'
-#' This function calibrates a boosted regression tree (or gradient boosting machine) model, and is a wrapper for \code{\link[dismo]{gbm.step}}. The function uses a grid search to assess the best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. If a particular combination of parameters leads to an unconverged model, the script attempts again using slightly different parameters. Its output is any or all of: a table with deviance of evaluated models; all evaluated models; and/or the single model with the lowest deviance.
+#' This function calibrates a boosted regression tree (or gradient boosting machine) model, and is a wrapper for \code{\link[gbm]{gbm}}. The function uses a grid search to assess the best combination of learning rate, tree depth, and bag fraction based on cross-validated deviance. If a particular combination of parameters leads to an unconverged model, the script attempts again using slightly different parameters. Its output is any or all of: a table with deviance of evaluated models; all evaluated models; and/or the single model with the lowest deviance.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
-#' @param family Character. Name of error family.  See \code{\link[dismo]{gbm.step}}.
+#' @param family Character. Name of error family.
 #' @param learningRate Numeric. Learning rate at which model learns from successive trees (Elith et al. 2008 recommend 0.0001 to 0.1).
 #' @param treeComplexity Positive integer. Tree complexity: depth of branches in a single tree (1 to 16).
 #' @param bagFraction Numeric in the range [0, 1]. Bag fraction: proportion of data used for training in cross-validation (Elith et al. 2008 recommend 0.5 to 0.7).
 #' @param minTrees Positive integer. Minimum number of trees to be scored as a "usable" model (Elith et al. 2008 recommend at least 1000). Default is 1000.
-#' @param maxTrees Positive integer. Maximum number of trees in model set (same as parameter \code{max.trees} in \code{\link[dismo]{gbm.step}}).
+#' @param maxTrees Positive integer. Maximum number of trees in model set.
 #' @param tries Integer > 0. Number of times to try to train a model with a particular set of tuning parameters. The function will stop training the first time a model converges (usually on the first attempt). Non-convergence seems to be related to the number of trees tried in each step.  So if non-convergence occurs then the function automatically increases the number of trees in the step size until \code{tries} is reached.
 #' @param tryBy Character list. A list that contains one or more of \code{'learningRate'}, \code{'treeComplexity'}, \code{numTrees}, and/or \code{'stepSize'}. If a given combination of \code{learningRate}, \code{treeComplexity}, \code{numTrees}, \code{stepSize}, and \code{bagFraction} do not allow model convergence then then the function tries again but with alterations to any of the arguments named in \code{tryBy}:
 #' * \code{learningRate}: Decrease the learning rate by a factor of 10.
@@ -34,11 +34,11 @@
 #' }
 #' @param cores Integer >= 1. Number of cores to use when calculating multiple models. Default is 1.  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.
 #' @param verbose Logical. If \code{TRUE} display progress.
-#' @param ... Arguments to pass to \code{\link[dismo]{gbm.step}}.
+#' @param ... Additional arguments (not used).
 #'
 #' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of two or more of these.
 #'
-#' @seealso \code{\link[dismo]{gbm.step}}
+#' @seealso \code{\link[gbm]{gbm}}
 #'
 #' @references
 #' Elith, J., J.R. Leathwick, & T. Hastie. 2008. A working guide to boosted regression trees. \emph{Journal of Animal Ecology} 77:802-813. \doi{10.1111/j.1365-2656.2008.01390.x}
@@ -293,7 +293,7 @@ trainBRT <- function(
 
 		# train model... using tryCatch because model may not converge
 		model <- tryCatch(
-			model <- dismo::gbm.step(
+			model <- gbm.step(
 				data = data,
 				gbm.x = preds,
 				gbm.y = resp,

@@ -26,14 +26,16 @@
 #'
 #' @return The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 #'
-#' @details This function is a wrapper for \code{maxent()}. That function relies on a maxent \code{jar} file in the folder \code{./library/dismo/java}. See \code{\link[dismo]{maxent}} for more details. The \code{maxent} function creates a series of files on disk for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \pkg{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion.
+#' @details This function is a wrapper for \code{MaxEnt()}. The \code{MaxEnt} function creates a series of files on disk for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \pkg{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion.
 #'
-#' @seealso \code{\link[dismo]{maxent}}
+#' @seealso \code{\link[predicts]{MaxEnt}}
 #' @references
 #' Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}
 #'
 #' @example man/examples/trainXYZ_examples.R
-#' 
+#'
+#' @importFrom stats predict
+#'
 #' @export
 trainMaxEnt <- function(
 	data,
@@ -297,7 +299,7 @@ trainMaxEnt <- function(
 	
 	 # need to call this to avoid "object '.doSnowGlobals' not found" error!!!
 	.libPaths(paths)
-
+	
 	thisRegMult <- tuning$regMult[i]
 	thisClasses <- tuning$classes[i]
 	
@@ -328,28 +330,29 @@ trainMaxEnt <- function(
 	}
 
 	# train model
-	model <- dismo::maxent(
+	model <- predicts::MaxEnt(
 		x=data,
 		p=as.vector(presBg),
-		path=thisScratchDir,
 		args=params,
 		silent=TRUE
 	)
 
 	## predict to training (and maybe test presences)
-	predPres <- dismo::predict(
+	predPres <- predictME(
 		object=model,
 		x=allPres,
 		na.rm=TRUE,
-		arguments='outputformat=raw'
+		# arguments='outputformat=raw'
+		args='outputformat=raw'
 	)
 
 	## predict to background
-	predBg <- dismo::predict(
+	predBg <- predictME(
 		object=model,
 		x=allBg,
 		na.rm=TRUE,
-		arguments='outputformat=raw'
+		# arguments='outputformat=raw'
+		args='outputformat=raw'
 	)
 
 	rawSum <- sum(c(predPres, predBg), na.rm=TRUE)
