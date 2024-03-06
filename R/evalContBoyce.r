@@ -12,10 +12,11 @@
 #' @param method Character. Type of correlation to calculate. The default is \code{'spearman'}, the Spearman rank correlation coefficient used by Boyce et al. (2002) and Hirzel et al. (2006), which is the "traditional" CBI. In contrast, \code{'pearson'} or \code{'kendall'} can be used instead.  See \code{\link[stats]{cor}} for more details.
 #' @param dropZeros Logical. If \code{TRUE} then drop all bins in which the frequency of presences is 0.
 #' @param graph Logical. If \code{TRUE} then plot P vs E and P/E versus bin.
+#' @param table Logical. If \code{TRUE}, the function will also return a table of P (proportion of presence weights per bin), E (expected proportion of presence weights per bin--from contrast sites), and the ratio of the two.
 #' @param na.rm Logical. If \code{TRUE} then remove any presences and associated weights and background predictions and associated weights with \code{NA}s.
 #' @param ... Other arguments (not used).
 #'
-#' @return Numeric value.
+#' @return Numeric value, or if \code{table} is \code{TRUE}, then a list object with CBI plus a data frame with P (proportion of presence weights per bin), E (expected proportion of presence weights per bin--from contrast sites), and the ratio of the two.
 #' 
 #' @details CBI is the Spearman rank correlation coefficient between the proportion of sites in each prediction class and the expected proportion of predictions in each prediction class based on the proportion of the landscape that is in that class.  The index ranges from -1 to 1. Values >0 indicate the model's output is positively correlated with the true probability of presence.  Values <0 indicate it is negatively correlated with the true probability of presence.
 #' 
@@ -47,6 +48,7 @@ evalContBoyce <- function(
 	method = 'spearman',
 	dropZeros = TRUE,
 	graph = FALSE,
+	table = FALSE,
 	na.rm = FALSE,
 	...
 ) {
@@ -154,6 +156,16 @@ evalContBoyce <- function(
 
 	# calculate continuous Boyce index (cbi)
 	cbi <- stats::cor(x=meanPred, y=PE, method=method)
-	cbi
+	
+	if (table) {
+		out <- list(
+			table = data.frame(bin = 1:numBins, propPres = P, propExpected = E, PtoERatio = PE),
+			cbi = cbi
+		)
+	} else {
+		out <- cbi
+	}
+	
+	out
 
 }
