@@ -1,3 +1,6 @@
+# enmSdmX 1.1.3 2023-03-06
+- `trainGLM()`,  `trainNS()`, and `trainEnmSdm()` now have options to automatically center and scale predictors.
+
 # enmSdmX 1.1.3 2023-02-02
 - Removed dependency on `dismo`, replaced where possible by `predicts`; copied `gbm.step()` and `predict()` method for MaxEnt to `enmSdmX` as a momentary fix; would love a professional solution!
 - Added European Datum 1950 (ED50) to coordinate reference systems table
