@@ -8,6 +8,7 @@ predictEnmSdm(
   model,
   newdata,
   maxentFun = "terra",
+  scale = TRUE,
   cores = 1,
   nrows = nrow(newdata),
   paths = .libPaths(),
@@ -20,6 +21,8 @@ predictEnmSdm(
 \item{newdata}{Data frame or matrix, or \code{SpatRaster} with data to which to predict.}
 
 \item{maxentFun}{This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used.}
+
+\item{scale}{Logical. If the model is a GLM trained with \code{\link{trainGLM}}, you can use the \code{scale} argument in that function to center and scale the predictors. In the \code{predictEnmSdm} function, you can set \code{scale} to \code{TRUE} to scale the rasters or data frame to which you are training using the centers (means) and scales (standard deviations) used in the mode. Otherwise, it is up to you to ensure variables are properly centered and scaled. This argument only has effect if the model is a GLM trained using \code{\link{trainGLM}}.}
 
 \item{cores}{Integer >= 1. Number of cores to use when calculating multiple models. Default is 1. This is forced to 1 if \code{newdata} is a \code{SpatRaster} (i.e., as of now, there is no parallelization when predicting to a raster... sorry!).  If you have issues when \code{cores} > 1, please see the \code{\link{troubleshooting_parallel_operations}} guide.}
 
@@ -172,14 +175,14 @@ rf <- trainRF(
 ### make maps of models
 #######################
 
-# Create scaled version of rasters for GLMs and NSs.
-madClimScaled <- scale(madClim, center=gl$scale$mean, scale=gl$scale$sd)
+# NB We do not have to scale rasters before predicting GLMs and NSs because we
+# used the `scale = TRUE` argument in trainGLM() and trainNS().
 
 mxMap <- predictEnmSdm(mx, madClim)
 mnMap <- predictEnmSdm(mn, madClim) 
-glMap <- predictEnmSdm(gl, madClimScaled)
+glMap <- predictEnmSdm(gl, madClim)
 gaMap <- predictEnmSdm(ga, madClim)
-nsMap <- predictEnmSdm(ns, madClimScaled)
+nsMap <- predictEnmSdm(ns, madClim)
 brtMap <- predictEnmSdm(brt, madClim)
 rfMap <- predictEnmSdm(rf, madClim)
 
