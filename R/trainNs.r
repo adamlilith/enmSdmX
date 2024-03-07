@@ -69,7 +69,11 @@ trainNS <- function(
 
 		w <- .calcWeights(w, data = data, resp = resp, family = family)
 		
-		if (is.na(scale) || scale) scales <- .scalePredictors(scale, preds, data)
+		if (is.na(scale) || scale) {
+			scaleds <- .scalePredictors(scale, preds, data)
+			data <- scaleds$data
+			scales <- scaleds$scales
+		}
 
 	### parallelization
 	###################
