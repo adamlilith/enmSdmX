@@ -52,6 +52,7 @@
 		
 	}
 	
+	data <- as.data.frame(data)
 	list(data = data, scales = list(mean=means, sd=sds))
 	
 }

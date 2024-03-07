@@ -154,7 +154,10 @@ predictEnmSdm <- function(
 				if (scaling) newdata <- terra::scale(newdata, center = centers, scale = scales)
 				out <- terra::predict(newdata, model, type='response', ...)
 			} else {
-				if (scaling) newdata <- scale(newdata, center = centers, scale = scales)
+				if (scaling) {
+					newdata <- scale(newdata, center = centers, scale = scales)
+					newdata <- as.data.frame(newdata)
+				}
 				out <- stats::predict.glm(model, newdata, type='response', ...)
 			}
 
