@@ -22,7 +22,8 @@
 #' @section Model calibration:
 #' 		\code{\link{trainByCrossValid}}: and \code{\link{summaryByCrossValid}}: Implement a \code{trainXYZ} function across calibration folds (which are distinct from evaluation folds). \cr
 #' 		\code{\link{trainBRT}}: Boosted regression trees (BRTs) \cr
-#' 		\code{\link{trainGAM}}: Generalized additive models (GAMs) \cr
+#' 		\code{\link{trainESM}}: Ensembles of small models (ESMs) \cr
+#' 		\code{\link{trainGLM}}: Generalized linear models (GLMs) \cr
 #' 		\code{\link{trainGLM}}: Generalized linear models (GLMs) \cr
 #' 		\code{\link{trainMaxEnt}}: MaxEnt models \cr
 #'		\code{\link{trainMaxNet}}: MaxNet models

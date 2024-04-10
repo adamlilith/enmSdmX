@@ -13,8 +13,8 @@ trainGLM(
   select = TRUE,
   quadratic = TRUE,
   interaction = TRUE,
-  method = "glm.fit",
   interceptOnly = TRUE,
+  method = "glm.fit",
   presPerTermInitial = 10,
   presPerTermFinal = 10,
   maxTerms = 8,
@@ -33,7 +33,7 @@ trainGLM(
 
 \item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
-\item{scale}{Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$mean} and \code{model$scales$sd}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do it's operations.}
+\item{scale}{Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$mean} and \code{model$scales$sd}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do its operations.}
 
 \item{construct}{Logical. If \code{TRUE} (default) then construct model from individual terms entered in order from lowest to highest AICc up to limits set by \code{presPerTermInitial} or \code{maxTerms} is met. If \code{FALSE} then the "full" model consists of all terms allowed by \code{quadratic} and \code{interaction}.}
 
@@ -43,9 +43,9 @@ trainGLM(
 
 \item{interaction}{Logical. Used only if \code{construct} is \code{TRUE}. If \code{TRUE} (default) then include 2-way interaction terms (including interactions between factor predictors).}
 
-\item{method}{Character: Name of function used to solve the GLM. For "normal" GLMs, this can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.}
-
 \item{interceptOnly}{If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.}
+
+\item{method}{Character: Name of function used to solve the GLM. For "normal" GLMs, this can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.}
 
 \item{presPerTermInitial}{Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only is \code{construct} is TRUE.}
 
