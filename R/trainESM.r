@@ -140,6 +140,8 @@ trainESM <- function(
 
 	}
 
-	list(models = models, tuning = tuning)
+	out <- list(models = models, tuning = tuning)
+	if (is.na(scale) || scale) out$scale <- scales
+	out
 
 }
