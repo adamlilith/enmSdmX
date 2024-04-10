@@ -1,5 +1,8 @@
+# enmSdmX 1.1.5 2023-04-10
+- Added function `trainESM()` for ensembles of small models.
+
 # enmSdmX 1.1.3 2023-03-06
-- `trainGLM()`,  `trainNS()`, and `trainEnmSdm()` now have options to automatically center and scale predictors.
+- `trainGLM()`,  `trainNS()`, and `predictEnmSdm()` now have options to automatically center and scale predictors.
 
 # enmSdmX 1.1.3 2023-02-02
 - Removed dependency on `dismo`, replaced where possible by `predicts`; copied `gbm.step()` and `predict()` method for MaxEnt to `enmSdmX` as a momentary fix; would love a professional solution!
