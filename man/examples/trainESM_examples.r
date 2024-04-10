@@ -2,8 +2,6 @@
 # designed to work fast, not produce accurate, defensible models. They can
 # take a few minutes to run.
 
-library(mgcv)
-library(sf)
 library(terra)
 set.seed(123)
 
@@ -79,3 +77,25 @@ esm2 <- trainESM(
 
 str(esm2, 1)
 esm2$tuning
+
+### make a set of predictions to rasters
+########################################
+
+# center environmental rasters and divide by their SD
+madClimScaled <- scale(madClim, center = esm2$scale$mean, scale = esm2$scale$sd)
+
+# make one raster per model
+predictions <- list()
+for (i in 1:length(esm2$models)) {
+    predictions[[i]] <- predict(madClimScaled, esm2$models[[i]], type = 'response')
+}
+
+# combine into a "stack"
+predictions <- do.call(c, predictions)
+names(predictions) <- esm2$tuning$model
+plot(predictions)
+
+# calculate (unweighted) mean
+prediction <- mean(predictions)
+plot(prediction)
+plot(occs, pch = 1, add = TRUE)
