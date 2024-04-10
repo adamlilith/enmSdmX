@@ -42,6 +42,7 @@ You may need to install the `remotes` package first.
 ### Model training ###
 * `trainByCrossValid` and `summaryByCrossValid`: Calibrate a distribution/niche model using cross-validation
 * `trainBRT`: Boosted regression trees (BRTs)
+* `trainESM`: Ensembles of small models (ESM)
 * `trainGAM`: Generalized additive models (GAMs)
 * `trainGLM`: Generalized linear models (GLMs)
 * `trainMaxEnt`: MaxEnt models
