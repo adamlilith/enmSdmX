@@ -1,5 +1,6 @@
 # enmSdmX 1.1.5 2023-04-10
 - Added function `trainESM()` for ensembles of small models.
+- Added several UTM coordinate reference systems accessible through `getCRS()`.
 
 # enmSdmX 1.1.3 2023-03-06
 - `trainGLM()`,  `trainNS()`, and `predictEnmSdm()` now have options to automatically center and scale predictors.
