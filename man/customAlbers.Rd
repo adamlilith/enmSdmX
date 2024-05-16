@@ -70,7 +70,7 @@ library(terra)
 # Get outline of Canada...
 # We wrap this in tryCatch() in case the server is down.
 can <- tryCatch(
-	gadm('CAN', level=0, path=tempdir()),
+	gadm('CAN', level=0, path=tempdir(), resolution=2),
 	error=function(cond) FALSE
 )
 
@@ -94,6 +94,7 @@ if (!is.logical(can)) {
 	par(oldPar)
 	
 }		
+
 }
 }
 \seealso{
