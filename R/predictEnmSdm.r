@@ -136,19 +136,19 @@ predictEnmSdm <- function(
 		# GLM
 		} else if (inherits(model, c('glm'))) {
 
-				# center and scale... match names of newdata to pre-calculated centers/scales in GLM object saved by trainGLM()
-				if (scale && any(names(model) == 'scale')) {
-					
-					scaling <- TRUE
-					centers <- model$scale$mean
-					scales <- model$scale$sd
-					nms <- names(newdata)
-					centers <- centers[match(nms, names(centers))]
-					scales <- scales[match(nms, names(scales))]
-					
-				} else {
-					scaling <- FALSE
-				}
+			# center and scale... match names of newdata to pre-calculated centers/scales in GLM object saved by trainGLM()
+			if (scale && any(names(model) == 'scale')) {
+				
+				scaling <- TRUE
+				centers <- model$scale$mean
+				scales <- model$scale$sd
+				nms <- names(newdata)
+				centers <- centers[match(nms, names(centers))]
+				scales <- scales[match(nms, names(scales))]
+				
+			} else {
+				scaling <- FALSE
+			}
 
 			if (inherits(newdata, c('SpatRaster'))) {
 				if (scaling) newdata <- terra::scale(newdata, center = centers, scale = scales)
@@ -188,7 +188,25 @@ predictEnmSdm <- function(
 			# hack... not calling ks functions explicitly at least once in package generates warning
 			if (FALSE) fhat <- ks::kde(stats::rnorm(100))
 			predictKde <- utils::getFromNamespace('predict.kde', 'ks')
-			out <- predictKde(model, x=as.matrix(newdata), ...)
+			newdataMatrix <- as.matrix(newdata)
+			n <- nrow(newdataMatrix)
+			notNas <- which(stats::complete.cases(newdataMatrix))
+			newdataMatrix <- newdataMatrix[notNas, ]
+			preds <- predictKde(model, x = newdataMatrix, ...)
+
+			if (inherits(newdata, "SpatRaster")) {
+						
+				out <- newdata[[1L]]
+				out[] <- NA_real_
+				out <- setValueByCell(out, preds, cell=notNas, format='raster')
+				names(out) <- 'kde'
+			
+			} else {
+			
+				out <- rep(NA_real_, n)
+				out[notNas] <- preds
+
+			}
 
 		# Maxent
 		} else if (inherits(model, c('MaxEnt', 'MaxEnt_model'))) {
@@ -235,7 +253,6 @@ predictEnmSdm <- function(
 			} else {
 				model$binary
 			}
-
 
 			if (inherits(newdata, 'SpatRaster')) {
 

@@ -14,6 +14,11 @@
 #' plot(madExtent, border='blue', lty='dotted')
 #' plot(mad0[1], add=TRUE)
 #'
+#' # NB This is the same as:
+#' library(terra)
+#' madExtent <- ext(mad0)
+#' madExtent <- as.polygons(madExtent, crs = crs(mad0))
+#' 
 #' @export
 extentToVect <- function(x, ...) {
 
