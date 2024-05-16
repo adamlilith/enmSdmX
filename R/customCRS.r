@@ -124,7 +124,6 @@ customLambert <- function(x) {
 customVNS <- function(x, alt = 35800) {
 
 	alt <- 1000 * alt
-
 	cent <- .getCentroid(x)
 	long <- cent$long
 	lat <- cent$lat
@@ -165,52 +164,6 @@ customVNS <- function(x, alt = 35800) {
 	out
 	
 }
-
-customVNS <- function(x, alt = 35800) {
-
-	alt <- 1000 * alt
-
-	cent <- .getCentroid(x)
-	long <- cent$long
-	lat <- cent$lat
-
-	out <- paste0(
-		'PROJCRS["World_Vertical_Perspective",
-			BASEGEOGCRS["WGS 84",
-			DATUM["World Geodetic System 1984",
-				ELLIPSOID["WGS 84",6378137,298.257223563,
-					LENGTHUNIT["metre",1]]],
-			PRIMEM["Greenwich",0,
-				ANGLEUNIT["Degree",0.0174532925199433]]],
-		CONVERSION["World_Vertical_Perspective",
-			METHOD["Vertical Perspective",
-				ID["EPSG",9838]],
-			PARAMETER["Latitude of topocentric origin",', lat, ',
-				ANGLEUNIT["Degree",0.0174532925199433],
-				ID["EPSG",8834]],
-			PARAMETER["Longitude of topocentric origin",', long, ',
-				ANGLEUNIT["Degree",0.0174532925199433],
-				ID["EPSG",8835]],
-			PARAMETER["Viewpoint height",', alt, ',
-				LENGTHUNIT["metre",1],
-				ID["EPSG",8840]]],
-		CS[Cartesian,2],
-			AXIS["(E)",east,
-				ORDER[1],
-				LENGTHUNIT["metre",1]],
-			AXIS["(N)",north,
-				ORDER[2],
-				LENGTHUNIT["metre",1]],
-		USAGE[
-			SCOPE["Not known."],
-			AREA["World."],
-			BBOX[-90,-180,90,180]]]'
-	)
-	
-	out
-	
-}
-
 
 ### get centroid of raster, vector, sf, etc. object
 ###################################################
@@ -236,6 +189,7 @@ customVNS <- function(x, alt = 35800) {
 		lat <- cent[1L, 2L]
 	
 	} else if (inherits(x, c('matrix', 'data.frame'))) {
+	
 		if (ncol(x) != 2L | nrow(x) != 1L) stop('Argument "x" must be a 2-column data frame/matrix with one row, a two-element numeric vector, or a spatial object.')
 		long <- x[1L, 1L]
 		lat <- x[1L, 2L]
