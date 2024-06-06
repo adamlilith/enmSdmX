@@ -336,7 +336,7 @@ trainNS <- function(
 		...
 	)
 	
-	AICc <- MuMIn::AICc(model)
+	AICc <- AICcmodavg::AICc(model)
 	
 	# out
 	out <- if (modelOut) {
