@@ -220,7 +220,7 @@ interpolateRasts <- function(
 						models[[length(models) + 1]] <- model
 						k <- c(k, length(model$coefficients))
 						
-						aicc <- sapply(models, MuMIn::AICc)
+						aicc <- sapply(models, AICcmodavg::AICc)
 						interpModel <- models[[which.min(aicc)]]
 
 					} else if (type == 'bs') {
@@ -251,7 +251,7 @@ interpolateRasts <- function(
 						models[[length(models) + 1]] <- model
 						k <- c(k, length(model$coefficients))
 						
-						aicc <- sapply(models, MuMIn::AICc)
+						aicc <- sapply(models, AICcmodavg::AICc)
 						interpModel <- models[[which.min(aicc)]]
 
 					} else if (type == 'smooth.spline') {
@@ -314,7 +314,7 @@ interpolateRasts <- function(
 							models[[length(models) + 1]] <- model
 							k <- c(k, length(model$coefficients))
 							
-							aicc <- sapply(models, MuMIn::AICc)
+							aicc <- sapply(models, AICcmodavg::AICc)
 							interpModel <- models[[which.min(aicc)]]
 							
 						}

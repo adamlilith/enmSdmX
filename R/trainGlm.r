@@ -242,7 +242,7 @@ trainGLM <- function(
 				...
 			)
 			
-			AICc <- MuMIn::AICc(model)
+			AICc <- AICcmodavg::AICc(model)
 			
 			tuning <- data.frame(
 				model = form,
@@ -419,7 +419,7 @@ trainGLM <- function(
 			...
 		)
 		
-		AICc <- MuMIn::AICc(model)
+		AICc <- AICcmodavg::AICc(model)
 		
 		tuning <- data.frame(
 			model = form,
@@ -510,7 +510,7 @@ trainGLM <- function(
 		...
 	)
 	
-	AICc <- MuMIn::AICc(model)
+	AICc <- AICcmodavg::AICc(model)
 	
 	# out
 	if (modelOut) {

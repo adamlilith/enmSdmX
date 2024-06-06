@@ -1,8 +1,8 @@
 Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
-Version: 1.1.5
-Date: 2024-05-16
+Version: 1.1.6
+Date: 2024-06-06
 Authors@R: 
 	c(
 		person(
@@ -29,6 +29,7 @@ Description: Implements species distribution modeling and ecological niche
 Depends:
 	R (>= 4.0.0)
 Imports:
+	AICcmodavg,
 	boot,
 	data.table,
 	doParallel,
@@ -40,7 +41,6 @@ Imports:
 	maxnet,
 	methods,
 	mgcv,
-	MuMIn,
 	omnibus,
 	parallel,
 	predicts,
