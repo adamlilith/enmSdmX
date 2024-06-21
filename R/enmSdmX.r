@@ -75,6 +75,7 @@
 #'		\code{\link{spatVectorToSpatial}}: Convert \code{SpatVector} object to a \code{Spatial}* object. \cr
 #'
 #' @section Data:
+#' 		\code{\link{canada}}: Outline of Canada \cr
 #' 		\code{\link{lemurs}}: Lemur occurrences \cr
 #' 		\code{\link{mad0}}: Madagascar spatial object \cr
 #' 		\code{\link{mad1}}: Madagascar spatial object \cr

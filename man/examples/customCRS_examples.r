@@ -1,6 +1,6 @@
 library(sf)
 
-# Madagascar
+### Madagascar
 data(mad0)
 
 alb <- customAlbers(mad0)
@@ -20,40 +20,29 @@ plot(st_geometry(madVert), main='Vertical')
 
 par(oldPar)
 
-\donttest{
+### Canada
 # The effect is more noticeable when plotting large areas,
 # especially if they lie near the poles.
 # This example can take a few minutes to run and plot.
 
-library(geodata)
 library(terra)
 
-# Get outline of Canada...
-# We wrap this in tryCatch() in case the server is down.
-can <- tryCatch(
-	gadm('CAN', level=0, path=tempdir(), resolution=2),
-	error=function(cond) FALSE
-)
+canFile <- system.file('extdata', 'canada_level0_gadm41.gpkg', package='enmSdmX')
+can <- vect(canFile)
 
-if (!is.logical(can)) {
+alb <- customAlbers(can)
+lamb <- customLambert(can)
+vert <- customVNS(can)
 
-	alb <- customAlbers(can)
-	lamb <- customLambert(can)
-	vert <- customVNS(can)
+canAlb <- project(can, alb)
+canLamb <- project(can, lamb)
+canVert <- project(can, vert)
 
-	canAlb <- project(can, alb)
-	canLamb <- project(can, lamb)
-	canVert <- project(can, vert)
+oldPar <- par(mfrow=c(2, 2))
 
-	oldPar <- par(mfrow=c(2, 2))
-
-	plot(can, main='Unprojected (WGS84)')
-	plot(canAlb, main='Albers')
-	plot(canLamb, main='Lambert')
-	plot(canVert, main='Vertical')
-		
-	par(oldPar)
+plot(can, main='Unprojected (WGS84)')
+plot(canAlb, main='Albers')
+plot(canLamb, main='Lambert')
+plot(canVert, main='Vertical')
 	
-}		
-
-}
+par(oldPar)

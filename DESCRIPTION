@@ -2,7 +2,7 @@ Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
 Version: 1.1.6
-Date: 2024-06-06
+Date: 2024-06-13
 Authors@R: 
 	c(
 		person(
@@ -54,8 +54,6 @@ Imports:
 	stats,
 	terra,
 	utils
-Suggests:
-	geodata
 LazyData: true
 LazyLoad: yes
 URL: https://github.com/adamlilith/enmSdmX
