@@ -32,13 +32,13 @@ predictMaxEnt(
 
 \item{perm}{Character vector. Name(s) of variable to permute before calculating predictions. This permutes the variables for \emph{all} features in which they occur.  If a variable is named here, it overrides permutation settings for each feature featType.  Note that for product features the variable is permuted before the product is taken. This permutation is performed before any subsequent permutations (i.e., so if both variables in a product feature are included in \code{perms}, then this is equivalent to using the \code{'before'} rule for \code{permProdRule}). Ignored if \code{NULL}.}
 
-\item{permLinear}{Character list. Names(s) of variables to permute in linear features before calculating predictions.  Ignored if \code{NULL}.}
+\item{permLinear}{Character vector. Names(s) of variables to permute in linear features before calculating predictions.  Ignored if \code{NULL}.}
 
 \item{permQuad}{Names(s) of variables to permute in quadratic features before calculating predictions.  Ignored if \code{NULL}.}
 
 \item{permHinge}{Character vector. Names(s) of variables to permute in forward/reverse hinge features before calculating predictions.  Ignored if \code{NULL}.}
 
-\item{permThresh}{Character list. Names(s) of variables to permute in threshold features before calculating predictions.  Ignored if \code{NULL}.}
+\item{permThresh}{Character vector. Names(s) of variables to permute in threshold features before calculating predictions.  Ignored if \code{NULL}.}
 
 \item{permProd}{Character list. A list object of \code{n} elements, each of which has two character elements naming the variables to permute if they occur in a product feature.  Depending on the value of \code{permProdRule}, the function will either permute the individual variables then calculate their product or calculate their product, then permute the product across observations.  Any other features containing the variables will produce values as normal.  Example: \code{permProd=list(c('precipWinter', 'tempWinter'), c('tempSummer', 'precipFall'))}.  The order of the variables in each element of \code{permProd} doesn't matter, so \code{permProd=list(c('temp', 'precip'))} is the same as \code{permProd=list(c('precip', 'temp'))}.  Ignored if \code{NULL}.}
 

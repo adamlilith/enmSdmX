@@ -22,7 +22,7 @@
 #' \itemize{
 #' 		\item \code{meta}: Meta-data on the model call.
 #' 		\item \code{folds}: The \code{folds} object.
-#' 		\item \code{models} (if \code{outputModels} is \code{TRUE}): A list of model objects, one per  data fold.
+#' 		\item \code{models} (if \code{outputModels} is \code{TRUE}): A list of model objects, one per data fold.
 #'		\item \code{tuning}: One data frame per k-fold, each containing evaluation statistics for all candidate models in the fold. In addition to algorithm-specific fields, these consist of:
 #' 	\itemize{
 #' 		\item \code{'logLoss'}: Log loss. Higher (less negative) values imply better fit.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/trainMaxEnt.r
 \name{trainMaxEnt}
 \alias{trainMaxEnt}
-\title{Calibrate a MaxEnt (ver 3.3.3+ or "maxent") model using AICc}
+\title{Calibrate a MaxEnt model using AICc}
 \usage{
 trainMaxEnt(
   data,
@@ -28,11 +28,11 @@ trainMaxEnt(
 
 \item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character vector or integer vector. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{regMult}{Numeric vector. Values of the master regularization parameters (called \code{beta} in some publications) to test.}
 
-\item{classes}{Character list. Names of feature classes to use (either \code{default} to use \code{lpqh}) or any combination of \code{lpqht}, where \code{l} ==> linear features, \code{p} ==> product features, \code{q} ==> quadratic features, \code{h} ==> hinge features, and \code{t} ==> threshold features.}
+\item{classes}{Character vector. Names of feature classes to use (either \code{default} to use \code{lpqh}) or any combination of \code{lpqht}, where \code{l} ==> linear features, \code{p} ==> product features, \code{q} ==> quadratic features, \code{h} ==> hinge features, and \code{t} ==> threshold features. Example: \code{c('l', 'p', 'q')}.}
 
 \item{testClasses}{Logical.  If \code{TRUE} (default) then test all possible combinations of classes (note that all tested models will at least have linear features). If \code{FALSE} then use the classes provided (these will not vary between models).}
 
@@ -44,7 +44,7 @@ trainMaxEnt(
 
 \item{jackknife}{Logical. If \code{TRUE} (default) the the returned model will be also include jackknife testing of variable importance.}
 
-\item{arguments}{\code{NULL} (default) or a character list. Options to pass to \code{maxent()}'s \code{args} argument. (Do not include \code{l}, \code{p}, \code{q}, \code{h}, \code{t}, \code{betamultiplier}, or \code{jackknife}!)}
+\item{arguments}{\code{NULL} (default) or a character vector. Options to pass to \code{maxent()}'s \code{args} argument. (Do not include \code{l}, \code{p}, \code{q}, \code{h}, \code{t}, \code{betamultiplier}, or \code{jackknife}!)}
 
 \item{scratchDir}{Character. Directory to which to write temporary files. Leave as NULL to create a temporary folder in the current working directory.}
 
@@ -65,9 +65,13 @@ trainMaxEnt(
 The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these.
 }
 \description{
-This function calculates the "best" Maxent model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better). The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+This function calculates the "best" MaxEnt model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better).
 }
 \details{
+The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+
+Note that due to differences in how MaxEnt and MaxNet are implemented in their base packages, the models will not necessarily be the same even for the same training data.
+
 This function is a wrapper for \code{MaxEnt()}. The \code{MaxEnt} function creates a series of files on disk for each model. This function assumes you do not want those files, so deletes most of them. However, there is one that cannot be deleted and the normal ways of changing its permissions in \pkg{R} do not work. So the function simply writes over that file (which is allowed) to make it smaller. Regardless, if you run many models your temporary directory (argument \code{scratchDir}) can fill up and require manual deletion.
 }
 \examples{

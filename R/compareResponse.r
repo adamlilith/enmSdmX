@@ -2,15 +2,15 @@
 #'
 #' This function calculates a suite of metrics reflecting of niche overlap for two response curves. Response curves are predicted responses of a uni- or multivariate model along a single variable. Depending on the user-specified settings the function calculates these values either at each pair of values of \code{pred1} and \code{pred2} \emph{or} along a smoothed version of \code{pred1} and \code{pred2}.
 #'
-#' @param pred1 Numeric list. Predictions from first model along \code{data} (one value per row in \code{data}).
-#' @param pred2 Numeric list. Predictions from second model along \code{data} (one value per row in \code{data}).
+#' @param pred1 Numeric vector. Predictions from first model along \code{data} (one value per row in \code{data}).
+#' @param pred2 Numeric vector. Predictions from second model along \code{data} (one value per row in \code{data}).
 #' @param data Data frame or matrix corresponding to \code{pred1} and \code{pred2}.
-#' @param predictor Character list. Name(s) of predictor(s) for which to calculate comparisons. These must appear as column names in \code{data}.
+#' @param predictor Character vector. Name(s) of predictor(s) for which to calculate comparisons. These must appear as column names in \code{data}.
 #' @param adjust Logical. If \code{TRUE} then subtract the mean of \code{pred1} from \code{pred1} and the mean of \code{pred2} from \code{pred2} before analysis. Useful for comparing the shapes of curves while controlling for different elevations (intercepts).
 #' @param gap Numeric >0. Proportion of range of predictor variable across which to assume a gap exists. Calculation of \code{areaAbsDiff} will  ignore gaps wide than this. To ensure the entire range of the data is included set this equal to \code{Inf} (default).
 #' @param smooth Logical. If \code{TRUE} then the responses are first smoothed using loess() then compared at \code{smoothN} values along each predictor. If \code{FALSE}, then comparisons are conducted at the raw values \code{pred1} and \code{pred2}.
 #' @param smoothN \code{NULL} or positive integer. Number of values along "pred" at which to calculate comparisons. Only used if \code{smooth} is \code{TRUE}. If \code{NULL}, then comparisons are calculated at each value in data. If a number, then comparisons are calculated at \code{smoothN} values of \code{data[ , pred]} that cover the range of \code{data[ , pred]}.
-#' @param smoothRange 2-element numeric list or \code{NULL}. If \code{smooth} is \code{TRUE}, then force loess predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.
+#' @param smoothRange 2-element numeric vector or \code{NULL}. If \code{smooth} is \code{TRUE}, then force loess predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.
 #' @param graph Logical. If \code{TRUE} then plot predictions.
 #' @param ... Arguments to pass to functions like \code{sum()} (for example, \code{na.rm=TRUE}) and to \code{overlap()} (for example, \code{w} for weights). Note that if \code{smooth = TRUE}, then passing an argument called \code{w} will likely cause a warning and make results circumspect \emph{unless} weights are pre-calculated for each of the \code{smoothN} points along a particular predictor.
 #' @return Either a data frame (if \code{smooth = FALSE} or a list object with the smooth model plus a data frame (if \code{smooth = TRUE}) . The data frame represents metrics comparing response curves of \code{pred1} and \code{pred2}:

@@ -45,7 +45,7 @@
 \item{x2weightedElev}{Matrix of elevations weighted by x2 or \code{NULL}.}
 }
 \value{
-a list object with distance moved and abundance of all cells north/south/east/west of reference point.
+A list object with distance moved and abundance of all cells north/south/east/west of reference point.
 }
 \description{
 This function calculates the weighted distance moved by a mass represented by set of cells which fall north, south, east, or west of a given location (i.e., typically the centroid of the starting population). Values >0 confer movement to the north, south, east, or west of this location.

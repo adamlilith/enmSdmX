@@ -6,7 +6,7 @@
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
-#' @param preds Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
+#' @param preds Character vector or integer vector. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
 #' @param binary Logical. If \code{TRUE} (default) then the response is converted to a binary factor with levels 0 and 1. Otherwise, this argument has no effect and the response will be assumed to be a real number.
 #' @param numTrees Vector of number of trees to grow. All possible combinations of \code{mtry} and \code{numTrees} will be assessed.
 #' @param mtryIncrement Positive integer (default is 2).  Number of predictors to add to \code{mtry} until all predictors are in each tree.

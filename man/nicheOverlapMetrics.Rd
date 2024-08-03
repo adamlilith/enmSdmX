@@ -31,7 +31,7 @@ nicheOverlapMetrics(
 \item \code{rankCor}: Spearman rank correlation.
 }}
 
-\item{w}{Numeric list. Weights of predictions in \code{x1} and \code{x2}.}
+\item{w}{Numeric vector. Weights of predictions in \code{x1} and \code{x2}.}
 
 \item{na.rm}{Logical.  If T\code{TRUE} then remove elements in \code{x1} and \code{2} that are \code{NA} in \emph{either} \code{x1} or \code{x2}.}
 
