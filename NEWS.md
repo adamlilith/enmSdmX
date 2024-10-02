@@ -1,3 +1,6 @@
+# enmSdmX 1.1.8 2024-10-02
+- `modelSize()` can now tell size of a `ranger` random forest.
+
 # enmSdmX 1.1.7 2024-08-02
 - Clarified mis-leading help in several functions, including all the `trainXYZ()` functions (thank you, PT!).
 

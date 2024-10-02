@@ -1,8 +1,8 @@
 # enmSdmX
 <!-- badges: start -->
 
-[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![cran version](https://www.r-pkg.org/badges/version/enmSdmX)](https://cran.r-project.org/package=enmSdmX)
+![R](https://img.shields.io/badge/r-%23276DC3.svg?style=for-the-badge&logo=r&logoColor=white) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active) [![cran version](https://www.r-pkg.org/badges/version/enmSdmX)](https://cran.r-project.org/package=enmSdmX) [![R-CMD-check](https://github.com/adamlilith/fasterRaster/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/adamlilith/fasterRaster/actions/workflows/R-CMD-check.yaml)
+
 <!-- badges: end -->
 
 <strong>Tools for modeling niches and distributions of species </strong>

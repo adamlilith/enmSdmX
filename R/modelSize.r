@@ -58,6 +58,11 @@ modelSize <- function(
 		NA
 		warning('Cannot determine number of presences and background sites for a MaxNet model.')
 		
+	# random forest in ranger package
+	} else if (inherits(x, 'ranger')) {
+	
+		as.numeric(x$predictions)
+		
 	# random forest in party package
 	} else if (inherits(x, 'randomForest')) {
 	
@@ -83,7 +88,11 @@ modelSize <- function(
 			stop('Cannot extract sample size from model object.')
 		}
 	} else if (binary) {
-		out <- c(sum(samples == 1), sum(samples == 0))
+		out <- if (inherits(x, 'ranger')) {
+			c(sum(samples == 1), sum(samples == 2))
+		} else {
+			c(sum(samples == 1), sum(samples == 0))
+		}
 		names(out) <- c('num1s', 'num0s')
 		if (out[1L] == 0 & out[2L] == 0) warning('Model does not seem to be using a binary response.', .immediate=TRUE)
 	} else {
