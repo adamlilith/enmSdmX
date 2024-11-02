@@ -15,7 +15,7 @@
 #' \item \code{cor}: Pearson correlation between \code{x1} and \code{x2} (will apply \code{logitAdj()} first unless logit=FALSE).
 #' \item \code{rankCor}: Spearman rank correlation.
 #' }
-#' @param w Numeric list. Weights of predictions in \code{x1} and \code{x2}.
+#' @param w Numeric vector. Weights of predictions in \code{x1} and \code{x2}.
 #' @param na.rm Logical.  If T\code{TRUE} then remove elements in \code{x1} and \code{2} that are \code{NA} in \emph{either} \code{x1} or \code{x2}.
 #' @param ... Other arguments (not used).
 #' 

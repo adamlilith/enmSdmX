@@ -939,7 +939,7 @@ bioticVelocity <- function(
 #' @param x2weightedLats Matrix of latitudes weighted (i.e., by population size, given by \code{x2}).
 #' @param x1weightedElev Matrix of elevations weighted by x1 or \code{NULL}.
 #' @param x2weightedElev Matrix of elevations weighted by x2 or \code{NULL}.
-#' @return a list object with distance moved and abundance of all cells north/south/east/west of reference point.
+#' @returns A list object with distance moved and abundance of all cells north/south/east/west of reference point.
 #' @keywords internal
 .cardinalDistance <- function(
 	direction,

@@ -1,13 +1,19 @@
+# enmSdmX 1.1.8 2024-10-02
+- `modelSize()` can now tell size of a `ranger` random forest.
+
+# enmSdmX 1.1.7 2024-08-02
+- Clarified mis-leading help in several functions, including all the `trainXYZ()` functions (thank you, PT!).
+
 # enmSdmX 1.1.6 2024-06-06
 - Replaced dependency on **MuMIn** with one one **AICcmodavg** for calculation of AICc. Received warning that **MuMIn** was going to be archived on CRAN.
 
 # enmSdmX 1.1.5 2024-05-16
 - Added function `trainESM()` for ensembles of small models.
 - Added several UTM coordinate reference systems accessible through `getCRS()`.
-- Fixed bug in `precidtEnmSdm()` for predicting kernel density models from the **ks** package.
+- Fixed bug in `predictEnmSdm()` for predicting kernel density models from the **ks** package.
 
 # enmSdmX 1.1.3 2023-03-06
-- `trainGLM()`,  `trainNS()`, and `predictEnmSdm()` now have options to automatically center and scale predictors.
+- `trainGLM()`,  `trainNS()`, and `predictEnmSdm()` now have options to automatically center and scale predictors. If a GLM or NS model created using `trainGLM()` or `trainSN()` is provided to `predictEnmSdm()`, it will automatically scale the predictors properly.
 
 # enmSdmX 1.1.3 2023-02-02
 - Removed dependency on `dismo`, replaced where possible by `predicts`; copied `gbm.step()` and `predict()` method for MaxEnt to `enmSdmX` as a momentary fix; would love a professional solution!

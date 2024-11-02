@@ -19,13 +19,13 @@ compareResponse(
 )
 }
 \arguments{
-\item{pred1}{Numeric list. Predictions from first model along \code{data} (one value per row in \code{data}).}
+\item{pred1}{Numeric vector. Predictions from first model along \code{data} (one value per row in \code{data}).}
 
-\item{pred2}{Numeric list. Predictions from second model along \code{data} (one value per row in \code{data}).}
+\item{pred2}{Numeric vector. Predictions from second model along \code{data} (one value per row in \code{data}).}
 
 \item{data}{Data frame or matrix corresponding to \code{pred1} and \code{pred2}.}
 
-\item{predictor}{Character list. Name(s) of predictor(s) for which to calculate comparisons. These must appear as column names in \code{data}.}
+\item{predictor}{Character vector. Name(s) of predictor(s) for which to calculate comparisons. These must appear as column names in \code{data}.}
 
 \item{adjust}{Logical. If \code{TRUE} then subtract the mean of \code{pred1} from \code{pred1} and the mean of \code{pred2} from \code{pred2} before analysis. Useful for comparing the shapes of curves while controlling for different elevations (intercepts).}
 
@@ -35,7 +35,7 @@ compareResponse(
 
 \item{smoothN}{\code{NULL} or positive integer. Number of values along "pred" at which to calculate comparisons. Only used if \code{smooth} is \code{TRUE}. If \code{NULL}, then comparisons are calculated at each value in data. If a number, then comparisons are calculated at \code{smoothN} values of \code{data[ , pred]} that cover the range of \code{data[ , pred]}.}
 
-\item{smoothRange}{2-element numeric list or \code{NULL}. If \code{smooth} is \code{TRUE}, then force loess predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.}
+\item{smoothRange}{2-element numeric vector or \code{NULL}. If \code{smooth} is \code{TRUE}, then force loess predictions < \code{smoothRange[1]} to equal \code{smoothRange[1]} and predictions > \code{smoothRange[2]} to equal \code{smoothRange[2]}. Ignored if \code{NULL}.}
 
 \item{graph}{Logical. If \code{TRUE} then plot predictions.}
 

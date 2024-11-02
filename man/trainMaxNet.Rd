@@ -2,7 +2,7 @@
 % Please edit documentation in R/trainMaxNet.r
 \name{trainMaxNet}
 \alias{trainMaxNet}
-\title{Calibrate a MaxNet (MaxEnt) model using AICc}
+\title{Calibrate a MaxNet model using AICc}
 \usage{
 trainMaxNet(
   data,
@@ -24,11 +24,11 @@ trainMaxNet(
 
 \item{resp}{Character or integer. Name or column index of response variable. Default is to use the first column in \code{data}.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character vector or integer vector. Names of columns or column indices of predictors. Default is to use the second and subsequent columns in \code{data}.}
 
 \item{regMult}{Numeric vector. Values of the master regularization parameters (called \code{beta} in some publications) to test.}
 
-\item{classes}{Character list. Names of feature classes to use (either \code{default} to use \code{lpqh}) or any combination of \code{lpqht}, where \code{l} ==> linear features, \code{p} ==> product features, \code{q} ==> quadratic features, \code{h} ==> hinge features, and \code{t} ==> threshold features.}
+\item{classes}{Character vector. Names of feature classes to use (either \code{default} to use \code{'lpqh'}) or any combination of \code{'lpqht'}, where \code{l} ==> linear features, \code{p} ==> product features, \code{q} ==> quadratic features, \code{h} ==> hinge features, and \code{t} ==> threshold features. Example: \code{c('l', 'p', 'q')}.}
 
 \item{testClasses}{Logical.  If \code{TRUE} (default) then test all possible combinations of classes (note that all tested models will at least have linear features). If \code{FALSE} then use the classes provided (these will not vary between models).}
 
@@ -53,7 +53,12 @@ trainMaxNet(
 If \code{out = 'model'} this function returns an object of class \code{MaxEnt}. If \code{out = 'tuning'} this function returns a data frame with tuning parameters, log likelihood, and AICc for each model tried. If \code{out = c('model', 'tuning'} then it returns a list object with the \code{MaxEnt} object and the data frame.
 }
 \description{
-This function calculates the "best" MaxNet model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The "best" model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better). The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+This function calculates the "best" MaxNet model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The "best" model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better).
+}
+\details{
+The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+
+Note that due to differences in how MaxEnt and MaxNet are implemented in their base packages, the models will not necessarily be the same even for the same training data.
 }
 \examples{
 \donttest{

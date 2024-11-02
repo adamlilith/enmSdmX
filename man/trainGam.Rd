@@ -31,7 +31,7 @@ trainGAM(
 
 \item{resp}{Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.}
 
-\item{preds}{Character list or integer list. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
+\item{preds}{Character vector or integer vector. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.}
 
 \item{gamma}{Initial penalty to degrees of freedom to use (larger ==> smoother fits).}
 
