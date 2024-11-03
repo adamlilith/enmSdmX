@@ -39,7 +39,7 @@ trainGAM(
 
 \item{smoothingBasis}{Character. Indicates the type of smoothing basis. The default is \code{'cs'} (cubic splines), but see \code{\link[mgcv]{smooth.terms}} for other options. This is the value of argument \code{bs} in a \code{\link[mgcv]{s}} function.}
 
-\item{interaction}{Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.}
+\item{interaction}{Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL}, then interactions are not used.}
 
 \item{interceptOnly}{If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.}
 
