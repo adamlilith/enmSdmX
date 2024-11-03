@@ -1,3 +1,6 @@
+# enmSdmX 1.1.9 2024-11-01
+- `trainGAM()` does not include interaction terms if `interaction` is `NULL`, and does not fail when interactions are included and the number of predictors is >2 (thank you, Pascal!).  
+
 # enmSdmX 1.1.8 2024-10-02
 - `modelSize()` can now tell size of a `ranger` random forest.
 
