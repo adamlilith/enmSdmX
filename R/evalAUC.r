@@ -7,6 +7,9 @@
 #' @param contrastWeight Weights of contrast cases. The default is to assign each case a weight of 1.
 #' @param na.rm Logical. If \code{TRUE} then remove any positive cases and associated weights and contrast predictions and associated weights with \code{NA}s.
 #' @param ... Other arguments (unused).
+#'
+#' @references Mason, S.J. and N.E. Graham.  2002.  Areas beneath the relative operating characteristics (ROC) and relative operating levels (ROL) curves: Statistical significance and interpretation.  \emph{Quarterly Journal of the Royal Meteorological Society} 128:2145-2166. \doi{10.1256/003590002320603584}
+#'
 #' @return A Numeric value.
 #'
 #' @seealso \code{\link[predicts]{pa_evaluate}}, \code{\link{evalMultiAUC}}

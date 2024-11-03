@@ -13,7 +13,7 @@
 #' @param presPerTermInitial Positive integer. Minimum number of presences needed per model term for a term to be included in the model construction stage. Used only if \code{construct} is \code{TRUE}.
 #' @param presPerTermFinal Positive integer. Minimum number of presence sites per term in initial starting model; used only if \code{select} is \code{TRUE}.
 #' @param maxTerms Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.
-#' @param interaction Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL} then interactions are not used.
+#' @param interaction Character or \code{NULL}. Type of interaction term to use (\code{te}, \code{ts}, \code{s}, etc.). See \code{?te} (for example) for help on any one of these. If \code{NULL}, then interactions are not used.
 #' @param interceptOnly If \code{TRUE} (default) and model selection is enabled, then include an intercept-only model.
 #' @param smoothingBasis Character. Indicates the type of smoothing basis. The default is \code{'cs'} (cubic splines), but see \code{\link[mgcv]{smooth.terms}} for other options. This is the value of argument \code{bs} in a \code{\link[mgcv]{s}} function.
 #' @param w Weights. Any of:
@@ -128,40 +128,68 @@ trainGAM <- function(
 		}
 		
 		# interaction terms
-		if (length(preds) > 1L & n >= 2 * presPerTermInitial) {
+		if (!is.null(interaction) & length(preds) > 1L & n >= 2 * presPerTermInitial) {
 		
-			for (countPred1 in 1L:(length(preds)-1L)) { # for each predictor test two-variable terms
+			predCombos <- utils::combn(preds, m = 2, simplify = FALSE)
 
-				pred1 <- preds[countPred1]
-
-				for (countPred2 in 2:length(preds)) { # for each second predictor test two-variable terms
-
-					pred2 <- preds[countPred2]
-
-					# create term
-					if (!inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
-
-						terms <- c(terms, paste0(interaction, '(', pred1, ', ', pred2, ', bs=\'', smoothingBasis, '\')'))
-
-					} else if (inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
-
-						terms <- c(terms, paste0(interaction, '(', pred2, ', by=', pred1, ', bs=\'', smoothingBasis,'\')'))
-
-					} else if (!inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
-
-						terms <- c(terms, paste0(interaction, '(', pred1, ', by=', pred2, ', bs=\'', smoothingBasis, '\')'))
-
-					} else if (inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
-
-						terms <- c(terms, paste0(pred1, ' * ', pred2))
-
-					}
-					
-				} # next second term
+			for (i in seq_along(predCombos)) {
 				
-			} # next first term
+				pred1 <- predCombos[[i]][1]
+				pred2 <- predCombos[[i]][2]
+
+				# create term
+				if (!inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
+
+					terms <- c(terms, paste0(interaction, '(', pred1, ', ', pred2, ', bs=\'', smoothingBasis, '\')'))
+
+				} else if (inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
+
+					terms <- c(terms, paste0(interaction, '(', pred2, ', by=', pred1, ', bs=\'', smoothingBasis,'\')'))
+
+				} else if (!inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
+
+					terms <- c(terms, paste0(interaction, '(', pred1, ', by=', pred2, ', bs=\'', smoothingBasis, '\')'))
+
+				} else if (inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
+
+					terms <- c(terms, paste0(pred1, ' * ', pred2))
+
+				}
+				
+			}
+							
+			# for (countPred1 in 1L:(length(preds)-1L)) { # for each predictor test two-variable terms
+
+				# pred1 <- preds[countPred1]
+
+				# for (countPred2 in 2:length(preds)) { # for each second predictor test two-variable terms
+
+					# pred2 <- preds[countPred2]
+
+					# # create term
+					# if (!inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
+
+						# terms <- c(terms, paste0(interaction, '(', pred1, ', ', pred2, ', bs=\'', smoothingBasis, '\')'))
+
+					# } else if (inherits(data[ , pred1], 'factor') & !inherits(data[ , pred2], 'factor')) {
+
+						# terms <- c(terms, paste0(interaction, '(', pred2, ', by=', pred1, ', bs=\'', smoothingBasis,'\')'))
+
+					# } else if (!inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
+
+						# terms <- c(terms, paste0(interaction, '(', pred1, ', by=', pred2, ', bs=\'', smoothingBasis, '\')'))
+
+					# } else if (inherits(data[ , pred1], 'factor') & inherits(data[ , pred2], 'factor')) {
+
+						# terms <- c(terms, paste0(pred1, ' * ', pred2))
+
+					# }
+					
+				# } # next second term
+				
+			# } # next first term
 			
-		} # if more than one term
+		} # if more than one term and wanting interactions
 			
 	## term-by-term model construction
 	##################################
@@ -195,7 +223,7 @@ trainGAM <- function(
 		rownames(assess) <- NULL
 
 		if (verbose) {
-			omnibus::say('Term-by-term evaluation:', level=2)
+			omnibus::say('Term-by-term evaluation', level=2)
 			print(assess)
 			utils::flush.console()
 		}
@@ -238,7 +266,7 @@ trainGAM <- function(
 
 			if (verbose) {
 
-				omnibus::say('Final model (construction from best terms, but no selection):', level=2)
+				omnibus::say('Final model (construction from best terms, but no selection)', level=2)
 				print(summary(model))
 				utils::flush.console()
 				
@@ -328,7 +356,7 @@ trainGAM <- function(
 		
 			if (verbose) {
 			
-				omnibus::say('Model selection:', level=2)
+				omnibus::say('Model selection', level=2)
 				print(tuning)
 				utils::flush.console()
 			
@@ -369,7 +397,7 @@ trainGAM <- function(
 		
 		if (verbose) {
 		
-			omnibus::say('Model (no construction or selection):', level=2)
+			omnibus::say('Model (no construction or selection)', level=2)
 			print(summary(model))
 			utils::flush.console()
 		

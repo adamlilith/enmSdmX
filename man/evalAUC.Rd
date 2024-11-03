@@ -51,6 +51,9 @@ evalAUC(pres, contrast, presWeight=presWeight)
 contrastWeight <- sqrt(contrast)
 evalAUC(pres, contrast, presWeight=presWeight, contrastWeight=contrastWeight)
 }
+\references{
+Mason, S.J. and N.E. Graham.  2002.  Areas beneath the relative operating characteristics (ROC) and relative operating levels (ROL) curves: Statistical significance and interpretation.  \emph{Quarterly Journal of the Royal Meteorological Society} 128:2145-2166. \doi{10.1256/003590002320603584}
+}
 \seealso{
 \code{\link[predicts]{pa_evaluate}}, \code{\link{evalMultiAUC}}
 }

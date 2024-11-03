@@ -1,8 +1,8 @@
 Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
-Version: 1.1.8
-Date: 2024-10-02
+Version: 1.1.9
+Date: 2024-11-01
 Authors@R: 
 	c(
 		person(
