@@ -130,18 +130,16 @@ trainNS <- function(
 		# interaction terms
 		if (interaction & length(preds) > 1L & n >= 2 * presPerTermFinal) {
 		
-			for (countPred1 in 1L:(length(preds) - 1L)) { # for each predictor test two-variable terms
+			predCombos <- utils::combn(preds, m = 2, simplify = FALSE)
 
-				pred1 <- preds[countPred1]
+			for (i in seq_along(predCombos)) {
 
-				for (countPred2 in 2L:length(preds)) { # for each second predictor test two-variable terms
+				pred1 <- predCombos[[i]][1]
+				pred2 <- predCombos[[i]][2]
 
-					pred2 <- preds[countPred2]
-					terms <- c(terms, paste0('splines::ns(', preds[countPred1], ' * ', preds[countPred2], ', df=', df, ')'))
+				terms <- c(terms, paste0('splines::ns(', pred1, ' * ', pred2, ', df=', df, ')'))
 					
-				} # next second term
-				
-			} # next first term
+			}
 			
 		} # if more than one term
 		
