@@ -1,3 +1,6 @@
+# enmSdmX 1.1.10 2024-11-06
+- `trainNS()` works when the number of predictors is >2 and interactions are allowed between variables (thank you again, Pascal!).  
+
 # enmSdmX 1.1.9 2024-11-01
 - `trainGAM()` does not include interaction terms if `interaction` is `NULL`, and does not fail when interactions are included and the number of predictors is >2 (thank you, Pascal!).  
 
