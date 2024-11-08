@@ -20,7 +20,7 @@
 #' @param k 		Numeric: Number of folds to create.
 #' @param minIn 	Numeric: Minimum number of points required to be in a fold.
 #' @param longLat 	Character or integer vector: This is ignored if \code{x} is a \code{SpatVector} or \code{sf} object. However, if \code{x} is a \code{data.frame} or \code{matrix}, then this should be a character or integer vector specifying the columns in \code{x} corresponding to longitude and latitude (in that order). For example, \code{c('long', 'lat')} or \code{c(1, 2)}. The default is to assume that the first two columns in \code{x} represent coordinates.
-#' @param method Character: Method used by \code{\link[stats]{hclust}} to cluster points. By default, this is \code{'single'}, but in some cases this may result in strange clustering (especially when there is a large number of points). The \code{'complete'} method (or others) may give more reasonable results in these cases.
+#' @param method Character: Method used by \code{\link[stats]{hclust}} to cluster points. By default, this is \code{'complete'}, but other methods may give more reasonable results, depending on the case.
 #' @param ... Additional arguments (unused)
 #'
 #' @return A vector of integers the same length as the number of points in \code{x}. Each integer indicates which fold a point in \code{x} belongs to.
