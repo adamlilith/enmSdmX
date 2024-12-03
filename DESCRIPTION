@@ -2,11 +2,11 @@ Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
 Version: 1.1.10
-Date: 2024-11-06
+Date: 2024-12-03
 Authors@R: 
 	c(
 		person(
-			given = 'Adam B.',
+			given = c('Adam', 'B.'),
 			family = 'Smith',
 			role = c('cre', 'aut'),
 			email = 'adam.smith@mobot.org',
