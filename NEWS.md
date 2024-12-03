@@ -1,4 +1,4 @@
-# enmSdmX 1.1.10 2024-11-06
+# enmSdmX 1.1.10 2024-12-03
 - `trainNS()` works when the number of predictors is >2 and interactions are allowed between variables (thank you again, Pascal!).  
 
 # enmSdmX 1.1.9 2024-11-01
