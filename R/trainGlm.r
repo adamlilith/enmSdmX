@@ -25,6 +25,8 @@
 #'  \item A numeric vector of weights, one per row in \code{data}.
 #' 	\item The name of the column in \code{data} that contains site weights.
 #' }
+#' @param removeInvalid Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity). If you run this function with `construct = TRUE` (i.e., construct a "full" model from the best "small" models), then any small model that either did not converge or had parameters that are near the boundary (usually negative or positive infinity) are removed from consideration as terms in "full" model.
+#' @param failIfInvalid Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.
 #' @param out Character vector. One or more values:
 #' \itemize{
 #' 	\item	\code{'model'}: Model with the lowest AICc.
@@ -35,7 +37,7 @@
 #' @param verbose Logical. If \code{TRUE} then display progress.
 #' @param ... Arguments to pass to \code{glm}.
 #'
-#' @returns The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors.
+#' @returns The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors. The data frame reports the AICc for all of the models, sorted by best to worst. The \code{converged} column indicates whether the model converged ("\code{TRUE}" is good), and the \code{boundary} column whether the model parameters are near the boundary (usually, negative or positive infinity; "\code{FALSE}" is good).
 #'
 #' @seealso \code{\link[stats]{glm}}
 #'
@@ -58,6 +60,8 @@ trainGLM <- function(
 	maxTerms = 8,
 	w = TRUE,
 	family = stats::binomial(),
+	removeInvalid = TRUE,
+	failIfInvalid = TRUE,
 	out = 'model',
 	cores = 1,
 	verbose = FALSE,
@@ -79,6 +83,8 @@ trainGLM <- function(
 		presPerTermFinal <- 10
 		maxTerms <- 8
 		w <- TRUE
+		removeInvalid <- TRUE
+		failIfInvalid <- TRUE
 		scale <- TRUE
 		family <- stats::binomial()
 		out <- 'model'
@@ -191,11 +197,29 @@ trainGLM <- function(
 			)
 		}
 	
-		assess <- assess[order(assess$AICc), , drop=FALSE]
+		if (removeInvalid) {
+
+			bads <- which(!assess$converged | assess$boundary)
+			if (length(bads) > 0) {
+				assess <- assess[-bads, , drop = FALSE]
+				
+				if (nrow(assess) == 0) {
+					msg <- 'No single-term models converged or all models had parameter estimates near the boundary.'
+					if (failIfInvalid) {
+						stop(msg)
+					} else {
+						warning(msg)
+						return(NULL)
+					}
+				}
+			}
+		}
+
+		assess <- assess[order(assess$AICc), , drop = FALSE]
 		rownames(assess) <- NULL
 
 		if (verbose) {
-			omnibus::say('Term-by-term evaluation:', pre=1)
+			omnibus::say('Term-by-term evaluation:', pre = 1)
 			print(assess)
 			utils::flush.console()
 		}
@@ -232,7 +256,7 @@ trainGLM <- function(
 			numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
 			start <- rep(0, numTerms)
 			
-			model <- stats::glm(
+			model <- suppressWarnings(stats::glm(
 				formula = stats::as.formula(thisForm),
 				family = family,
 				data = data,
@@ -240,23 +264,43 @@ trainGLM <- function(
 				weights = w,
 				start = start,
 				...
-			)
+			))
 			
 			AICc <- AICcmodavg::AICc(model)
 			
 			tuning <- data.frame(
 				model = form,
+				converged = model$converged,
+				boundary = model$boundary,
 				AICc = AICc
 			)
 
 			models <- NULL
 
+			if (!tuning$converged | tuning$boundary) {
+
+				msg <- 'The model did not converge and/or estimates are near boundary conditions.'
+				if (removeInvalid) {
+				
+					if (failIfInvalid) {
+						stop(msg)
+					} else {
+						warning(msg)
+						return(NULL)
+					}
+				} else {
+					warning(msg)
+				}
+
+			}
+
+				
 			if (verbose) {
 
 				omnibus::say('Final model (construction from best terms, but no selection):', pre=1)
 				print(summary(model))
 				utils::flush.console()
-				
+
 			}
 
 		### model selection
@@ -373,15 +417,44 @@ trainGLM <- function(
 			}
 
 			# compile all possible models and rank
-			tuning <- data.frame(model = rep(NA_character_, length(assess)), AICc = rep(NA_real_, length(assess)))
+			n <- length(assess)
+			tuning <- data.frame(
+				model = rep(NA_character_, n),
+				converged = rep(NA, n),
+				boundary = rep(NA, n),
+				AICc = rep(NA_real_, n)
+			)
+
 			models <- list()
 			for (i in seq_along(assess)) {
 				models[[i]] <- assess[[i]]$model
 				if (!is.na(scale)) if (scale) models[[i]]$scale <- scales
 				tuning$model[i] <- assess[[i]]$formula
+				tuning$converged[i] <- assess[[i]]$converged
+				tuning$boundary[i] <- assess[[i]]$boundary
 				tuning$AICc[i] <- assess[[i]]$AICc
 			}
 			
+			if (removeInvalid) {
+
+				bads <- which(!tuning$converged | tuning$boundary)
+				if (length(bads) > 0) {
+
+					tuning <- tuning[-bads, , drop = FALSE]
+					models <- models[-bads]
+
+					if (nrow(tuning) == 0) {
+						msg <- 'No models converged or all had parameter estimates near the boundary of parameter space.'
+						if (failIfInvalid) {
+							stop(msg)
+						} else {
+							warning(msg)
+							return(NULL)
+						}
+					}
+				}
+			}
+
 			ranks <- order(tuning$AICc)
 			models <- models[ranks]
 			tuning <- tuning[ranks, , drop=FALSE]
@@ -409,7 +482,7 @@ trainGLM <- function(
 		numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
 		start <- rep(0, numTerms)
 	
-		model <- stats::glm(
+		model <- suppressWarnings(stats::glm(
 			formula = stats::as.formula(thisForm),
 			family = family,
 			data = data,
@@ -417,19 +490,37 @@ trainGLM <- function(
 			weights = w,
 			start = start,
 			...
-		)
+		))
 		
 		AICc <- AICcmodavg::AICc(model)
 		
 		tuning <- data.frame(
 			model = form,
+			converged = model$converged,
+			boundary = model$boundary,
 			AICc = AICc
 		)
 		
 		models <- NULL
 		
-		if (select) warning('Model selection is not performed when argument "construct" is FALSE.')
+		if (select) warning('Model selection is not performed when argument `construct` is FALSE.')
+		if (!model$converged | model$boundary) {
+			
+			msg <- 'The model did not converge and/or parameters are near the boundary space.'
+			if (removeInvalid) {
+				
+				if (failIfInvalid) {
+					stop(msg)
+				} else {
+					warning(msg)
+					return(NULL)
+				}
+			} else {
+				warning(msg)
+			}
 		
+		}
+
 		if (verbose) {
 		
 			omnibus::say('Model (no construction or selection):', level=2)
@@ -454,6 +545,7 @@ trainGLM <- function(
 		output <- models
 	} else if ('model' %in% out) {
 		output <- model
+		if (!tuning$converged[1] | tuning$boundary[1]) warning('The top model did not converge and/or had parameter estimates near the boundary.')
 	} else if ('tuning' %in% out) {
 		output <- tuning
 	}
@@ -500,7 +592,7 @@ trainGLM <- function(
 	numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
 	start <- rep(0, numTerms)
 
-	model <- stats::glm(
+	model <- suppressWarnings(stats::glm(
 		formula = stats::as.formula(thisForm),
 		data = data,
 		family = family,
@@ -508,7 +600,7 @@ trainGLM <- function(
 		method = method,
 		start = start,
 		...
-	)
+	))
 	
 	AICc <- AICcmodavg::AICc(model)
 	
@@ -519,6 +611,8 @@ trainGLM <- function(
 			list(
 				model = model,
 				formula = form,
+				converged = model$converged,
+				boundary = model$boundary,
 				AICc = AICc
 			)
 		)
@@ -527,6 +621,8 @@ trainGLM <- function(
 	
 		out <- data.frame(
 			formula = form,
+			converged = model$converged,
+			boundary = model$boundary,
 			AICc = AICc
 		)
 	
