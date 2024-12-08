@@ -18,7 +18,7 @@ trainNS(
   w = TRUE,
   family = "binomial",
   removeInvalid = TRUE,
-  failIfInvalid = TRUE,
+  failIfNoValid = TRUE,
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -58,7 +58,7 @@ trainNS(
 
 \item{removeInvalid}{Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity).}
 
-\item{failIfInvalid}{Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.}
+\item{failIfNoValid}{Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.}
 
 \item{out}{Character vector. One or more values:
 \itemize{

@@ -21,7 +21,7 @@ trainGLM(
   w = TRUE,
   family = stats::binomial(),
   removeInvalid = TRUE,
-  failIfInvalid = TRUE,
+  failIfNoValid = TRUE,
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -67,7 +67,7 @@ trainGLM(
 
 \item{removeInvalid}{Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity). If you run this function with `construct = TRUE` (i.e., construct a "full" model from the best "small" models), then any small model that either did not converge or had parameters that are near the boundary (usually negative or positive infinity) are removed from consideration as terms in "full" model.}
 
-\item{failIfInvalid}{Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.}
+\item{failIfNoValid}{Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.}
 
 \item{out}{Character vector. One or more values:
 \itemize{

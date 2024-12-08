@@ -21,7 +21,7 @@
 #' }
 #' @param family Name of family for data error structure (see \code{\link[stats]{family}}).
 #' @param removeInvalid Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity).
-#' @param failIfInvalid Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.
+#' @param failIfNoValid Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.
 #' @param out Character vector. One or more values:
 #' \itemize{
 #' 	\item	\code{'model'}: Model with the lowest AICc.
@@ -62,7 +62,7 @@ trainNS <- function(
 	w = TRUE,
 	family = 'binomial',
 	removeInvalid = TRUE,
-	failIfInvalid = TRUE,
+	failIfNoValid = TRUE,
 	out = 'model',
 	cores = 1,
 	verbose = FALSE,
@@ -83,7 +83,7 @@ trainNS <- function(
 		w <- TRUE
 		family <- 'binomial'
 		removeInvalid <- TRUE
-		failIfInvalid <- TRUE
+		failIfNoValid <- TRUE
 		out <- 'model'
 		cores <- 1
 		verbose <- TRUE
@@ -238,7 +238,7 @@ trainNS <- function(
 				
 				if (nrow(work) == 0) {
 					msg <- 'No single-term models converged or all models had parameter estimates near the boundary.'
-					if (failIfInvalid) {
+					if (failIfNoValid) {
 						stop(msg)
 					} else {
 						warning(msg)
@@ -357,7 +357,7 @@ trainNS <- function(
 				
 				if (nrow(work) == 0) {
 					msg <- 'No single-term models converged or all models had parameter estimates near the boundary.'
-					if (failIfInvalid) {
+					if (failIfNoValid) {
 						stop(msg)
 					} else {
 						warning(msg)

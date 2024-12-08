@@ -26,7 +26,7 @@
 #' 	\item The name of the column in \code{data} that contains site weights.
 #' }
 #' @param removeInvalid Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity). If you run this function with `construct = TRUE` (i.e., construct a "full" model from the best "small" models), then any small model that either did not converge or had parameters that are near the boundary (usually negative or positive infinity) are removed from consideration as terms in "full" model.
-#' @param failIfInvalid Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.
+#' @param failIfNoValid Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.
 #' @param out Character vector. One or more values:
 #' \itemize{
 #' 	\item	\code{'model'}: Model with the lowest AICc.
@@ -70,7 +70,7 @@ trainGLM <- function(
 	w = TRUE,
 	family = stats::binomial(),
 	removeInvalid = TRUE,
-	failIfInvalid = TRUE,
+	failIfNoValid = TRUE,
 	out = 'model',
 	cores = 1,
 	verbose = FALSE,
@@ -94,7 +94,7 @@ trainGLM <- function(
 		maxTerms <- 8
 		w <- TRUE
 		removeInvalid <- TRUE
-		failIfInvalid <- TRUE
+		failIfNoValid <- TRUE
 		scale <- TRUE
 		family <- stats::binomial()
 		out <- 'model'
@@ -211,7 +211,7 @@ trainGLM <- function(
 				
 				if (nrow(assess) == 0) {
 					msg <- 'No single-term models converged or all models had parameter estimates near the boundary.'
-					if (failIfInvalid) {
+					if (failIfNoValid) {
 						stop(msg)
 					} else {
 						warning(msg)
@@ -290,7 +290,7 @@ trainGLM <- function(
 				msg <- 'The model did not converge and/or estimates are near boundary conditions.'
 				if (removeInvalid) {
 				
-					if (failIfInvalid) {
+					if (failIfNoValid) {
 						stop(msg)
 					} else {
 						warning(msg)
@@ -453,7 +453,7 @@ trainGLM <- function(
 
 					if (nrow(tuning) == 0) {
 						msg <- 'No models converged or all had parameter estimates near the boundary of parameter space.'
-						if (failIfInvalid) {
+						if (failIfNoValid) {
 							stop(msg)
 						} else {
 							warning(msg)
@@ -519,7 +519,7 @@ trainGLM <- function(
 			msg <- 'The model did not converge and/or parameters are near the boundary space.'
 			if (removeInvalid) {
 				
-				if (failIfInvalid) {
+				if (failIfNoValid) {
 					stop(msg)
 				} else {
 					warning(msg)
