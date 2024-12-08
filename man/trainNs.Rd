@@ -17,6 +17,8 @@ trainNS(
   maxTerms = 8,
   w = TRUE,
   family = "binomial",
+  removeInvalid = TRUE,
+  failIfInvalid = TRUE,
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -42,7 +44,7 @@ trainNS(
 
 \item{presPerTermFinal}{Minimum number of presence sites per term in initial starting model.}
 
-\item{maxTerms}{Maximum number of terms to be used in any model, not including the intercept (default is 8). Used only if \code{construct} is \code{TRUE}.}
+\item{maxTerms}{Maximum number of terms to be used in any model, not including the intercept (default is 8).}
 
 \item{w}{Weights. Any of:
 \itemize{
@@ -53,6 +55,10 @@ trainNS(
 }}
 
 \item{family}{Name of family for data error structure (see \code{\link[stats]{family}}).}
+
+\item{removeInvalid}{Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity).}
+
+\item{failIfInvalid}{Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.}
 
 \item{out}{Character vector. One or more values:
 \itemize{

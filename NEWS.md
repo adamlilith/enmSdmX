@@ -1,8 +1,9 @@
-# enmSdmX 1.1.10 2024-12-03
-- `trainNS()` works when the number of predictors is >2 and interactions are allowed between variables (thank you again, Pascal!).  
+# enmSdmX 1.2.10 2024-12-07
+- `trainGLM()` now allows users to remove models that did not converge or had boundary problems. The function also works for factor predictors with > 2 levels. Thank you, A.L.!  
+- `trainNS()` works when the number of predictors is >2 and interactions are allowed between variables. Thank you, P.T.! It also handles factors with >2 levels and allows users to remove models that did not converge or had boundary problems. Thank you, A.L.!
 
 # enmSdmX 1.1.9 2024-11-01
-- `trainGAM()` does not include interaction terms if `interaction` is `NULL`, and does not fail when interactions are included and the number of predictors is >2 (thank you, Pascal!).  
+- `trainGAM()` does not include interaction terms if `interaction` is `NULL`, and does not fail when interactions are included and the number of predictors is >2 (thank you, P.T.!).  
 
 # enmSdmX 1.1.8 2024-10-02
 - `modelSize()` can now tell size of a `ranger` random forest.
