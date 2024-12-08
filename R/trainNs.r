@@ -1,6 +1,6 @@
 #' Calibrate a natural splines model
 #'
-#' This function constructs a natural-spline model by evaluating all possible models given the available predictors and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model. Its output is any or all of: a table with AICc for all evaluated models; all models evaluated; and/or the single model with the lowest AICc.
+#' This function constructs a natural-spline model by evaluating all possible models given the available predictors and constraints. "Constraints" in this case include the degrees of freedom for a spline, whether or not interaction terms are included, minimum number of presence sites per model term, and maximum number of terms to include in the model. Its output is any or all of: the most parsimonious model (lowest AICc); all models evaluated; and/or a table with AICc for all evaluated models.
 #'
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
@@ -32,7 +32,16 @@
 #' @param verbose Logical. If \code{TRUE} then display intermediate results on the display device. Default is \code{FALSE}.
 #' @param ... Arguments to send to \code{\link[stats]{glm}}.
 #'
-#' @returns The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors.
+#' @details
+#' This function is designed to find the most parsimonious model given the amount of calibration data that is available to it. `trainNS()` can work with any data, but has been designed to work specifically as a species distribution model where the response is either binary (default) or abundance. Specifically, it 1) identifies the most parsimonious model (lowest AICc) with 2) optimal flexibility (optimal degrees of freedom in splines) and 3) allows for (but does not require) interaction terms between predictors (if desired). If the defaults are used, the following procedure is applied:
+#' \itemize{
+#'	\item Constructing a set of simple model terms, each with 1 to 4 degrees of freedom. Terms can be univariate or bilabiate (two-way interactions). Predictors can be continuous or factors. If any simple models has convergence issues or boundary issues (coefficients that approach negative or positive infinity), it is removed.
+#'  \item Constructing a series of models, each with one of the terms, then using the models to rank terms by AICc.
+#'  \item From the top set of terms, creating a "full" model. The full model will ensure the maximum number of terms is <= `maxTerms`, and that for each term, there are at least `presPerTermFinal` data points.
+#'  \item All possible submodels, plus the full model, are evaluated and ranked by AICc.  If a model has convergence or boundary issues, it is removed from the set. The most parsimonious model (lowest AICc) is returned.
+#'}
+#'
+#' @returns The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors. The data frame reports the AICc for all of the models evaluated, sorted by best to worst. The \code{converged} column indicates whether the model converged ("\code{TRUE}" is good), and the \code{boundary} column whether the model parameters are near the boundary (usually, negative or positive infinity; "\code{FALSE}" is good).
 #'
 #' @seealso \code{\link[splines]{ns}}
 #'

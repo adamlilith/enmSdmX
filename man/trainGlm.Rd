@@ -83,12 +83,21 @@ trainGLM(
 \item{...}{Arguments to pass to \code{glm}.}
 }
 \value{
-The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors. The data frame reports the AICc for all of the models, sorted by best to worst. The \code{converged} column indicates whether the model converged ("\code{TRUE}" is good), and the \code{boundary} column whether the model parameters are near the boundary (usually, negative or positive infinity; "\code{FALSE}" is good).
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors. The data frame reports the AICc for all of the models evaluated, sorted by best to worst. The \code{converged} column indicates whether the model converged ("\code{TRUE}" is good), and the \code{boundary} column whether the model parameters are near the boundary (usually, negative or positive infinity; "\code{FALSE}" is good).
 }
 \description{
 This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model).
 
 The function outputs any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+}
+\details{
+This function is designed to find the most parsimonious model given the amount of calibration data that is available to it. `trainGLM()` can work with any data, but has been designed to work specifically as a species distribution model where the response is either binary (default) or abundance. Specifically, it 1) identifies the most parsimonious model (lowest AICc) with 2) optimal flexibility (optimal degrees of freedom in splines) and 3) allows for (but does not require) interaction terms between predictors (if desired). If the defaults are used, the following procedure is applied:
+\itemize{
+\item Constructing a set of simple model terms, each with 1 to 4 degrees of freedom. Terms can be univariate or bilabiate (two-way interactions). Predictors can be continuous or factors. If any simple models has convergence issues or boundary issues (coefficients that approach negative or positive infinity), it is removed.
+ \item Constructing a series of models, each with one of the terms, then using the models to rank terms by AICc.
+ \item From the top set of terms, creating a "full" model. The full model will ensure the maximum number of terms is <= `maxTerms`, and that for each term, there are at least `presPerTermFinal` data points.
+ \item All possible submodels, plus the full model, are evaluated and ranked by AICc.  If a model has convergence or boundary issues, it is removed from the set. The most parsimonious model (lowest AICc) is returned.
+}
 }
 \examples{
 \donttest{
