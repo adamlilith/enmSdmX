@@ -20,6 +20,8 @@ trainGLM(
   maxTerms = 8,
   w = TRUE,
   family = stats::binomial(),
+  removeInvalid = TRUE,
+  failIfInvalid = TRUE,
   out = "model",
   cores = 1,
   verbose = FALSE,
@@ -63,6 +65,10 @@ trainGLM(
 
 \item{family}{Name of family for data error structure (see \code{\link[stats]{family}}). Default is to use the 'binomial' family.}
 
+\item{removeInvalid}{Logical. If \code{TRUE} (default), remove models that either did not converge or have parameter estimates near the boundaries (usually negative or positive infinity). If you run this function with `construct = TRUE` (i.e., construct a "full" model from the best "small" models), then any small model that either did not converge or had parameters that are near the boundary (usually negative or positive infinity) are removed from consideration as terms in "full" model.}
+
+\item{failIfInvalid}{Logical. If \code{TRUE} (default), and the "full" model either does not converge or has parameters near the boundary, then the function will fail. If \code{FALSE}, then return \code{NULL} in this case.}
+
 \item{out}{Character vector. One or more values:
 \itemize{
     \item    \code{'model'}: Model with the lowest AICc.
@@ -77,7 +83,7 @@ trainGLM(
 \item{...}{Arguments to pass to \code{glm}.}
 }
 \value{
-The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors.
+The object that is returned depends on the value of the \code{out} argument. It can be a model object, a data frame, a list of models, or a list of all two or more of these. If \code{scale} is \code{TRUE}, any model object will also have an element named \code{$scale}, which contains the means and standard deviations for predictors that are not factors. The data frame reports the AICc for all of the models, sorted by best to worst. The \code{converged} column indicates whether the model converged ("\code{TRUE}" is good), and the \code{boundary} column whether the model parameters are near the boundary (usually, negative or positive infinity; "\code{FALSE}" is good).
 }
 \description{
 This function constructs a generalized linear model. By default, the model is constructed in a two-stage process.  First, the "construct" phase generates a series of simple models with univariate, quadratic, or 2-way-interaction terms. These simple models are then ranked based on their AICc. Second, the "select" phase creates a "full" model from the simple models such that there is at least \code{presPerTermInitial} presences (if the response is binary) or data rows (if not) for each coefficient to be estimated (not counting the intercept). Finally, it selects the best model using AICc from all possible subsets of this "full" model, while respecting marginality (i.e., all lower-order terms of higher-order terms appear in the model).

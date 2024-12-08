@@ -74,6 +74,7 @@ trainGLM <- function(
 	if (FALSE) {
 	
 		resp <- 'presBg'
+		
 		construct <- TRUE
 		select <- TRUE
 		quadratic <- TRUE
@@ -90,11 +91,6 @@ trainGLM <- function(
 		out <- 'model'
 		cores <- 1
 		verbose <- TRUE
-	
-		# speed <- TRUE
-		# method <- 'eigen'
-
-		# speed <- FALSE
 		method <- 'glm.fit'
 
 	}
@@ -167,8 +163,9 @@ trainGLM <- function(
 
 		### create vector of terms
 		terms <- preds
-		if (quadratic) terms <- c(terms, .makeQuadsMarginality(preds=preds, n=n, presPerTermInitial=presPerTermInitial))
-		if (interaction) terms <- c(terms, .makeIAsMarginality(preds=preds, n=n, presPerTermInitial=presPerTermInitial))
+		factors <- sapply(data[ , preds, drop = FALSE], is.factor)
+		if (quadratic) terms <- c(terms, .makeQuadsMarginality(preds = preds, n = n, presPerTermInitial = presPerTermInitial, factors = factors))
+		if (interaction) terms <- c(terms, .makeIAsMarginality(preds = preds, n = n, presPerTermInitial = presPerTermInitial))
 		
 	## term-by-term model construction
 	##################################
@@ -253,11 +250,13 @@ trainGLM <- function(
 			}
 			
 			thisForm <- paste0(resp, ' ~ 1 + ', form)
-			numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
-			start <- rep(0, numTerms)
+			thisForm <- stats::as.formula(thisForm)
+			
+			mm <- stats::model.matrix(thisForm, data)
+			start <- rep(0, ncol(mm))
 			
 			model <- suppressWarnings(stats::glm(
-				formula = stats::as.formula(thisForm),
+				formula = thisForm,
 				family = family,
 				data = data,
 				method = method,
@@ -479,11 +478,13 @@ trainGLM <- function(
 		form <- unique(form)
 		form <- paste(form, collapse = ' + ')
 		thisForm <- paste0(resp, ' ~ 1 + ', form)
-		numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
-		start <- rep(0, numTerms)
+		thisForm <- stats::as.formula(thisForm)
+		
+		mm <- stats::model.matrix(thisForm, data)
+		start <- rep(0, ncol(mm))
 	
 		model <- suppressWarnings(stats::glm(
-			formula = stats::as.formula(thisForm),
+			formula = thisForm,
 			family = family,
 			data = data,
 			method = method,
@@ -589,8 +590,9 @@ trainGLM <- function(
 		}
 	}
 	thisForm <- paste0(resp, ' ~ ', form)
-	numTerms <- lengths(regmatches(thisForm, gregexpr('\\+', thisForm))) + 1
-	start <- rep(0, numTerms)
+	thisForm <- stats::as.formula(thisForm)
+	mm <- stats::model.matrix(thisForm, data)
+	start <- rep(0, ncol(mm))
 
 	model <- suppressWarnings(stats::glm(
 		formula = stats::as.formula(thisForm),
@@ -632,11 +634,21 @@ trainGLM <- function(
 }
 
 # make vector of quadratic terms respecting marginality
-.makeQuadsMarginality <- function(preds, n, presPerTermInitial) {
+.makeQuadsMarginality <- function(
+	preds,					# vector of predictor names
+	n,						# sample size
+	presPerTermInitial,		# number of presences per term
+	factors					# logical: is each predictor a factor?
+) {
 	
 	quads <- character()
 	if (n >= 2 * presPerTermInitial) {
-		for (i in seq_along(preds)) quads <- c(quads, paste0(preds[i], ' + I(', preds[i], '^2)'))
+		for (i in seq_along(preds)) {
+			pred <- preds[i]
+			if (!factors[[pred]]) {
+				quads <- c(quads, paste0(pred, ' + I(', pred, '^2)'))
+			}
+		}
 	}
 	quads
 
