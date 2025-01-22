@@ -62,6 +62,22 @@ trainByCrossValid <- function(
 	verbose = 0
 ) {
 
+	### for debugging
+	#################
+
+	if (FALSE) {
+
+		folds <- predicts::folds(data)
+		trainFx <- enmSdmX::trainGLM
+		weightEvalTrain <- TRUE
+		weightEvalTest <- TRUE
+		na.rm <- FALSE
+		outputModels <- TRUE
+		verbose <- 1
+
+	}
+
+
 	ellipses <- list(...)
 	hasWeights <- ('w' %in% names(ellipses))
 
@@ -363,7 +379,7 @@ trainByCrossValid <- function(
 		k <- k + 1L
 	}
 	
-	trainFxName <- if (inherits(someModel, 'MaxEnt')) {
+	trainFxName <- if (inherits(someModel, 'MaxEnt_model')) {
 		'trainMaxEnt'
 	} else if (inherits(someModel, 'maxnet')) {
 		'trainMaxNet'
