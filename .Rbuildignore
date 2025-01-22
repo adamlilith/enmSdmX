@@ -9,3 +9,6 @@
 ^\.github
 ^\.github$
 ^enmSdmX_workspace.code-workspace
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
