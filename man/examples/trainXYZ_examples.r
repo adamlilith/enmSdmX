@@ -1,4 +1,5 @@
 \donttest{
+
 # NB: The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models. They can
 # take a few minutes to run.
@@ -218,4 +219,20 @@ legend(
    bg = 'white'
 )
 
+### compare response curves ###
+###############################
+
+modelNames <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'NS', 'BRT', 'RF')
+
+responses <- responseCurves(
+	models = list(mx, mn, gl, ga, ns, brt, rf),
+	env = bgEnv,
+	ref = occEnv,
+	vars = predictors,
+	modelNames = modelNames
+)
+
+print(responses)
+
 }
+

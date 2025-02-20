@@ -40,9 +40,9 @@ canVert <- project(can, vert)
 
 oldPar <- par(mfrow=c(2, 2))
 
-plot(can, main='Unprojected (WGS84)')
-plot(canAlb, main='Albers')
-plot(canLamb, main='Lambert')
-plot(canVert, main='Vertical')
+plot(can, main = 'Unprojected (WGS84)')
+plot(canAlb, main = 'Albers')
+plot(canLamb, main = 'Lambert')
+plot(canVert, main = 'Vertical')
 	
 par(oldPar)

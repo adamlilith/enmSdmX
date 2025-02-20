@@ -19,7 +19,7 @@ predictMaxEnt(
 )
 }
 \arguments{
-\item{x}{Either a Maxent lambda object or a Maxent model object}
+\item{x}{Either a MaxEnt lambda object or a MaxEnt model object}
 
 \item{data}{Data frame. Data to which to make predictions}
 
@@ -27,7 +27,7 @@ predictMaxEnt(
 \itemize{
         \item \code{'raw'}: Maxent "raw" values
         \item \code{'logistic'}: Maxent logistic values
-        \item \code{'cloglog'} Complementary log-log output (as per version 3.4.0+ of maxent--called "\code{maxnet()}" in the package of the same name)
+        \item \code{'cloglog'} (default): Complementary log-log output
 }}
 
 \item{perm}{Character vector. Name(s) of variable to permute before calculating predictions. This permutes the variables for \emph{all} features in which they occur.  If a variable is named here, it overrides permutation settings for each feature featType.  Note that for product features the variable is permuted before the product is taken. This permutation is performed before any subsequent permutations (i.e., so if both variables in a product feature are included in \code{perms}, then this is equivalent to using the \code{'before'} rule for \code{permProdRule}). Ignored if \code{NULL}.}
@@ -54,6 +54,7 @@ Takes a MaxEnt \code{lambda} object or a MaxEnt object and returns raw or logist
 }
 \examples{
 \donttest{
+
 # NB: The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models. They can
 # take a few minutes to run.
@@ -273,7 +274,23 @@ legend(
    bg = 'white'
 )
 
+### compare response curves ###
+###############################
+
+modelNames <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'NS', 'BRT', 'RF')
+
+responses <- responseCurves(
+	models = list(mx, mn, gl, ga, ns, brt, rf),
+	env = bgEnv,
+	ref = occEnv,
+	vars = predictors,
+	modelNames = modelNames
+)
+
+print(responses)
+
 }
+
 }
 \seealso{
 \code{\link[predicts]{MaxEnt}}

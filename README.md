@@ -64,9 +64,10 @@ You may need to install the `remotes` package first.
 * `evalTSS`: True Skill Statistic (TSS) (with/out site weights)
 * `modelSize`: Number of response values in a model object
 
-### Niche overlap and comparison ###
+### Response curves and niche overlap ###
 * `compareResponse`: Compare different niche model responses along an environmental variable
 * `nicheOverlapMetrics`: Niche overlap metrics
+* `responseCurves`: Plot response curves for one or more models
 
 ### Functions for rasters ###
 * `bioticVelocity`: Velocity of a "mass" across a time series of rasters

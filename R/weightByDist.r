@@ -7,7 +7,7 @@
 #'
 #' @param x	A spatial points object of class \code{SpatVector} or \code{sf}.
 #' @param maxDist Maximum distance beyond which a two neighboring points are assumed to have no effect on one another for calculation of weights.
-#' @param alpha Scaling parameter (see equations above).
+#' @param alpha Scaling parameter (see equations below).
 #'
 #' @return A numeric vector of weights.
 #'
@@ -20,38 +20,38 @@
 #' wgs84 <- getCRS('WGS84')
 #' occs <- lemurs[lemurs$species == 'Eulemur fulvus', ]
 #' occs <- sf::st_as_sf(occs, coords=c('longitude', 'latitude'), crs=wgs84)
-#' 
+#'
 #' # weights
 #' maxDist <- 30000 # in meters, for this example
 #' w <- weightByDist(occs, maxDist)
-#' 
+#'
 #' # plot
 #' plot(st_geometry(occs), cex=5 * w, main='point size ~ weight')
 #' plot(st_geometry(mad0), col='gainsboro', border='gray70', add=TRUE)
 #' plot(st_geometry(occs), cex=5 * w, add=TRUE)
-#' 
+#'
 #' @export
 
 weightByDist <- function(x, maxDist, alpha = 1) {
 
 	if (inherits(x, 'SpatVector')) x <- sf::st_as_sf(x)
-	
+
 	dists <- sf::st_distance(x)
 	diag(dists) <- NA
 	dists <- methods::as(dists, 'matrix')
-	
+
 	w <- rep(1, nrow(x))
 	for (i in 1:nrow(x)) {
-	
+
 		neighs <- which(dists[i, ] < maxDist)
 		if (length(neighs) > 0) {
-		
+
 			theseDists <- dists[i, neighs]
 			epsilon <- sum((1 - (theseDists / maxDist))^alpha)
 			w[i] <- 1 / (1 + epsilon)
-		
+
 		}
-	
+
 	}
 
 	w

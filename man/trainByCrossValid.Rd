@@ -126,7 +126,7 @@ env <- cbind(presBg, env)
 predictors <- c('bio1', 'bio12')
 
 # using "vector" form of "folds" argument
-folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
+folds <- predicts::kfold(env, 3) # just 3 folds (for speed)
 
 ### calibrate models
 ####################

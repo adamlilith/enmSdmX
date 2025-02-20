@@ -145,17 +145,24 @@ predictEnmSdm <- function(
 				nms <- names(newdata)
 				centers <- centers[match(nms, names(centers))]
 				scales <- scales[match(nms, names(scales))]
+
+				centers <- centers[!is.na(centers)]
+				scales <- scales[!is.na(scales)]
 				
 			} else {
 				scaling <- FALSE
 			}
 
 			if (inherits(newdata, c('SpatRaster'))) {
-				if (scaling) newdata <- terra::scale(newdata, center = centers, scale = scales)
+				if (scaling) {
+					nms <- names(centers)
+					newdata <- terra::scale(newdata[[nms]], center = centers, scale = scales)
+				}
 				out <- terra::predict(newdata, model, type='response', ...)
 			} else {
 				if (scaling) {
-					newdata <- scale(newdata, center = centers, scale = scales)
+					nms <- names(centers)
+					newdata <- scale(newdata[ , nms, drop = FALSE], center = centers, scale = scales)
 					newdata <- as.data.frame(newdata)
 				}
 				out <- stats::predict.glm(model, newdata, type='response', ...)

@@ -68,7 +68,7 @@ The object that is returned depends on the value of the \code{out} argument. It 
 This function calculates the "best" MaxEnt model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better).
 }
 \details{
-The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file.  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 
 Note that due to differences in how MaxEnt and MaxNet are implemented in their base packages, the models will not necessarily be the same even for the same training data.
 
@@ -76,6 +76,7 @@ This function is a wrapper for \code{MaxEnt()}. The \code{MaxEnt} function creat
 }
 \examples{
 \donttest{
+
 # NB: The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models. They can
 # take a few minutes to run.
@@ -295,7 +296,23 @@ legend(
    bg = 'white'
 )
 
+### compare response curves ###
+###############################
+
+modelNames <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'NS', 'BRT', 'RF')
+
+responses <- responseCurves(
+	models = list(mx, mn, gl, ga, ns, brt, rf),
+	env = bgEnv,
+	ref = occEnv,
+	vars = predictors,
+	modelNames = modelNames
+)
+
+print(responses)
+
 }
+
 }
 \references{
 Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}

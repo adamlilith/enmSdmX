@@ -2,7 +2,7 @@
 #'
 #' This function calculates the "best" MaxEnt model using AICc across all possible combinations of a set of master regularization parameters and feature classes. The best model has the lowest AICc, with ties broken by number of features (fewer is better), regularization multiplier (higher better), then finally the number of coefficients (fewer better).
 #'
-#' The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file (see \emph{Details}).  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
+#' The function can return the best model (default), a list of models created using all possible combinations of feature classes and regularization multipliers, and/or a data frame with tuning statistics for each model. Models in the list and in the data frame are sorted from best to worst. The function requires the \code{maxent} jar file.  Its output is any or all of: a table with AICc for all evaluated models; all models evaluated in the "selection" phase; and/or the single model with the lowest AICc.
 #'
 #' Note that due to differences in how MaxEnt and MaxNet are implemented in their base packages, the models will not necessarily be the same even for the same training data.
 #'
@@ -60,9 +60,26 @@ trainMaxEnt <- function(
 	...
 ) {
 
-	###########
-	## setup ##
-	###########
+	### debugging
+	if (FALSE) {
+
+		regMult <- 1:2
+		classes <- 'default'
+		testClasses <- TRUE
+		dropOverparam <- TRUE
+		anyway <- TRUE
+		forceLinear <- TRUE
+		jackknife <- FALSE
+		arguments <- NULL
+		scratchDir <- NULL
+		out <- 'model'
+		cores <- 1
+		verbose <- TRUE
+
+	}
+
+	## setup
+	########
 	
 		# need this bc on some platforms fails CRAN checks bc rJava isn't imported and if we import it we need to use it
 		if (FALSE) rJava::clone(data) # yields an errorl but we need to call it somewhere!
@@ -177,8 +194,9 @@ trainMaxEnt <- function(
 			.options.multicore = mcOptions,
 			.combine = 'c',
 			.inorder = FALSE,
+			# .export = c('.trainMaxEntWorker', '.maxent_predict'),
 			.export = c('.trainMaxEntWorker'),
-			.packages = c('rJava', 'parallel', 'doParallel')
+			.packages = c('rJava', 'parallel', 'doParallel', 'enmSdmX')
 			# .packages = c('rJava')
 		) %makeWork% {
 			.trainMaxEntWorker(
@@ -224,7 +242,7 @@ trainMaxEnt <- function(
 			topModel <- models[[1]]
 			topTuning <- tuning[1, , drop=FALSE]
 
-			overparamModels <- which(tuning$n < tuning$numCoeff)
+			overparamModels <- which(nrow(allPres) < tuning$numCoeff)
 			if (length(overparamModels) > 0) {
 				tuning <- tuning[-overparamModels, ]
 				models <- models[-overparamModels]
@@ -341,23 +359,67 @@ trainMaxEnt <- function(
 		silent=TRUE
 	)
 
+	# get predict() method from predicts package
+	# hacking this bc can't get it to work otherwise
+	maxentPredictMethod <- get('predict', envir = asNamespace('predicts'))
+
 	## predict to training (and maybe test presences)
-	predPres <- predictME(
-		object=model,
-		x=allPres,
-		na.rm=TRUE,
-		# arguments='outputformat=raw'
-		args='outputformat=raw'
+	# predPres <- predicts::predictME(
+	# predPres <- .maxent_predict(
+	# predPres <- maxentPredictMethod(
+	# 	object=model,
+	# 	x=allPres,
+	# 	# na.rm=TRUE,
+	# 	# arguments='outputformat=raw'
+	# 	args='outputformat=raw'
+	# )
+
+	predPres <- tryCatch(
+		maxentPredictMethod(
+			object = model,
+			x  = allPres,
+			args = 'outputformat=raw'
+		), error = function(cond) FALSE
 	)
 
+	if (is.logical(predPres)) {
+
+		predPres <- predictMaxEnt(
+			x = model,
+			data  = allPres,
+			type = 'raw'
+		)
+
+	}
+
 	## predict to background
-	predBg <- predictME(
-		object=model,
-		x=allBg,
-		na.rm=TRUE,
+	# predBg <- predicts::predictME(
+	# predBg <- predicts::predict(
+	# predBg <- maxentPredictMethod(
+	# 	object=model,
+	# 	x=allBg,
+		# na.rm=TRUE,
 		# arguments='outputformat=raw'
-		args='outputformat=raw'
+		# args='outputformat=raw'
+	# )
+
+	predBg <- tryCatch(
+		maxentPredictMethod(
+			object = model,
+			x  = allBg,
+			args = 'outputformat=raw'
+		), error = function(cond) FALSE
 	)
+
+	if (is.logical(predBg)) {
+
+		predBg <- predictMaxEnt(
+			x = model,
+			data  = allBg,
+			type = 'raw'
+		)
+
+	}
 
 	rawSum <- sum(c(predPres, predBg), na.rm=TRUE)
 

@@ -31,13 +31,13 @@ summaryByCrossValid(
 \item{interceptOnly}{Logical. If \code{TRUE} (default) and the top models in each case were intercept-only models, return an emppty data frame (with a warning). If \code{FALSE}, return results using the first model in each fold that was not an intercept-only model. This is only used if the training function was a generalized linear model (GLM), natural splines model (NS), or generalized additive model (GAM).}
 }
 \value{
-Data frame with statistics on the best set of models across k-folds. Depending on the model algorithm, this could be:
+Data frame with statistics on the best set of models across k-folds. In each case, the "best" model for each fold is used. Depending on the model algorithm, this output is a data frame with these fields:
 \itemize{
 	\item BRTs (boosted regression trees): Learning rate, tree complexity, and bag fraction.
 	\item GLMs (generalized linear models): Frequency of use of each term in the best models.
-	\item Maxent: Frequency of times each specific combination of feature classes was used in the best models plus mean master regularization multiplier for each feature set.
-	\item NSs (natural splines): Data frame, one row per fold and one column per predictor, with values representing the maximum degrees of freedom used for each variable in the best model of each fold.
-	\item RFs (random forests): Data frame, one row per fold, with values representing the optimal value of \code{numTrees} and \code{mtry} (see \code{\link[ranger]{ranger}}).
+	\item MaxEnt and MaxNet: Frequency with which each combination of feature classes was used and mean master regularization multiplier.
+	\item NSs (natural splines): One row per fold and one column per predictor, with values representing the maximum degrees of freedom used for each variable in the best model of each fold.
+	\item RFs (random forests): One row per fold, with values representing the optimal value of \code{numTrees} and \code{mtry} (see \code{\link[ranger]{ranger}}).
 }
 }
 \description{
@@ -99,7 +99,7 @@ env <- cbind(presBg, env)
 predictors <- c('bio1', 'bio12')
 
 # using "vector" form of "folds" argument
-folds <- dismo::kfold(env, 3) # just 3 folds (for speed)
+folds <- predicts::kfold(env, 3) # just 3 folds (for speed)
 
 ### calibrate models
 ####################

@@ -1,13 +1,13 @@
 #' Predict a MaxEnt model object (with optional feature-level permutation)
 #'
 #' Takes a MaxEnt \code{lambda} object or a MaxEnt object and returns raw or logistic predictions.  Its output is the same as the \code{\link[terra]{predict}} function from the \pkg{terra} package, and in fact, is slower than the function from \pkg{terra}. However, this function does allow custom manipulations that those functions do not allow (e.g., permuting product features while leaving other features with the same variables intact).  This function does \emph{not} clamp predictions--beyond the range of the training data, it extends the prediction in the direction it was going (up/down/no change). The function is based on Peter D. Wilson's document "Guidelines for computing MaxEnt model output values from a lambdas file". The function has a special feature in that it allows you to permute single variables or combinations of variables in specific features before making predictions. This is potentially useful, for example, if you wanted to determine the relative importance of a quadratic feature for a particular variable in a Maxent model relative to the other features in the model.  You can also permute values of a variable regardless of which features they appear in. For product features, you can implement the permutation before or after the values are multiplied together (before often makes for bigger differences in predictions).
-#' @param x Either a Maxent lambda object or a Maxent model object
+#' @param x Either a MaxEnt lambda object or a MaxEnt model object
 #' @param data Data frame. Data to which to make predictions
 #' @param type Character.  One of:
 #' \itemize{
 #' 		\item \code{'raw'}: Maxent "raw" values
 #' 		\item \code{'logistic'}: Maxent logistic values
-#' 		\item \code{'cloglog'} Complementary log-log output (as per version 3.4.0+ of maxent--called "\code{maxnet()}" in the package of the same name)
+#' 		\item \code{'cloglog'} (default): Complementary log-log output
 #' }
 #' @param perm Character vector. Name(s) of variable to permute before calculating predictions. This permutes the variables for \emph{all} features in which they occur.  If a variable is named here, it overrides permutation settings for each feature featType.  Note that for product features the variable is permuted before the product is taken. This permutation is performed before any subsequent permutations (i.e., so if both variables in a product feature are included in \code{perms}, then this is equivalent to using the \code{'before'} rule for \code{permProdRule}). Ignored if \code{NULL}.
 #' @param permLinear Character vector. Names(s) of variables to permute in linear features before calculating predictions.  Ignored if \code{NULL}.
@@ -39,8 +39,22 @@ predictMaxEnt <- function(
 	...
 ) {
 
+	### debug
+	if (FALSE) {
+		
+		type <- 'cloglog'
+		perm <- NULL
+		permLinear <- NULL
+		permQuad <- NULL
+		permHinge <- NULL
+		permThresh <- NULL
+		permProd <- NULL
+		permProdRule <- NULL
+	
+	}
+
 	# get lambdas is object is a model object
-	if (inherits(x, 'MaxEnt')) x <- x@lambdas
+	if (inherits(x, 'MaxEnt_model')) x <- x@lambdas
 
 	### create meta value data frame
 	################################

@@ -1,6 +1,7 @@
 #' Summarize distribution/niche model cross-validation object
 #'
 #' This function summarizes models calibrated using the \code{\link[enmSdmX]{trainByCrossValid}} function. It returns aspects of the best models across k-folds (the particular aspects depends on the kind of models used).
+#'
 #' @param x The output from the \code{\link{trainByCrossValid}} function (which is a list). Note that the object \emph{must} include a sublist named \code{tuning}.
 #' @param metric Metric by which to select the best model in each k-fold. This can be any of the columns that appear in the data frames in \code{x$tuning} (or any columns added manually), but typically is one of the following \emph{plus} either \code{Train}, \code{Test}, or \code{Delta} (e.g., \code{'logLossTrain'}, \code{'logLossTest'}, or \code{'logLossDelta'}):
 #' \itemize{
@@ -16,13 +17,13 @@
 #' @param decreasing Logical, if \code{TRUE} (default), for each k-fold sort models by the value listed in \code{metric} in decreasing order (highest connotes "best", lowest "worst"). If \code{FALSE} use the lowest value of \code{metric}.
 #' @param interceptOnly Logical. If \code{TRUE} (default) and the top models in each case were intercept-only models, return an emppty data frame (with a warning). If \code{FALSE}, return results using the first model in each fold that was not an intercept-only model. This is only used if the training function was a generalized linear model (GLM), natural splines model (NS), or generalized additive model (GAM).
 #'
-#' @return Data frame with statistics on the best set of models across k-folds. Depending on the model algorithm, this could be:
+#' @return Data frame with statistics on the best set of models across k-folds. In each case, the "best" model for each fold is used. Depending on the model algorithm, this output is a data frame with these fields:
 #' \itemize{
 #' 	\item BRTs (boosted regression trees): Learning rate, tree complexity, and bag fraction.
 #' 	\item GLMs (generalized linear models): Frequency of use of each term in the best models.
-#' 	\item Maxent: Frequency of times each specific combination of feature classes was used in the best models plus mean master regularization multiplier for each feature set.
-#' 	\item NSs (natural splines): Data frame, one row per fold and one column per predictor, with values representing the maximum degrees of freedom used for each variable in the best model of each fold.
-#' 	\item RFs (random forests): Data frame, one row per fold, with values representing the optimal value of \code{numTrees} and \code{mtry} (see \code{\link[ranger]{ranger}}).
+#' 	\item MaxEnt and MaxNet: Frequency with which each combination of feature classes was used and mean master regularization multiplier.
+#' 	\item NSs (natural splines): One row per fold and one column per predictor, with values representing the maximum degrees of freedom used for each variable in the best model of each fold.
+#' 	\item RFs (random forests): One row per fold, with values representing the optimal value of \code{numTrees} and \code{mtry} (see \code{\link[ranger]{ranger}}).
 #' }
 #' @seealso \code{\link[enmSdmX]{trainByCrossValid}}, \code{\link[enmSdmX]{trainBRT}}, \code{\link[enmSdmX]{trainGAM}}, \code{\link[enmSdmX]{trainGLM}}, \code{\link[enmSdmX]{trainMaxEnt}}, \code{\link[enmSdmX]{trainNS}}, \code{\link[enmSdmX]{trainRF}}
 #'

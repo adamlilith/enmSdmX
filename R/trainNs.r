@@ -5,7 +5,7 @@
 #' @param data Data frame.
 #' @param resp Response variable. This is either the name of the column in \code{data} or an integer indicating the column in \code{data} that has the response variable. The default is to use the first column in \code{data} as the response.
 #' @param preds Character vector or integer vector. Names of columns or column indices of predictors. The default is to use the second and subsequent columns in \code{data}.
-#' @param scale Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainGLM(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$means} and \code{model$scales$sds}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do it's operations.
+#' @param scale Either \code{NA} (default), or \code{TRUE} or \code{FALSE}. If \code{TRUE}, the predictors will be centered and scaled by dividing by subtracting their means then dividing by their standard deviations. The means and standard deviations will be returned in the model object under an element named "\code{scales}". For example, if you do something like \code{model <- trainNS(data, scale=TRUE)}, then you can get the means and standard deviations using \code{model$scales$means} and \code{model$scales$sds}. If \code{FALSE}, no scaling is done. If \code{NA} (default), then the function will check to see if non-factor predictors have means ~0 and standard deviations ~1. If not, then a warning will be printed, but the function will continue to do its operations.
 #' @param method Character, name of function used to solve. This can be \code{'glm.fit'} (default), \code{'brglmFit'} (from the \pkg{brglm2} package), or another function.
 #' @param df A vector of integers > 0 or \code{NULL}. Sets flexibility of model fit. See documentation for \code{\link[splines]{ns}}.
 #' @param interaction If \code{TRUE} (default), include two-way interaction terms.
@@ -46,7 +46,7 @@
 #' @seealso \code{\link[splines]{ns}}
 #'
 #' @example man/examples/trainXYZ_examples.R
-#' 
+#'
 #' @export
 trainNS <- function(
 	data,
@@ -70,7 +70,7 @@ trainNS <- function(
 ) {
 
 	if (FALSE) {
-	
+
 		resp <- 'presBg'
 
 		scale <- TRUE
@@ -87,7 +87,7 @@ trainNS <- function(
 		out <- 'model'
 		cores <- 1
 		verbose <- TRUE
-	
+
 	}
 
 	###########
@@ -102,7 +102,7 @@ trainNS <- function(
 		if (inherits(preds, c('integer', 'numeric'))) preds <- names(data)[preds]
 
 		w <- .calcWeights(w, data = data, resp = resp, family = family)
-		
+
 		if (is.na(scale) || scale) {
 			scaleds <- .scalePredictors(scale, preds, data)
 			data <- scaleds$data
@@ -111,7 +111,7 @@ trainNS <- function(
 
 	### parallelization
 	###################
-			
+
 		cores <- min(cores, parallel::detectCores(logical = FALSE))
 
 		if (cores > 1L) {
@@ -122,7 +122,7 @@ trainNS <- function(
 			parallel::clusterEvalQ(cl, requireNamespace('parallel', quietly=TRUE))
 			doParallel::registerDoParallel(cl)
 			on.exit(parallel::stopCluster(cl), add=TRUE)
-			
+
 			# `%makeWork%` <- doRNG::`%dorng%`
 			# doFuture::registerDoFuture()
 			# future::plan(future::multisession(workers = cores))
@@ -153,14 +153,14 @@ trainNS <- function(
 
 		# univariate terms
 		for (thisPred in preds) {
-		
+
 			if (factors[thisPred]) {
 				terms <- c(terms, thisPred)
 				componentTerms <- c(componentTerms, thisPred)
 			} else {
 
 				for (thisDf in df) {
-				
+
 					term <- paste0('splines::ns(', thisPred, ', df=', thisDf, ')')
 					terms <- c(terms, term)
 					componentTerms <- c(componentTerms, thisPred)
@@ -168,14 +168,14 @@ trainNS <- function(
 				}
 
 			}
-		
+
 		}
 
 		numTerms <- rep(1, length(terms))
 
 		# interaction terms
 		if (interaction & length(preds) > 1L & n >= 2 * presPerTermFinal) {
-		
+
 			predCombos <- utils::combn(preds, m = 2, simplify = FALSE)
 
 			for (i in seq_along(predCombos)) {
@@ -194,9 +194,9 @@ trainNS <- function(
 				componentTerms <- c(componentTerms, rep(paste(pred1, pred2, collapse = ' '), length(df)))
 				numTerms <- c(numTerms, rep(2, length(df)))
 				terms <- c(terms, newTerm)
-					
+
 			}
-			
+
 		} # if more than one term
 
 		### select best set of terms for full model
@@ -204,7 +204,7 @@ trainNS <- function(
 
 		forms <- terms
 		# if (interceptOnly) forms <- c(forms, '1')
-		
+
 		if (verbose) omnibus::say('Evaluating simple models with each candidate term...')
 		work <- foreach::foreach(
 			i = seq_along(forms),
@@ -235,7 +235,7 @@ trainNS <- function(
 			bads <- which(!work$converged | work$boundary)
 			if (length(bads) > 0) {
 				work <- work[-bads, , drop = FALSE]
-				
+
 				if (nrow(work) == 0) {
 					msg <- 'No single-term models converged or all models had parameter estimates near the boundary.'
 					if (failIfNoValid) {
@@ -264,7 +264,7 @@ trainNS <- function(
 		totalTerms <- work$numTerms[1L]
 
 		termsSoFar <- work$componentTerms[1L]
-			
+
 		i <- 2L
 		while (i <= nrow(work) && (n >= (totalTerms + numTerms[i]) * presPerTermFinal & totalTerms < maxTerms + numTerms[i])) {
 
@@ -287,14 +287,14 @@ trainNS <- function(
 
 		forms <- character()
 		for (i in 1:nrow(formGrid)) {
-		
+
 			terms <- unlist(formGrid[i, , drop = TRUE])
 			terms <- terms[!is.na(terms)]
 			if (length(terms) > 0) {
 				form <- paste(terms, collapse = ' + ')
 				forms[i] <- form
 			}
-		
+
 		}
 
 
@@ -330,10 +330,10 @@ trainNS <- function(
 		if (wantModels) models <- list()
 		tuning <- data.frame()
 		for (i in seq_along(work)) {
-		
+
 			if (wantModels) {
 				models[[i]] <- work[[i]]$model
-				models[[i]]$scales <- scales
+				models[[i]]$scale <- scales
 			}
 
 			tuning <- rbind(
@@ -345,16 +345,16 @@ trainNS <- function(
 					AICc = work[[i]]$AICc
 				)
 			)
-		
+
 		}
 
 		if (removeInvalid) {
 
 			bads <- which(!tuning$converged | tuning$boundary)
 			if (length(bads) > 0) {
-				
+
 				tuning <- work[-bads, , drop = FALSE]
-				
+
 				if (nrow(work) == 0) {
 					msg <- 'No single-term models converged or all models had parameter estimates near the boundary.'
 					if (failIfNoValid) {
@@ -394,7 +394,7 @@ trainNS <- function(
 	} else if ('tuning' %in% out) {
 		tuning
 	}
-		
+
 }
 
 ### train NS
@@ -438,12 +438,12 @@ trainNS <- function(
 		weights = w,
 		...
 	))
-	
+
 	AICc <- AICcmodavg::AICc(model)
-	
+
 	# out
 	out <- if (modelOut) {
-		
+
 		list(
 			list(
 				model = model,
@@ -455,9 +455,9 @@ trainNS <- function(
 				AICc = AICc
 			)
 		)
-		
+
 	} else {
-	
+
 		data.frame(
 			term = forms[i],
 			componentTerms = componentTerms[i],
@@ -466,7 +466,7 @@ trainNS <- function(
 			boundary = model$boundary,
 			AICc = AICc
 		)
-	
+
 	}
 	out
 
