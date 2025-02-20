@@ -1,8 +1,9 @@
-# enmSdmX 1.2.11 2025-01-XX
-- Added `responseCurves()` for easy plotting of model response curves.
-- Bug fix: `predictEnmSdm()` no longer fails for GLMs when `newdata` has more columns than necessary.
-- Bug fix: `trainMaxEnt()` now removes over-parameterized models (thank you, ML!).
-- Bug fix: `trainByCrossValid()` no longer crashes when trying to train MaxEnt models (thank you, ML!)
+# enmSdmX 1.2.11 2025-02-19
+- Added `responseCurves()` for easy plotting of model response curves.  
+- Bug fix: `predictEnmSdm()` no longer fails for GLMs when `newdata` has more columns than necessary.  
+- Bug fix: `trainMaxEnt()` now removes over-parameterized models (thank you, ML!).  
+- Bug fix: `trainNS()` correctly records the `scale` statistics when argument `scale = TRUE`.  
+- Bug fix: `trainByCrossValid()` no longer crashes when trying to train MaxEnt models (thank you, ML!).  
 
 # enmSdmX 1.1.9 2024-11-01
 - `trainGAM()` does not include interaction terms if `interaction` is `NULL`, and does not fail when interactions are included and the number of predictors is >2 (thank you, P.T.!).  
