@@ -8,7 +8,10 @@
 ^\.Rproj\.user$
 ^\.github
 ^\.github$
+^vignettes_compiled$
 ^enmSdmX_workspace.code-workspace
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^doc$
+^Meta$

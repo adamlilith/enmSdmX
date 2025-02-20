@@ -11,7 +11,7 @@ weightByDist(x, maxDist, alpha = 1)
 
 \item{maxDist}{Maximum distance beyond which a two neighboring points are assumed to have no effect on one another for calculation of weights.}
 
-\item{alpha}{Scaling parameter (see equations above).}
+\item{alpha}{Scaling parameter (see equations below).}
 }
 \value{
 A numeric vector of weights.

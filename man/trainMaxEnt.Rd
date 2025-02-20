@@ -76,6 +76,7 @@ This function is a wrapper for \code{MaxEnt()}. The \code{MaxEnt} function creat
 }
 \examples{
 \donttest{
+
 # NB: The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models. They can
 # take a few minutes to run.
@@ -295,7 +296,23 @@ legend(
    bg = 'white'
 )
 
+### compare response curves ###
+###############################
+
+modelNames <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'NS', 'BRT', 'RF')
+
+responses <- responseCurves(
+	models = list(mx, mn, gl, ga, ns, brt, rf),
+	env = bgEnv,
+	ref = occEnv,
+	vars = predictors,
+	modelNames = modelNames
+)
+
+print(responses)
+
 }
+
 }
 \references{
 Warren, D.L. and S.N. Siefert. 2011. Ecological niche modeling in Maxent: The importance of model complexity and the performance of model selection criteria. \emph{Ecological Applications} 21:335-342. \doi{10.1890/10-1171.1}

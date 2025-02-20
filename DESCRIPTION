@@ -31,11 +31,13 @@ Depends:
 Imports:
 	AICcmodavg,
 	boot,
+	cowplot,
 	data.table,
 	doParallel,
 	DT,
 	foreach,
 	gbm,
+	ggplot2,
 	graphics,
 	ks,
 	maxnet,
@@ -54,6 +56,15 @@ Imports:
 	stats,
 	terra,
 	utils
+Suggests:
+	brglm,
+	cluster,
+	gecko,
+	geodata,
+	knitr,
+	rgbif,
+	rmarkdown
+VignetteBuilder: knitr
 LazyData: true
 LazyLoad: yes
 URL: https://github.com/adamlilith/enmSdmX

@@ -40,6 +40,7 @@ This is a generic predict function that automatically uses the model common argu
 }
 \examples{
 \donttest{
+
 # NB: The examples below show a very basic modeling workflow. They have been 
 # designed to work fast, not produce accurate, defensible models. They can
 # take a few minutes to run.
@@ -259,7 +260,23 @@ legend(
    bg = 'white'
 )
 
+### compare response curves ###
+###############################
+
+modelNames <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'NS', 'BRT', 'RF')
+
+responses <- responseCurves(
+	models = list(mx, mn, gl, ga, ns, brt, rf),
+	env = bgEnv,
+	ref = occEnv,
+	vars = predictors,
+	modelNames = modelNames
+)
+
+print(responses)
+
 }
+
 }
 \seealso{
 \code{\link[stats]{predict}} from the \pkg{stats} package, \code{\link[terra]{predict}} from the \pkg{terra} package, \code{\link[enmSdmX]{predictMaxEnt}}, \code{\link[enmSdmX]{predictMaxNet}}

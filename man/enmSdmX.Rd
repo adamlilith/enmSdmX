@@ -63,6 +63,13 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 		\code{\link{modelSize}}: Number of response values in a model object \cr
 }
 
+\section{Response curves and niche overlap}{
+
+		\code{\link{compareResponse}}: Compare model responses to a single variable \cr
+		\code{\link{nicheOverlapMetrics}}: Niche overlap metrics \cr
+		\code{\link{responseCurves}}: Create plots of response curves for one or more models \cr
+}
+
 \section{Functions for rasters}{
 
 		\code{\link{bioticVelocity}}: Velocity of movement across a series of rasters \cr
@@ -73,12 +80,6 @@ Create an issue on \href{https://github.com/adamlilith/enmSdmX/issues}{GitHub}.
 		\code{\link{sampleRast}}: Sample raster with/out replacement \cr
 	\code{\link{setValueByCell}}: Set value(s) in raster cell(s) by cell number \cr
 		\code{\link{squareCellRast}}: Create a raster with square cells \cr
-}
-
-\section{Niche overlap and similarity}{
-
-		\code{\link{compareResponse}}: Compare niche model responses to a single variable \cr
-		\code{\link{nicheOverlapMetrics}}: Niche overlap metrics \cr
 }
 
 \section{Coordinate reference systems}{
