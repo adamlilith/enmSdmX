@@ -1,5 +1,5 @@
 # enmSdmX 1.2.13 2025-04-10
-- Fixed bug in `responeCurves()` that disallowed plotting with >2 predictors (thank you, JC!).  
+- Fixed bug in `responseCurves()` that disallowed plotting with >2 predictors (thank you, JC!).  
 
 # enmSdmX 1.2.12 2025-03-13
 - Fixed bug that sometimes appeared in `coordImprecision()` because output included units :(.  
