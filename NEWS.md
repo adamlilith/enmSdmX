@@ -1,3 +1,9 @@
+# enmSdmX 1.2.13 2025-XX-XX
+- Fixed bug in `responeCurves()` that disallowed plotting with >2 predictors (thank you, JC!).  
+
+# enmSdmX 1.2.12 2025-03-13
+- Fixed bug that sometimes appeared in `coordImprecision()` because output included units :(.  
+
 # enmSdmX 1.2.11 2025-02-19
 - Added `responseCurves()` for easy plotting of model response curves.  
 - Bug fix: `predictEnmSdm()` no longer fails for GLMs when `newdata` has more columns than necessary.  
