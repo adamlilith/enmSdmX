@@ -57,7 +57,7 @@ responseCurves <- function(
 	constants <- apply(ref[ , vars, drop = FALSE], 2, constantFx, na.rm = TRUE)
 
 	# models
-	if (!is.list(models)) models <- list(models)
+	if (!inherits(models, 'list')) models <- list(models)
 
 	# create data frame with increasing values for each variable
 	minsEnv <- sapply(env[ , vars], min, na.rm = TRUE)
@@ -89,7 +89,9 @@ responseCurves <- function(
 		# create data frame with focal variable varying but all others constant
 		constantGrad <- gradients
 		varsSansFocal <- vars[vars != variable]
-		constantGrad[ , varsSansFocal] <- constants[[varsSansFocal]]
+		for (varSansFocal in varsSansFocal) {
+			constantGrad[ , varSansFocal] <- constants[[varSansFocal]]
+		}
 
 		# predict for each model
 		df <- data.frame()
