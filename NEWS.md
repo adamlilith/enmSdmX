@@ -1,3 +1,6 @@
+# enmSdmX 1.2.XX 2025-XX-XX
+- Added WKT string "Equal Earth Greenwich" to data object `crss` (available through `getCRS()`).  
+
 # enmSdmX 1.2.13 2025-04-10
 - Fixed bug in `responseCurves()` that disallowed plotting with >2 predictors (thank you, JC!).  
 
