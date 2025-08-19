@@ -20,7 +20,7 @@ Numeric values (by default in units of meters).
 This function calculates the imprecision of geographic coordinates due to rounded coordinate values. See \emph{Details} for an explanation of how this is calculated.
 }
 \details{
-For coordinates originally reported in decimal notation, coordinate imprecision is \emph{half} the distance between the two opposing corners on a bounding box whose size is based on the number of significant digits in the coordinates. This box is defined by 1) finding the maximum number of significant digits after the decimal in the longitude/latitude pair; 2) adding/subtracting 5 to the decimal place that falls just after this; and 3) calculating the distance between these points then dividing by 2. For example, if longitude is 82.37 and latitude 45.8 then the number of significant digits after the decimal place is 2 and 1, respectively so 2 is used on the assumption that latitude is measured to the nearest 100th degree. The precision is then the distance between the point pairs (82.37 - 0.05 = 82.365, 45.8 - 0.05 = 45.795) and (82.37 + 0.05 = 82.375, 45.8 + 0.05 = 45.805). \cr \cr
+For coordinates originally reported in decimal notation, coordinate imprecision is \emph{half} the distance between the two opposing corners on a bounding box whose size is based on the number of significant digits in the coordinates. This box is defined by 1) finding the maximum number of significant digits after the decimal in the longitude/latitude pair; 2) adding/subtracting 5 to the decimal place that falls just after this; and 3) calculating the distance between these points then dividing by 2. For example, if longitude is 82.37 and latitude 45.8 then the number of significant digits after the decimal place is 2 and 1, respectively so 2 is used on the assumption that latitude is measured to the nearest 100th of a degree. The precision is then the distance between the point pairs (82.37 - 0.005 = 82.365, 45.8 - 0.005 = 45.795) and (82.37 + 0.005 = 82.375, 45.8 + 0.005 = 45.805). \cr \cr
 
 For coordinates originally reported in degree-minus-second (DMS) format, the bounding box is defined by adding/subtracting 0.5 units (degrees, minutes, or seconds, depending on the smallest non-zero unit reported) from the coordinate. For example, if longitude is 90deg 00min 00sec and latitude is 37deg 37min 37sec, then the bounding box will be defined by adding/subtracting 0.5 arcsec to the coordinates.
 }
@@ -75,12 +75,10 @@ decimal <- cbind(longDec, latDec)
 # is to use maximum:
 pmax(decImp, dmsImp)
 
-if (FALSE) {
-  # known error when longitude is negative and latitude is -90
-  long <- -45
-  lat <- -90
-  ll <- cbind(long, lat)
-  coordImprecision(ll)
-}
+# when longitude is negative and latitude is -90
+long <- -45
+lat <- -90
+ll <- cbind(long, lat)
+coordImprecision(ll)
 
 }

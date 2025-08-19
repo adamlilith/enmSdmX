@@ -1,8 +1,8 @@
 Package: enmSdmX
 Type: Package
 Title: Species Distribution Modeling and Ecological Niche Modeling
-Version: 1.2.11
-Date: 2025-01-22
+Version: 1.2.13
+Date: 2025-04-10
 Authors@R: 
 	c(
 		person(
@@ -57,14 +57,13 @@ Imports:
 	terra,
 	utils
 Suggests:
-	brglm,
+	brglm2,
 	cluster,
 	gecko,
 	geodata,
 	knitr,
 	rgbif,
 	rmarkdown
-VignetteBuilder: knitr
 LazyData: true
 LazyLoad: yes
 URL: https://github.com/adamlilith/enmSdmX
