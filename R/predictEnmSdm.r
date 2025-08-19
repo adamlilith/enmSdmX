@@ -6,7 +6,7 @@
 #'
 #' @param newdata	Data frame or matrix, or \code{SpatRaster} with data to which to predict.
 #'
-#' @param maxentFun	This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used.
+#' @param maxentFun	This argument is only used if the \code{model} object is a MaxEnt model; otherwise, it is ignored. It takes a value of either \code{'terra'}, in which case a MaxEnt model is predicted using the default \code{predict} function from the \pkg{terra} package, or \code{'enmSdmX'} in which case the function \code{\link[enmSdmX]{predictMaxEnt}} function from the \pkg{enmSdmX} package (this package) is used. If the former is used, then predictions should be clamped, unless you use the \code{...} to supply arguments to \code{terra::predict()} and thus modify how MaxEnt is predicted. If you use \code{'enmSdmX'}, the predictions are not clamped.
 #'
 #' @param scale Logical. If the model is a GLM trained with \code{\link{trainGLM}} or \code{\link{trainNS}}, you can use the \code{scale} argument in that function to center and scale the predictors. In the \code{predictEnmSdm} function, you can set \code{scale} to \code{TRUE} to scale the rasters or data frame to which you are training using the centers (means) and scales (standard deviations) used in the mode. Otherwise, it is up to you to ensure variables are properly centered and scaled. This argument only has effect if the model is a GLM trained using \code{\link{trainGLM}} or \code{\link{trainNS}}.
 #'
@@ -218,9 +218,9 @@ predictEnmSdm <- function(
 		# Maxent
 		} else if (inherits(model, c('MaxEnt', 'MaxEnt_model'))) {
 
-			out <- if (maxentFun == 'terra') {
+			out <- if (tolower(maxentFun) == 'terra') {
 				terra::predict(model, newdata, ...)
-			} else if (maxentFun == 'enmSdmX') {
+			} else if (tolower(maxentFun) == 'enmsdmx') {
 				predictMaxEnt(model, newdata, ...)
 			}
 
