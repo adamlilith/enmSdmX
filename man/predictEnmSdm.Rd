@@ -201,65 +201,6 @@ names(maps) <- c('MaxEnt', 'MaxNet', 'GLM', 'GAM', 'NSs', 'BRTs', 'RFs')
 fun <- function() plot(occs, col='black', pch=3, add=TRUE)
 plot(maps, fun = fun, nc = 4)
 
-### compare model responses to BIO12 (mean annual precipitation)
-################################################################
-
-# make a data frame holding all other variables at mean across occurrences,
-# varying only BIO12
-occEnvMeans <- colMeans(occEnv, na.rm=TRUE)
-occEnvMeans <- rbind(occEnvMeans)
-occEnvMeans <- as.data.frame(occEnvMeans)
-climFrame <- occEnvMeans[rep(1, 100), ]
-rownames(climFrame) <- NULL
-
-minBio12 <- min(env$bio12)
-maxBio12 <- max(env$bio12)
-climFrame$bio12 <- seq(minBio12, maxBio12, length.out=100)
-
-predMx <- predictEnmSdm(mx, climFrame)
-predMn <- predictEnmSdm(mn, climFrame)
-predGl <- predictEnmSdm(gl, climFrame)
-predGa <- predictEnmSdm(ga, climFrame)
-predNat <- predictEnmSdm(ns, climFrame)
-predBrt <- predictEnmSdm(brt, climFrame)
-predRf <- predictEnmSdm(rf, climFrame)
-
-
-plot(climFrame$bio12, predMx,
-xlab='BIO12', ylab='Prediction', type='l', ylim=c(0, 1))
-
-lines(climFrame$bio12, predMn, lty='solid', col='red')
-lines(climFrame$bio12, predGl, lty='dotted', col='blue')
-lines(climFrame$bio12, predGa, lty='dashed', col='green')
-lines(climFrame$bio12, predNat, lty=4, col='purple')
-lines(climFrame$bio12, predBrt, lty=5, col='orange')
-lines(climFrame$bio12, predRf, lty=6, col='cyan')
-
-legend(
-   'topleft',
-   inset = 0.01,
-   legend = c(
-	'MaxEnt',
-	'MaxNet',
-	'GLM',
-	'GAM',
-	'NS',
-	'BRT',
-	'RF'
-   ),
-   lty = c(1, 1:6),
-   col = c(
-	'black',
-	'red',
-	'blue',
-	'green',
-	'purple',
-	'orange',
-	'cyan'
-   ),
-   bg = 'white'
-)
-
 ### compare response curves ###
 ###############################
 
